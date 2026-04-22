@@ -11,6 +11,8 @@ from reasoning.object_correspondence_rule_engine import solve_pair_object_corres
 from reasoning.object_projection_rule_engine import solve_pair_object_projection_rule
 from reasoning.multi_object_projection_rule_engine import solve_pair_multi_object_projection_rule
 from reasoning.motif_layout_rule import solve_pair_motif_layout_rule
+from reasoning.noise_cleanup_rule import solve_pair_noise_cleanup
+from core.scoring import score_prediction
 
 
 def grid_shape(grid):
@@ -137,6 +139,16 @@ def print_adjusted_debug(candidates):
         )
 
 
+def find_divider_column(grid):
+    h = len(grid)
+    w = len(grid[0])
+
+    for c in range(w):
+        column = [grid[r][c] for r in range(h)]
+        if len(set(column)) == 1:  # all same color
+            return c
+    return None
+
 def get_all_strategy_results(input_grid, output_grid):
     """
     Runs every available strategy and returns all adjusted candidate results.
@@ -174,13 +186,28 @@ def get_all_strategy_results(input_grid, output_grid):
         result_region = apply_router_adjustments(result_region, input_grid, output_grid)
         candidates.append(result_region)
 
-    result_motif_layout = solve_pair_motif_layout_rule(input_grid, output_grid)
-    if result_motif_layout is not None:
-        result_motif_layout["strategy"] = "motif_layout_rule"
-        result_motif_layout = apply_router_adjustments(
-            result_motif_layout, input_grid, output_grid
-        )
-        candidates.append(result_motif_layout)
+    # motif layout (only if divider exists)
+    result_motif_layout = None
+
+    divider_col = find_divider_column(input_grid)
+
+    if divider_col is not None and divider_col > 0:
+        result_motif_layout = solve_pair_motif_layout_rule(input_grid, output_grid)
+        if result_motif_layout is not None:
+            result_motif_layout["strategy"] = "motif_layout_rule"
+            result_motif_layout = apply_router_adjustments(
+                result_motif_layout, input_grid, output_grid
+            )
+            candidates.append(result_motif_layout)
+    else:
+        print("Skipping motif_layout_rule (no divider)")
+
+    result_noise = solve_pair_noise_cleanup(input_grid, output_grid)
+
+    if result_noise is not None:
+        result_noise["strategy"] = "noise_cleanup_rule"
+        result_noise = apply_router_adjustments(result_noise, input_grid, output_grid)
+        candidates.append(result_noise)
 
     result_region_alignment = solve_pair_region_alignment_rule(input_grid, output_grid)
     if result_region_alignment is not None:

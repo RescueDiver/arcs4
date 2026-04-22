@@ -1,29 +1,5 @@
 [
   {
-    "task_id": "136b0064",
-    "pair_index": 1,
-    "strategy": "region_rule",
-    "score": 188,
-    "selector": null,
-    "transform": null
-  },
-  {
-    "task_id": "136b0064",
-    "pair_index": 2,
-    "strategy": "region_rule",
-    "score": 142,
-    "selector": null,
-    "transform": null
-  },
-  {
-    "task_id": "136b0064",
-    "pair_index": 3,
-    "strategy": "region_rule",
-    "score": 168,
-    "selector": null,
-    "transform": null
-  },
-  {
     "task_id": "20270e3b",
     "pair_index": 1,
     "strategy": "region_alignment_rule_v2",
@@ -162,10 +138,10 @@
   {
     "task_id": "291dc1e1",
     "pair_index": 4,
-    "strategy": "object_fc7",
-    "score": 68,
-    "selector": "most_multicolor_object",
-    "transform": "identity"
+    "strategy": "motif_layout_rule",
+    "score": 0,
+    "selector": null,
+    "transform": null
   },
   {
     "task_id": "2ba387bc",

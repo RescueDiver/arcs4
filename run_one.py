@@ -22,7 +22,7 @@ from memory.rule_memory import save_successful_task_memory
 # ============================================================
 # CHANGE THIS TO THE TASK YOU WANT TO DEBUG
 # ============================================================
-TARGET_TASK_ID = "136b0064"
+TARGET_TASK_ID = "20270e3b"
 
 
 # ============================================================

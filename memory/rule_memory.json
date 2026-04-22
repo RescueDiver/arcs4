@@ -1,181 +1,54 @@
 {
   "history": [
     {
-      "task_id": "136b0064",
-      "strategy": "motif_layout_rule",
-      "exact_count": 3,
-      "total_pairs": 3,
-      "result": "exact",
+      "task_id": "20270e3b",
+      "strategy": "region_alignment_rule_v2",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
       "features": {
-        "pair_count": 3,
+        "pair_count": 4,
         "has_divider_color_4": true,
-        "has_anchor_color_5": true,
+        "has_anchor_color_5": false,
         "output_widths": [
-          7,
-          7,
-          7
+          8,
+          6,
+          3,
+          12
         ],
         "output_heights": [
-          15,
           7,
-          11
+          7,
+          6,
+          5
         ]
       }
     },
     {
-      "task_id": "136b0064",
-      "strategy": "motif_layout_rule",
-      "exact_count": 3,
-      "total_pairs": 3,
-      "result": "exact",
+      "task_id": "20270e3b",
+      "strategy": "region_alignment_rule_v2",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
       "features": {
-        "pair_count": 3,
+        "pair_count": 4,
         "has_divider_color_4": true,
-        "has_anchor_color_5": true,
+        "has_anchor_color_5": false,
         "output_widths": [
-          7,
-          7,
-          7
+          8,
+          6,
+          3,
+          12
         ],
         "output_heights": [
-          15,
-          7,
-          11
-        ]
-      }
-    },
-    {
-      "task_id": "136b0064",
-      "strategy": "motif_layout_rule",
-      "exact_count": 3,
-      "total_pairs": 3,
-      "result": "exact",
-      "features": {
-        "pair_count": 3,
-        "has_divider_color_4": true,
-        "has_anchor_color_5": true,
-        "output_widths": [
           7,
           7,
-          7
-        ],
-        "output_heights": [
-          15,
-          7,
-          11
-        ]
-      }
-    },
-    {
-      "task_id": "136b0064",
-      "strategy": "motif_layout_rule",
-      "exact_count": 3,
-      "total_pairs": 3,
-      "result": "exact",
-      "features": {
-        "pair_count": 3,
-        "has_divider_color_4": true,
-        "has_anchor_color_5": true,
-        "output_widths": [
-          7,
-          7,
-          7
-        ],
-        "output_heights": [
-          15,
-          7,
-          11
-        ]
-      }
-    },
-    {
-      "task_id": "136b0064",
-      "strategy": "motif_layout_rule",
-      "exact_count": 3,
-      "total_pairs": 3,
-      "result": "exact",
-      "features": {
-        "pair_count": 3,
-        "has_divider_color_4": true,
-        "has_anchor_color_5": true,
-        "output_widths": [
-          7,
-          7,
-          7
-        ],
-        "output_heights": [
-          15,
-          7,
-          11
-        ]
-      }
-    },
-    {
-      "task_id": "136b0064",
-      "strategy": "motif_layout_rule",
-      "exact_count": 3,
-      "total_pairs": 3,
-      "result": "exact",
-      "features": {
-        "pair_count": 3,
-        "has_divider_color_4": true,
-        "has_anchor_color_5": true,
-        "output_widths": [
-          7,
-          7,
-          7
-        ],
-        "output_heights": [
-          15,
-          7,
-          11
-        ]
-      }
-    },
-    {
-      "task_id": "136b0064",
-      "strategy": "motif_layout_rule",
-      "exact_count": 3,
-      "total_pairs": 3,
-      "result": "exact",
-      "features": {
-        "pair_count": 3,
-        "has_divider_color_4": true,
-        "has_anchor_color_5": true,
-        "output_widths": [
-          7,
-          7,
-          7
-        ],
-        "output_heights": [
-          15,
-          7,
-          11
+          6,
+          5
         ]
       }
     }
   ],
-  "patterns": [
-    {
-      "name": "motif_layout_rule_136b0064",
-      "features": {
-        "pair_count": 3,
-        "has_divider_color_4": true,
-        "has_anchor_color_5": true,
-        "output_widths": [
-          7,
-          7,
-          7
-        ],
-        "output_heights": [
-          15,
-          7,
-          11
-        ]
-      },
-      "suggested_strategy": "motif_layout_rule",
-      "source_task": "136b0064"
-    }
-  ],
+  "patterns": [],
   "rules": []
 }
