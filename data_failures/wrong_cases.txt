@@ -1,0 +1,651 @@
+WRONG TRAIN PAIRS
+============================================================
+
+1. TASK: 0934a4d8 | PAIR: 1
+   Strategy : object_fc7
+   Score    : 248
+   Selector : most_multicolor_object
+   Transform: rotate_270
+
+2. TASK: 0934a4d8 | PAIR: 2
+   Strategy : object_fc7
+   Score    : 390
+   Selector : most_multicolor_object
+   Transform: identity
+
+3. TASK: 0934a4d8 | PAIR: 3
+   Strategy : object_fc7
+   Score    : 256
+   Selector : most_multicolor_object
+   Transform: identity
+
+4. TASK: 0934a4d8 | PAIR: 4
+   Strategy : object_fc7
+   Score    : 282
+   Selector : most_multicolor_object
+   Transform: identity
+
+5. TASK: 136b0064 | PAIR: 1
+   Strategy : region_rule
+   Score    : 77
+   Selector : None
+   Transform: None
+
+6. TASK: 136b0064 | PAIR: 2
+   Strategy : object_fc7
+   Score    : 41
+   Selector : most_multicolor_object
+   Transform: identity
+
+7. TASK: 136b0064 | PAIR: 3
+   Strategy : region_rule
+   Score    : 57
+   Selector : None
+   Transform: None
+
+8. TASK: 20270e3b | PAIR: 1
+   Strategy : object_fc7
+   Score    : 80
+   Selector : most_multicolor_object
+   Transform: identity
+
+9. TASK: 20270e3b | PAIR: 2
+   Strategy : object_fc7
+   Score    : 90
+   Selector : most_multicolor_object
+   Transform: identity
+
+10. TASK: 20270e3b | PAIR: 3
+   Strategy : object_fc7
+   Score    : 80
+   Selector : most_multicolor_object
+   Transform: identity
+
+11. TASK: 20270e3b | PAIR: 4
+   Strategy : object_fc7
+   Score    : 82
+   Selector : most_multicolor_object
+   Transform: identity
+
+12. TASK: 20a9e565 | PAIR: 1
+   Strategy : region_rule
+   Score    : 111
+   Selector : None
+   Transform: None
+
+13. TASK: 20a9e565 | PAIR: 2
+   Strategy : region_rule
+   Score    : 124
+   Selector : None
+   Transform: None
+
+14. TASK: 20a9e565 | PAIR: 3
+   Strategy : region_rule
+   Score    : 136
+   Selector : None
+   Transform: None
+
+15. TASK: 21897d95 | PAIR: 1
+   Strategy : object_fc7
+   Score    : 120
+   Selector : most_multicolor_object
+   Transform: identity
+
+16. TASK: 21897d95 | PAIR: 3
+   Strategy : object_fc7
+   Score    : 120
+   Selector : most_multicolor_object
+   Transform: identity
+
+17. TASK: 269e22fb | PAIR: 1
+   Strategy : object_fc7
+   Score    : 80
+   Selector : most_multicolor_object
+   Transform: identity
+
+18. TASK: 269e22fb | PAIR: 2
+   Strategy : object_fc7
+   Score    : 80
+   Selector : most_multicolor_object
+   Transform: identity
+
+19. TASK: 269e22fb | PAIR: 3
+   Strategy : region_rule
+   Score    : 49
+   Selector : None
+   Transform: None
+
+20. TASK: 269e22fb | PAIR: 4
+   Strategy : object_fc7
+   Score    : 70
+   Selector : most_multicolor_object
+   Transform: identity
+
+21. TASK: 269e22fb | PAIR: 5
+   Strategy : object_fc7
+   Score    : 80
+   Selector : most_multicolor_object
+   Transform: identity
+
+22. TASK: 291dc1e1 | PAIR: 1
+   Strategy : region_rule
+   Score    : 127
+   Selector : None
+   Transform: None
+
+23. TASK: 291dc1e1 | PAIR: 2
+   Strategy : object_fc7
+   Score    : 66
+   Selector : most_multicolor_object
+   Transform: identity
+
+24. TASK: 291dc1e1 | PAIR: 3
+   Strategy : object_fc7
+   Score    : 83
+   Selector : most_multicolor_object
+   Transform: identity
+
+25. TASK: 291dc1e1 | PAIR: 4
+   Strategy : object_fc7
+   Score    : 68
+   Selector : most_multicolor_object
+   Transform: identity
+
+26. TASK: 2ba387bc | PAIR: 1
+   Strategy : region_rule
+   Score    : 144
+   Selector : None
+   Transform: None
+
+27. TASK: 2ba387bc | PAIR: 2
+   Strategy : region_rule
+   Score    : 142
+   Selector : None
+   Transform: None
+
+28. TASK: 2ba387bc | PAIR: 3
+   Strategy : region_rule
+   Score    : 124
+   Selector : None
+   Transform: None
+
+29. TASK: 2ba387bc | PAIR: 4
+   Strategy : region_rule
+   Score    : 140
+   Selector : None
+   Transform: None
+
+30. TASK: 2d0172a1 | PAIR: 1
+   Strategy : region_rule
+   Score    : 186
+   Selector : None
+   Transform: None
+
+31. TASK: 2d0172a1 | PAIR: 2
+   Strategy : region_rule
+   Score    : 118
+   Selector : None
+   Transform: None
+
+32. TASK: 2d0172a1 | PAIR: 3
+   Strategy : region_rule
+   Score    : 125
+   Selector : None
+   Transform: None
+
+33. TASK: 2d0172a1 | PAIR: 4
+   Strategy : region_rule
+   Score    : 167
+   Selector : None
+   Transform: None
+
+34. TASK: 38007db0 | PAIR: 1
+   Strategy : region_rule
+   Score    : 124
+   Selector : None
+   Transform: None
+
+35. TASK: 38007db0 | PAIR: 2
+   Strategy : region_rule
+   Score    : 124
+   Selector : None
+   Transform: None
+
+36. TASK: 3a25b0d8 | PAIR: 1
+   Strategy : region_rule
+   Score    : 202
+   Selector : None
+   Transform: None
+
+37. TASK: 3a25b0d8 | PAIR: 2
+   Strategy : region_rule
+   Score    : 167
+   Selector : None
+   Transform: None
+
+38. TASK: 45a5af55 | PAIR: 1
+   Strategy : object_fc7
+   Score    : 100
+   Selector : most_multicolor_object
+   Transform: identity
+
+39. TASK: 45a5af55 | PAIR: 2
+   Strategy : object_fc7
+   Score    : 100
+   Selector : most_multicolor_object
+   Transform: identity
+
+40. TASK: 4c7dc4dd | PAIR: 1
+   Strategy : object_fc7
+   Score    : 177
+   Selector : most_multicolor_object
+   Transform: flip_horizontal
+
+41. TASK: 4c7dc4dd | PAIR: 2
+   Strategy : object_fc7
+   Score    : 153
+   Selector : most_multicolor_object
+   Transform: flip_vertical
+
+42. TASK: 4e34c42c | PAIR: 1
+   Strategy : region_rule
+   Score    : 152
+   Selector : None
+   Transform: None
+
+43. TASK: 4e34c42c | PAIR: 2
+   Strategy : object_fc7
+   Score    : 88
+   Selector : most_multicolor_object
+   Transform: rotate_270_flip_horizontal
+
+44. TASK: 5545f144 | PAIR: 1
+   Strategy : object_fc7
+   Score    : 70
+   Selector : most_multicolor_object
+   Transform: identity
+
+45. TASK: 5545f144 | PAIR: 2
+   Strategy : object_fc7
+   Score    : 51
+   Selector : most_multicolor_object
+   Transform: rotate_270
+
+46. TASK: 5545f144 | PAIR: 3
+   Strategy : region_rule
+   Score    : 121
+   Selector : None
+   Transform: None
+
+47. TASK: 58490d8a | PAIR: 1
+   Strategy : region_rule
+   Score    : 146
+   Selector : None
+   Transform: None
+
+48. TASK: 58490d8a | PAIR: 2
+   Strategy : region_rule
+   Score    : 179
+   Selector : None
+   Transform: None
+
+49. TASK: 58490d8a | PAIR: 3
+   Strategy : region_rule
+   Score    : 124
+   Selector : None
+   Transform: None
+
+50. TASK: 58f5dbd5 | PAIR: 1
+   Strategy : region_rule
+   Score    : 107
+   Selector : None
+   Transform: None
+
+51. TASK: 58f5dbd5 | PAIR: 2
+   Strategy : region_rule
+   Score    : 107
+   Selector : None
+   Transform: None
+
+52. TASK: 58f5dbd5 | PAIR: 3
+   Strategy : region_rule
+   Score    : 248
+   Selector : None
+   Transform: None
+
+53. TASK: 5dbc8537 | PAIR: 1
+   Strategy : object_fc7
+   Score    : 90
+   Selector : most_multicolor_object
+   Transform: identity
+
+54. TASK: 5dbc8537 | PAIR: 2
+   Strategy : region_rule
+   Score    : 98
+   Selector : None
+   Transform: None
+
+55. TASK: 65b59efc | PAIR: 1
+   Strategy : object_fc7
+   Score    : 100
+   Selector : most_multicolor_object
+   Transform: identity
+
+56. TASK: 65b59efc | PAIR: 2
+   Strategy : object_fc7
+   Score    : 70
+   Selector : most_multicolor_object
+   Transform: identity
+
+57. TASK: 65b59efc | PAIR: 3
+   Strategy : object_fc7
+   Score    : 101
+   Selector : most_multicolor_object
+   Transform: identity
+
+58. TASK: 67e490f4 | PAIR: 1
+   Strategy : region_rule
+   Score    : 192
+   Selector : None
+   Transform: None
+
+59. TASK: 67e490f4 | PAIR: 2
+   Strategy : region_rule
+   Score    : 228
+   Selector : None
+   Transform: None
+
+60. TASK: 6ffbe589 | PAIR: 1
+   Strategy : region_rule
+   Score    : 251
+   Selector : None
+   Transform: None
+
+61. TASK: 6ffbe589 | PAIR: 2
+   Strategy : region_rule
+   Score    : 188
+   Selector : None
+   Transform: None
+
+62. TASK: 6ffbe589 | PAIR: 3
+   Strategy : region_rule
+   Score    : 172
+   Selector : None
+   Transform: None
+
+63. TASK: 78332cb0 | PAIR: 1
+   Strategy : object_fc7
+   Score    : 103
+   Selector : most_multicolor_object
+   Transform: identity
+
+64. TASK: 78332cb0 | PAIR: 2
+   Strategy : object_fc7
+   Score    : 100
+   Selector : most_multicolor_object
+   Transform: identity
+
+65. TASK: 78332cb0 | PAIR: 3
+   Strategy : object_fc7
+   Score    : 100
+   Selector : most_multicolor_object
+   Transform: identity
+
+66. TASK: 7b3084d4 | PAIR: 1
+   Strategy : region_rule
+   Score    : 110
+   Selector : None
+   Transform: None
+
+67. TASK: 7b3084d4 | PAIR: 2
+   Strategy : region_rule
+   Score    : 133
+   Selector : None
+   Transform: None
+
+68. TASK: 7b3084d4 | PAIR: 3
+   Strategy : region_rule
+   Score    : 105
+   Selector : None
+   Transform: None
+
+69. TASK: 7b5033c1 | PAIR: 1
+   Strategy : object_fc7
+   Score    : 43
+   Selector : most_multicolor_object
+   Transform: identity
+
+70. TASK: 7b5033c1 | PAIR: 2
+   Strategy : object_fc7
+   Score    : 43
+   Selector : most_multicolor_object
+   Transform: identity
+
+71. TASK: 8698868d | PAIR: 1
+   Strategy : region_rule
+   Score    : 146
+   Selector : None
+   Transform: None
+
+72. TASK: 8698868d | PAIR: 2
+   Strategy : region_rule
+   Score    : 241
+   Selector : None
+   Transform: None
+
+73. TASK: 89565ca0 | PAIR: 1
+   Strategy : region_rule
+   Score    : 106
+   Selector : None
+   Transform: None
+
+74. TASK: 89565ca0 | PAIR: 2
+   Strategy : region_rule
+   Score    : 108
+   Selector : None
+   Transform: None
+
+75. TASK: 89565ca0 | PAIR: 3
+   Strategy : region_rule
+   Score    : 106
+   Selector : None
+   Transform: None
+
+76. TASK: 898e7135 | PAIR: 1
+   Strategy : region_rule
+   Score    : 119
+   Selector : None
+   Transform: None
+
+77. TASK: 898e7135 | PAIR: 2
+   Strategy : region_rule
+   Score    : 113
+   Selector : None
+   Transform: None
+
+78. TASK: a251c730 | PAIR: 1
+   Strategy : region_rule
+   Score    : 265
+   Selector : None
+   Transform: None
+
+79. TASK: a251c730 | PAIR: 2
+   Strategy : region_rule
+   Score    : 244
+   Selector : None
+   Transform: None
+
+80. TASK: a32d8b75 | PAIR: 1
+   Strategy : region_rule
+   Score    : 249
+   Selector : None
+   Transform: None
+
+81. TASK: a32d8b75 | PAIR: 2
+   Strategy : region_rule
+   Score    : 239
+   Selector : None
+   Transform: None
+
+82. TASK: a32d8b75 | PAIR: 3
+   Strategy : region_rule
+   Score    : 267
+   Selector : None
+   Transform: None
+
+83. TASK: a6f40cea | PAIR: 1
+   Strategy : region_rule
+   Score    : 122
+   Selector : None
+   Transform: None
+
+84. TASK: a6f40cea | PAIR: 2
+   Strategy : region_rule
+   Score    : 246
+   Selector : None
+   Transform: None
+
+85. TASK: a6f40cea | PAIR: 3
+   Strategy : region_rule
+   Score    : 142
+   Selector : None
+   Transform: None
+
+86. TASK: b0039139 | PAIR: 1
+   Strategy : region_rule
+   Score    : 105
+   Selector : None
+   Transform: None
+
+87. TASK: b0039139 | PAIR: 2
+   Strategy : region_rule
+   Score    : 112
+   Selector : None
+   Transform: None
+
+88. TASK: b0039139 | PAIR: 3
+   Strategy : region_rule
+   Score    : 122
+   Selector : None
+   Transform: None
+
+89. TASK: b0039139 | PAIR: 4
+   Strategy : region_rule
+   Score    : 107
+   Selector : None
+   Transform: None
+
+90. TASK: b6f77b65 | PAIR: 1
+   Strategy : region_rule
+   Score    : 72
+   Selector : None
+   Transform: None
+
+91. TASK: bf45cf4b | PAIR: 1
+   Strategy : object_fc7
+   Score    : 73
+   Selector : most_multicolor_object
+   Transform: rotate_90
+
+92. TASK: bf45cf4b | PAIR: 2
+   Strategy : object_fc7
+   Score    : 79
+   Selector : most_multicolor_object
+   Transform: rotate_180
+
+93. TASK: e8686506 | PAIR: 1
+   Strategy : region_rule
+   Score    : 114
+   Selector : None
+   Transform: None
+
+94. TASK: e8686506 | PAIR: 2
+   Strategy : region_rule
+   Score    : 122
+   Selector : None
+   Transform: None
+
+95. TASK: e87109e9 | PAIR: 1
+   Strategy : region_rule
+   Score    : 231
+   Selector : None
+   Transform: None
+
+96. TASK: e87109e9 | PAIR: 2
+   Strategy : region_rule
+   Score    : 215
+   Selector : None
+   Transform: None
+
+97. TASK: e87109e9 | PAIR: 3
+   Strategy : region_rule
+   Score    : 191
+   Selector : None
+   Transform: None
+
+98. TASK: edb79dae | PAIR: 1
+   Strategy : region_rule
+   Score    : 180
+   Selector : None
+   Transform: None
+
+99. TASK: edb79dae | PAIR: 2
+   Strategy : region_rule
+   Score    : 238
+   Selector : None
+   Transform: None
+
+100. TASK: eee78d87 | PAIR: 1
+   Strategy : object_fc7
+   Score    : 61
+   Selector : most_multicolor_object
+   Transform: identity
+
+101. TASK: eee78d87 | PAIR: 2
+   Strategy : object_fc7
+   Score    : 41
+   Selector : most_multicolor_object
+   Transform: rotate_90
+
+102. TASK: eee78d87 | PAIR: 3
+   Strategy : object_fc7
+   Score    : 42
+   Selector : most_multicolor_object
+   Transform: identity
+
+103. TASK: f560132c | PAIR: 1
+   Strategy : region_rule
+   Score    : 102
+   Selector : None
+   Transform: None
+
+104. TASK: f560132c | PAIR: 2
+   Strategy : region_rule
+   Score    : 103
+   Selector : None
+   Transform: None
+
+105. TASK: f931b4a8 | PAIR: 1
+   Strategy : object_fc7
+   Score    : 80
+   Selector : most_multicolor_object
+   Transform: identity
+
+106. TASK: f931b4a8 | PAIR: 2
+   Strategy : object_fc7
+   Score    : 90
+   Selector : most_multicolor_object
+   Transform: identity
+
+107. TASK: f931b4a8 | PAIR: 3
+   Strategy : region_rule
+   Score    : 146
+   Selector : None
+   Transform: None
+
+108. TASK: f931b4a8 | PAIR: 5
+   Strategy : region_rule
+   Score    : 108
+   Selector : None
+   Transform: None
+
