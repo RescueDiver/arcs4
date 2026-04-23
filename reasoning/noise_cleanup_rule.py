@@ -1,50 +1,97 @@
 from core.scoring import score_prediction
 
 
-def solve_pair_noise_cleanup(input_grid, output_grid):
-    h = len(input_grid)
-    w = len(input_grid[0])
+def replace_7_with_neighbors(grid):
+    """
+    Replace color 7 using nearby non-7 colors.
+    Very simple local cleanup:
+    - look at 4-direction neighbors
+    - ignore 0 and 7
+    - use most common neighbor color
+    - if none found, leave as 7
+    """
+    h = len(grid)
+    w = len(grid[0])
 
-    # Step 1: remove 7
-    cleaned = [
-        [cell if cell != 7 else 0 for cell in row]
-        for row in input_grid
-    ]
-
-    # Step 2: fill gaps
-    result = [row[:] for row in cleaned]
+    new_grid = [row[:] for row in grid]
 
     for r in range(h):
         for c in range(w):
-            if result[r][c] == 0:
-                neighbors = []
-                for dr, dc in [(-1,0),(1,0),(0,-1),(0,1)]:
-                    nr, nc = r+dr, c+dc
-                    if 0 <= nr < h and 0 <= nc < w:
-                        if cleaned[nr][nc] in [1, 4]:
-                            neighbors.append(cleaned[nr][nc])
+            if grid[r][c] == 7:
+                counts = {}
 
-                if neighbors:
-                    result[r][c] = max(set(neighbors), key=neighbors.count)
+                for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    rr = r + dr
+                    cc = c + dc
 
-    # Step 3: crop
-    rows = [r for r in range(h) for c in range(w) if result[r][c] != 0]
-    cols = [c for r in range(h) for c in range(w) if result[r][c] != 0]
+                    if 0 <= rr < h and 0 <= cc < w:
+                        val = grid[rr][cc]
+                        if val != 0 and val != 7:
+                            counts[val] = counts.get(val, 0) + 1
 
-    if not rows or not cols:
+                if counts:
+                    best_color = max(counts, key=counts.get)
+                    new_grid[r][c] = best_color
+
+    return new_grid
+
+
+def crop_nonzero_bbox(grid):
+    """
+    Crop to the bounding box of all nonzero cells.
+    If grid is all zero, return a copy of original grid.
+    """
+    h = len(grid)
+    w = len(grid[0])
+
+    cells = []
+    for r in range(h):
+        for c in range(w):
+            if grid[r][c] != 0:
+                cells.append((r, c))
+
+    if not cells:
+        return [row[:] for row in grid]
+
+    min_r = min(r for r, c in cells)
+    max_r = max(r for r, c in cells)
+    min_c = min(c for r, c in cells)
+    max_c = max(c for r, c in cells)
+
+    cropped = []
+    for r in range(min_r, max_r + 1):
+        cropped.append(grid[r][min_c:max_c + 1])
+
+    return cropped
+
+
+def solve_pair_noise_cleanup(input_grid, output_grid):
+    """
+    Experimental cleanup rule:
+    1. replace 7 using local neighbors
+    2. crop to nonzero bbox
+    3. score against expected output
+
+    Returns router-style candidate dict.
+    """
+    if input_grid is None:
         return None
 
-    min_r, max_r = min(rows), max(rows)
-    min_c, max_c = min(cols), max(cols)
+    cleaned = replace_7_with_neighbors(input_grid)
+    predicted = crop_nonzero_bbox(cleaned)
 
-    cropped = [
-        row[min_c:max_c+1]
-        for row in result[min_r:max_r+1]
-    ]
+    if output_grid is None:
+        return {
+            "predicted": predicted,
+            "score": 0,
+            "exact": False,
+        }
 
-    # ✅ RETURN IN STANDARD FORMAT
+    score = score_prediction(predicted, output_grid)
+    exact = predicted == output_grid
+
     return {
-        "predicted": cropped,
-        "score": score_prediction(cropped, output_grid) if output_grid else -10**9,
-        "exact": cropped == output_grid if output_grid else False
+        "predicted": predicted,
+        "score": score,
+        "exact": exact,
     }

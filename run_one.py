@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap, BoundaryNorm
 
+from reasoning.pattern_rule_engine import (
+    solve_pair_pattern_rule,
+    learn_pattern_rule_from_train_pairs,
+)
 from reasoning.task_router import (
     solve_pair_with_multiple_strategies,
     choose_task_level_strategy,
@@ -19,17 +23,17 @@ from reasoning.pattern_break_detector import (
 )
 from memory.rule_memory import save_successful_task_memory
 
+
 # ============================================================
 # CHANGE THIS TO THE TASK YOU WANT TO DEBUG
 # ============================================================
-TARGET_TASK_ID = "20270e3b"
+TARGET_TASK_ID = "135"
 
 
 # ============================================================
 # PATHS
 # ============================================================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-TASKS_DIR = os.path.join(BASE_DIR, "data_failures", "extracted_tasks")
 
 
 # ============================================================
@@ -64,81 +68,6 @@ def print_grid_color_blocks(grid, title="GRID"):
     for row in grid:
         print(" ".join(color_map.get(cell, "❓") for cell in row))
     print()
-
-
-def show_grids_popup(input_grid, predicted_grid, expected_grid, title_prefix="PAIR"):
-    """
-    Show Input / Predicted / Expected side by side in a popup window.
-    """
-
-    arc_colors = [
-        "#000000",  # 0 black
-        "#0074D9",  # 1 blue
-        "#FF4136",  # 2 red
-        "#2ECC40",  # 3 green
-        "#FFDC00",  # 4 yellow
-        "#AAAAAA",  # 5 gray
-        "#F012BE",  # 6 magenta
-        "#FF851B",  # 7 orange
-        "#7FDBFF",  # 8 light blue
-        "#870C25",  # 9 dark red / brown-ish
-    ]
-
-    cmap = ListedColormap(arc_colors)
-    norm = BoundaryNorm(np.arange(-0.5, 10.5, 1), cmap.N)
-
-    grids = [
-        ("Input", input_grid),
-        ("Predicted", predicted_grid),
-        ("Expected", expected_grid),
-    ]
-
-    fig, axes = plt.subplots(1, 3, figsize=(16, 6))
-    fig.suptitle(title_prefix, fontsize=16)
-
-    for ax, (name, grid) in zip(axes, grids):
-        if grid is None:
-            ax.set_title(f"{name}\n(None)")
-            ax.axis("off")
-            continue
-
-        arr = np.array(grid)
-        h, w = arr.shape
-
-        ax.imshow(arr, cmap=cmap, norm=norm)
-
-        ax.set_xticks(np.arange(-0.5, w, 1), minor=True)
-        ax.set_yticks(np.arange(-0.5, h, 1), minor=True)
-        ax.grid(which="minor", color="white", linestyle="-", linewidth=0.8)
-
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_title(name)
-
-    plt.tight_layout()
-    plt.show()
-
-
-# ============================================================
-# HELPERS
-# ============================================================
-def load_task(task_id):
-    filename = f"{task_id}.json"
-    path = os.path.join(TASKS_DIR, filename)
-
-    if not os.path.exists(path):
-        raise FileNotFoundError(f"Task file not found: {path}")
-
-    with open(path, "r", encoding="utf-8") as f:
-        raw = json.load(f)
-
-    if isinstance(raw, dict) and task_id in raw:
-        return raw[task_id]
-
-    if isinstance(raw, dict) and ("train" in raw or "test" in raw):
-        return raw
-
-    raise ValueError(f"Unexpected task format in {path}")
 
 
 def grid_shape(grid):
@@ -213,6 +142,96 @@ def print_result_details(result):
         print(f"Group Size: {result.get('group_size')}")
 
 
+def show_grids_popup(input_grid, predicted_grid, expected_grid, title_prefix="PAIR"):
+    """
+    Show Input / Predicted / Expected side by side in a popup window.
+    """
+    arc_colors = [
+        "#000000",  # 0 black
+        "#0074D9",  # 1 blue
+        "#FF4136",  # 2 red
+        "#2ECC40",  # 3 green
+        "#FFDC00",  # 4 yellow
+        "#AAAAAA",  # 5 gray
+        "#F012BE",  # 6 magenta
+        "#FF851B",  # 7 orange
+        "#7FDBFF",  # 8 light blue
+        "#870C25",  # 9 dark red / brown-ish
+    ]
+
+    cmap = ListedColormap(arc_colors)
+    norm = BoundaryNorm(np.arange(-0.5, 10.5, 1), cmap.N)
+
+    grids = [
+        ("Input", input_grid),
+        ("Predicted", predicted_grid),
+        ("Expected", expected_grid),
+    ]
+
+    fig, axes = plt.subplots(1, 3, figsize=(16, 6))
+    fig.suptitle(title_prefix, fontsize=16)
+
+    for ax, (name, grid) in zip(axes, grids):
+        if grid is None:
+            ax.set_title(f"{name}\n(None)")
+            ax.axis("off")
+            continue
+
+        arr = np.array(grid)
+        h, w = arr.shape
+
+        ax.imshow(arr, cmap=cmap, norm=norm)
+
+        ax.set_xticks(np.arange(-0.5, w, 1), minor=True)
+        ax.set_yticks(np.arange(-0.5, h, 1), minor=True)
+        ax.grid(which="minor", color="white", linestyle="-", linewidth=0.8)
+
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(name)
+
+    plt.tight_layout()
+    plt.show()
+
+
+def load_task(task_id):
+    exact_filename = f"{task_id}.json"
+
+    short_id = task_id
+    if len(task_id) > 3 and task_id[:3].isdigit():
+        short_id = task_id[:3]
+
+    candidate_paths = [
+        os.path.join(BASE_DIR, "data_failures", "extracted_tasks", exact_filename),
+        os.path.join(BASE_DIR, "data_failures", exact_filename),
+        os.path.join(BASE_DIR, "data", exact_filename),
+        os.path.join(BASE_DIR, "data", f"{short_id}.json"),
+    ]
+
+    for path in candidate_paths:
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+
+            if isinstance(raw, dict) and task_id in raw:
+                return raw[task_id]
+
+            if isinstance(raw, dict) and ("train" in raw or "test" in raw):
+                return raw
+
+            # fallback: if file contains exactly one task, return it
+            if isinstance(raw, dict) and len(raw) == 1:
+                only_value = next(iter(raw.values()))
+                if isinstance(only_value, dict) and ("train" in only_value or "test" in only_value):
+                    return only_value
+
+            raise ValueError(f"Unexpected task format in {path}")
+
+    raise FileNotFoundError(
+        "Task file not found in any expected location:\n" + "\n".join(candidate_paths)
+    )
+
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -223,6 +242,14 @@ def main():
 
     task_level_choice = choose_task_level_strategy(train_pairs)
     forced_strategy = task_level_choice["best_strategy"]
+
+    learned_pattern_rule = None
+    if forced_strategy == "pattern_rule":
+        learned_pattern_rule = learn_pattern_rule_from_train_pairs(train_pairs)
+        print("\n" + "=" * 60)
+        print("LEARNED PATTERN RULE")
+        print("=" * 60)
+        print(learned_pattern_rule)
 
     print("\n" + "=" * 60)
     print("TASK-LEVEL ROUTER CHOICE")
@@ -392,11 +419,23 @@ def main():
 
             print(f"\nTEST PAIR {idx}")
 
-            # 🚨 CALL STRATEGY DIRECTLY (NO ROUTER)
+            # DIRECT TEST SOLVE USING CHOSEN FAMILY
             if forced_strategy == "motif_layout_rule":
                 from reasoning.motif_layout_rule import solve_pair_motif_layout_rule
-
                 result = solve_pair_motif_layout_rule(input_grid, None)
+
+            elif forced_strategy == "pattern_rule":
+                if learned_pattern_rule is None:
+                    print("⚠️ No learned pattern rule available for test")
+                    result = None
+                else:
+                    result = solve_pair_pattern_rule(
+                        input_grid,
+                        None,
+                        learned_rule=learned_pattern_rule,
+                    )
+                    if result is not None:
+                        result["strategy"] = "pattern_rule"
 
             else:
                 print(f"⚠️ Strategy {forced_strategy} not supported for direct test yet")
@@ -422,6 +461,7 @@ def main():
             except Exception as e:
                 print("\n[POPUP ERROR]")
                 print(e)
+
 
 if __name__ == "__main__":
     main()

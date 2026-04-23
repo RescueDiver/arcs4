@@ -47,8 +47,155 @@
           5
         ]
       }
+    },
+    {
+      "task_id": "20270e3b",
+      "strategy": "region_alignment_rule_v2",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          6,
+          3,
+          12
+        ],
+        "output_heights": [
+          7,
+          7,
+          6,
+          5
+        ]
+      }
+    },
+    {
+      "task_id": "20270e3b",
+      "strategy": "region_alignment_rule_v2",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          6,
+          3,
+          12
+        ],
+        "output_heights": [
+          7,
+          7,
+          6,
+          5
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
     }
   ],
-  "patterns": [],
+  "patterns": [
+    {
+      "name": "pattern_rule_135",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      },
+      "suggested_strategy": "pattern_rule",
+      "source_task": "135"
+    }
+  ],
   "rules": []
 }

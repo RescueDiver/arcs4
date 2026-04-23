@@ -74,12 +74,17 @@ def copy_patch(dest, patch, top, left):
                 dest[rr][cc] = val
 
 
-def print_grid(grid, title="GRID"):
+def print_grid(title, grid):
+    if grid is None:
+        print(f"{title}: None")
+        return
+
     h = len(grid)
     w = len(grid[0]) if h else 0
+
     print(f"{title} (h={h}, w={w})")
     for row in grid:
-        print(" ".join(str(x) for x in row))
+        print(" ".join(str(v) for v in row))
 
 
 def nonzero_colors(block):
