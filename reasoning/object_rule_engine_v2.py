@@ -3,7 +3,7 @@ from reasoning.object_selector import select_most_multicolor_nonframe_object
 from core.transforms import apply_transform
 from core.scoring import score_prediction
 from debug.debug_utils import debug_selected_object
-from reasoning.object_rule_engine import (
+from reasoning.archive.object_rule_engine import (
     get_grid_border_colors,
     get_visible_edge_colors,
     score_edge_alignment,

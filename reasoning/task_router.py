@@ -1,13 +1,10 @@
-from reasoning.object_rule_engine import solve_pair_fc7_rule
 from reasoning.object_rule_engine_v2 import solve_pair_object_rule_v2
 from reasoning.pattern_rule_engine import solve_pair_pattern_rule
 from reasoning.region_rule_engine import solve_pair_region_rule
 from reasoning.partition_rule_engine import solve_pair_partition_rule
-from reasoning.region_alignment_rule_engine import solve_pair_region_alignment_rule
 from reasoning.region_alignment_rule_engine_v2 import solve_pair_region_alignment_rule_v2
-from reasoning.mirror_repair_rule_engine import solve_pair_mirror_repair_rule
 from reasoning.motif_layout_rule import solve_pair_motif_layout_rule
-from reasoning.noise_cleanup_rule import solve_pair_noise_cleanup
+
 
 from debug.debug_utils import debug_strategy_scores, debug_router_adjustments
 
@@ -167,13 +164,6 @@ def get_all_strategy_results(input_grid, output_grid):
     """
     candidates = []
 
-    result_fc7 = maybe_add_candidate(
-        candidates,
-        solve_pair_fc7_rule(input_grid, output_grid),
-        "object_fc7",
-        input_grid,
-        output_grid,
-    )
 
     result_v2 = maybe_add_candidate(
         candidates,
@@ -220,21 +210,9 @@ def get_all_strategy_results(input_grid, output_grid):
     else:
         print("Skipping motif_layout_rule (no divider)")
 
-    result_noise = maybe_add_candidate(
-        candidates,
-        solve_pair_noise_cleanup(input_grid, output_grid),
-        "noise_cleanup_rule",
-        input_grid,
-        output_grid,
-    )
 
-    result_region_alignment = maybe_add_candidate(
-        candidates,
-        solve_pair_region_alignment_rule(input_grid, output_grid),
-        "region_alignment_rule",
-        input_grid,
-        output_grid,
-    )
+
+
 
     result_region_alignment_v2 = maybe_add_candidate(
         candidates,
@@ -244,35 +222,23 @@ def get_all_strategy_results(input_grid, output_grid):
         output_grid,
     )
 
-    result_mirror_repair = maybe_add_candidate(
-        candidates,
-        solve_pair_mirror_repair_rule(input_grid, output_grid),
-        "mirror_repair_rule",
-        input_grid,
-        output_grid,
-    )
+
 
     debug_strategy_scores(
-        result_fc7,
         result_v2,
         result_pattern,
         result_region,
         result_motif_layout,
         result_partition,
-        result_region_alignment,
-        result_mirror_repair,
         result_region_alignment_v2,
     )
 
     debug_router_adjustments(
-        result_fc7,
         result_v2,
         result_pattern,
         result_region,
         result_motif_layout,
         result_partition,
-        result_region_alignment,
-        result_mirror_repair,
         result_region_alignment_v2,
     )
 

@@ -309,7 +309,7 @@ def main():
         # MOTIF ENGINE BLOCK VISUALS
         # ======================================================
         try:
-            from reasoning.motif_projection_rule_engine import MotifEngine
+            from reasoning.experimental.motif_projection_rule_engine import MotifEngine
 
             print("\n############################################")
             print("### ENTERING MOTIF ENGINE BLOCK VISUALS ###")

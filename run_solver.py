@@ -4,11 +4,6 @@ import os
 from arc_visualizer import show_three_grids
 from core.grid_utils import print_grid
 from reasoning.task_router import solve_pair_with_multiple_strategies
-from reasoning.task_level_object_correspondence import (
-    discover_task_level_rule,
-    apply_task_rule
-)
-
 
 
 def load_tasks(filename="fc7.json"):
