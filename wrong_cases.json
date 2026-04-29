@@ -26,9 +26,9 @@
   {
     "task_id": "20270e3b",
     "pair_index": 4,
-    "strategy": "object_fc7",
+    "strategy": "object_v2_nonframe",
     "score": 82,
-    "selector": "most_multicolor_object",
+    "selector": "most_multicolor_nonframe_object",
     "transform": "identity"
   },
   {
@@ -98,10 +98,10 @@
   {
     "task_id": "269e22fb",
     "pair_index": 4,
-    "strategy": "partition_rule",
-    "score": 66,
+    "strategy": "object_grid_rule",
+    "score": 111,
     "selector": null,
-    "transform": "identity"
+    "transform": null
   },
   {
     "task_id": "269e22fb",
@@ -138,42 +138,10 @@
   {
     "task_id": "291dc1e1",
     "pair_index": 4,
-    "strategy": "motif_layout_rule",
-    "score": 0,
-    "selector": null,
-    "transform": null
-  },
-  {
-    "task_id": "2ba387bc",
-    "pair_index": 1,
-    "strategy": "region_rule",
-    "score": 155,
-    "selector": null,
-    "transform": null
-  },
-  {
-    "task_id": "2ba387bc",
-    "pair_index": 2,
-    "strategy": "region_rule",
-    "score": 153,
-    "selector": null,
-    "transform": null
-  },
-  {
-    "task_id": "2ba387bc",
-    "pair_index": 3,
-    "strategy": "region_rule",
-    "score": 134,
-    "selector": null,
-    "transform": null
-  },
-  {
-    "task_id": "2ba387bc",
-    "pair_index": 4,
-    "strategy": "region_rule",
-    "score": 150,
-    "selector": null,
-    "transform": null
+    "strategy": "object_v2_nonframe",
+    "score": 68,
+    "selector": "most_multicolor_nonframe_object",
+    "transform": "identity"
   },
   {
     "task_id": "2d0172a1",
@@ -434,25 +402,25 @@
   {
     "task_id": "78332cb0",
     "pair_index": 1,
-    "strategy": "object_fc7",
+    "strategy": "object_v2_nonframe",
     "score": 103,
-    "selector": "most_multicolor_object",
+    "selector": "most_multicolor_nonframe_object",
     "transform": "identity"
   },
   {
     "task_id": "78332cb0",
     "pair_index": 2,
-    "strategy": "object_fc7",
+    "strategy": "object_v2_nonframe",
     "score": 100,
-    "selector": "most_multicolor_object",
+    "selector": "most_multicolor_nonframe_object",
     "transform": "identity"
   },
   {
     "task_id": "78332cb0",
     "pair_index": 3,
-    "strategy": "object_fc7",
+    "strategy": "object_v2_nonframe",
     "score": 100,
-    "selector": "most_multicolor_object",
+    "selector": "most_multicolor_nonframe_object",
     "transform": "identity"
   },
   {
@@ -482,9 +450,9 @@
   {
     "task_id": "7b5033c1",
     "pair_index": 1,
-    "strategy": "object_fc7",
+    "strategy": "object_v2_nonframe",
     "score": 43,
-    "selector": "most_multicolor_object",
+    "selector": "most_multicolor_nonframe_object",
     "transform": "identity"
   },
   {
@@ -762,18 +730,18 @@
   {
     "task_id": "f931b4a8",
     "pair_index": 1,
-    "strategy": "object_fc7",
-    "score": 80,
-    "selector": "most_multicolor_object",
-    "transform": "identity"
+    "strategy": "object_grid_rule",
+    "score": 108,
+    "selector": null,
+    "transform": null
   },
   {
     "task_id": "f931b4a8",
     "pair_index": 2,
-    "strategy": "partition_rule",
-    "score": 14,
+    "strategy": "object_grid_rule",
+    "score": 112,
     "selector": null,
-    "transform": "identity"
+    "transform": null
   },
   {
     "task_id": "f931b4a8",

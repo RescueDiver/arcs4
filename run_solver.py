@@ -1,15 +1,65 @@
-import json
 import os
+import json
 
-from arc_visualizer import show_three_grids
-from core.grid_utils import print_grid
 from reasoning.task_router import solve_pair_with_multiple_strategies
+from reasoning.pattern_rule_engine import learn_pattern_rule_from_train_pairs
+
+from debug.debug_utils import print_grid, show_three_grids
 
 
-def load_tasks(filename="fc7.json"):
-    path = os.path.join(os.path.dirname(__file__), "data", filename)
+def load_tasks(filename):
+    base_dir = os.path.join(os.path.dirname(__file__), "data")
+
+    # CASE 1: run every .json file in data/
+    if filename.lower() == "data":
+        tasks = []
+
+        for file in os.listdir(base_dir):
+            if not file.endswith(".json"):
+                continue
+
+            path = os.path.join(base_dir, file)
+
+            with open(path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
+
+            # Standard single ARC task file
+            if isinstance(raw, dict) and ("train" in raw or "test" in raw):
+                task_id = file.replace(".json", "")
+                tasks.append((task_id, raw))
+
+            # Multi-task file
+            elif isinstance(raw, dict):
+                for k, v in raw.items():
+                    if isinstance(v, dict) and ("train" in v or "test" in v):
+                        tasks.append((k, v))
+
+        return tasks
+
+    # CASE 2: run one file
+    if not filename.endswith(".json"):
+        filename += ".json"
+
+    path = os.path.join(base_dir, filename)
+
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Task file not found: {path}")
+
     with open(path, "r", encoding="utf-8") as f:
-        return json.load(f)
+        raw = json.load(f)
+
+    if isinstance(raw, dict) and ("train" in raw or "test" in raw):
+        task_id = filename.replace(".json", "")
+        return [(task_id, raw)]
+
+    if isinstance(raw, dict):
+        tasks = []
+        for k, v in raw.items():
+            if isinstance(v, dict) and ("train" in v or "test" in v):
+                tasks.append((k, v))
+        return tasks
+
+    raise ValueError(f"Unexpected task format in {path}")
 
 
 def should_show_case(exact, shown_wrong, max_wrong, shown_correct, max_correct, show_correct):
@@ -64,7 +114,8 @@ def save_wrong_cases_json(base_dir, wrong_cases):
 
 def run():
     base_dir = os.path.dirname(__file__)
-    filename = input("Enter task file (e.g. fc7.json or 135a2760.json): ").strip()
+
+    filename = input("Enter task file (e.g. fc7.json, 135.json, or data): ").strip()
     tasks = load_tasks(filename)
 
     # DISPLAY SETTINGS
@@ -87,26 +138,29 @@ def run():
 
     wrong_cases = []
 
-    for task_id, task in tasks.items():
+    for task_id, task in tasks:
         print("\n" + "=" * 60)
         print(f"TASK: {task_id}")
         print("=" * 60)
 
+        train_pairs = task.get("train", [])
         task_total = 0
         task_right = 0
         task_wrong = 0
         task_strategy_counts = {}
 
-        for idx, pair in enumerate(task.get("train", []), start=1):
+        for idx, pair in enumerate(train_pairs, start=1):
             input_grid = pair["input"]
             output_grid = pair["output"]
 
-            result = solve_pair_with_multiple_strategies(input_grid, output_grid)
 
             task_total += 1
             total_pairs += 1
 
             print(f"\n--- TRAIN PAIR {idx} ---")
+
+            # 🔥 THIS LINE WAS MISSING
+            result = solve_pair_with_multiple_strategies(input_grid, output_grid)
 
             if result is None:
                 print("No result")
@@ -179,8 +233,12 @@ def run():
                 if "object" in result and result["object"] is not None:
                     print_grid(result["object"]["patch"], "SELECTED OBJECT")
 
-                print_grid(result["predicted"], "PREDICTED")
-                show_three_grids(input_grid, result["predicted"], output_grid)
+                print_grid(result.get("predicted"), "PREDICTED")
+
+                try:
+                    show_three_grids(input_grid, result.get("predicted"), output_grid)
+                except Exception as e:
+                    print(f"[VISUAL ERROR] {e}")
 
         if task_total > 0:
             if task_right == task_total:

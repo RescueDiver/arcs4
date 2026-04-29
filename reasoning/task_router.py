@@ -4,10 +4,8 @@ from reasoning.region_rule_engine import solve_pair_region_rule
 from reasoning.partition_rule_engine import solve_pair_partition_rule
 from reasoning.region_alignment_rule_engine_v2 import solve_pair_region_alignment_rule_v2
 from reasoning.motif_layout_rule import solve_pair_motif_layout_rule
-
-
 from debug.debug_utils import debug_strategy_scores, debug_router_adjustments
-
+from reasoning.object_grid_rule import solve_pair_object_grid_rule
 
 def grid_shape(grid):
     h = len(grid)
@@ -165,6 +163,7 @@ def get_all_strategy_results(input_grid, output_grid):
     candidates = []
 
 
+
     result_v2 = maybe_add_candidate(
         candidates,
         solve_pair_object_rule_v2(input_grid, output_grid),
@@ -185,6 +184,14 @@ def get_all_strategy_results(input_grid, output_grid):
         candidates,
         solve_pair_partition_rule(input_grid, output_grid),
         "partition_rule",
+        input_grid,
+        output_grid,
+    )
+
+    result_object_grid = maybe_add_candidate(
+        candidates,
+        solve_pair_object_grid_rule(input_grid, output_grid),
+        "object_grid_rule",
         input_grid,
         output_grid,
     )
@@ -241,6 +248,17 @@ def get_all_strategy_results(input_grid, output_grid):
         result_partition,
         result_region_alignment_v2,
     )
+
+    print("\nOBJECT_GRID DEBUG RESULT:")
+    if result_object_grid is None:
+        print("  object_grid_rule: None")
+    else:
+        print(f"  strategy: {result_object_grid.get('strategy')}")
+        print(f"  score   : {result_object_grid.get('score')}")
+        print(f"  exact   : {result_object_grid.get('exact')}")
+        pred = result_object_grid.get("predicted")
+        if pred is not None:
+            print(f"  shape   : {len(pred)}x{len(pred[0]) if pred else 0}")
 
     print_adjusted_debug(candidates)
     return candidates

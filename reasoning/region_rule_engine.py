@@ -65,7 +65,11 @@ def solve_pair_region_rule(input_grid, output_grid):
         richness_bonus = len(region_colors) * 2
         nonzero_bonus = count_nonzero(grid) // 5
 
+        exact = grid == output_grid
         total_score = base_score + richness_bonus + nonzero_bonus
+
+        if exact:
+            total_score += 1_000_000
 
         if total_score > best_score:
             best_score = total_score

@@ -95,6 +95,24 @@ def debug_strategy_scores(
     row("mirror_repair", result_mirror_repair)
     row("region_alignment_v2", result_region_alignment_v2)
 
+def print_grid(grid, title="GRID"):
+    print(f"\n{title}")
+    if grid is None:
+        print("None")
+        return
+
+    h = len(grid)
+    w = len(grid[0]) if h > 0 else 0
+    print(f"(h={h}, w={w})")
+
+    for row in grid:
+        print(" ".join(str(x) for x in row))
+
+
+def show_three_grids(inp, pred, exp):
+    print_grid(inp, "INPUT")
+    print_grid(pred, "PREDICTED")
+    print_grid(exp, "EXPECTED")
 
 # ============================================================
 # ROUTER DEBUG (CLEAN + NON-RECURSIVE)

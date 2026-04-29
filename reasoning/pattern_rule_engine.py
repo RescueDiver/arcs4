@@ -1,3 +1,5 @@
+# reasoning/pattern_rule_engine.py
+
 def same_shape(grid_a, grid_b):
     if grid_a is None or grid_b is None:
         return False
@@ -22,7 +24,8 @@ def count_matches(grid_a, grid_b):
 
 def discover_cell_corrections(input_grid, output_grid):
     """
-    Old pair-specific fallback rule.
+    Pair-specific fallback rule.
+    Finds exact changed cells between input and output.
     """
     if output_grid is None:
         return None
@@ -70,19 +73,6 @@ def find_separator_cols(grid):
         if len(set(col)) == 1:
             cols.append(c)
     return cols
-
-
-def consecutive_groups(values):
-    if not values:
-        return []
-
-    groups = [[values[0]]]
-    for v in values[1:]:
-        if v == groups[-1][-1] + 1:
-            groups[-1].append(v)
-        else:
-            groups.append([v])
-    return groups
 
 
 def extract_non_separator_spans(size, separator_indices):
@@ -302,10 +292,199 @@ def solve_pair_pattern_rule(input_grid, output_grid, learned_rule=None):
     }
 
 
+def find_uniform_rows(grid):
+    rows = []
+    for r, row in enumerate(grid):
+        if len(set(row)) == 1:
+            rows.append(r)
+    return rows
+
+
+def split_into_row_bands(grid):
+    """
+    Split grid into non-uniform row bands using full uniform rows as separators.
+
+    Example:
+      uniform rows at [0, 5, 10]
+      bands -> [(1,4), (6,9)]
+    """
+    h = len(grid)
+    uniform_rows = set(find_uniform_rows(grid))
+
+    bands = []
+    start = None
+
+    for r in range(h):
+        if r not in uniform_rows:
+            if start is None:
+                start = r
+        else:
+            if start is not None:
+                bands.append((start, r - 1))
+                start = None
+
+    if start is not None:
+        bands.append((start, h - 1))
+
+    return bands
+
+
+def learn_repeating_row_rule(train_pairs):
+    """
+    Learn row-wise repeating pattern rules by band position instead of exact grid shape.
+
+    For each changed row:
+    - find which non-uniform band it belongs to
+    - store its offset inside that band
+    - store the repeating unit of the output row
+    """
+    by_band_role = {}
+
+    for pair in train_pairs:
+        input_grid = pair["input"]
+        output_grid = pair["output"]
+
+        if not same_shape(input_grid, output_grid):
+            return None
+
+        bands = split_into_row_bands(output_grid)
+        if not bands:
+            return None
+
+        for r in range(len(output_grid)):
+            in_row = input_grid[r]
+            out_row = output_grid[r]
+
+            if in_row == out_row:
+                continue
+
+            band_index = None
+            offset_in_band = None
+
+            for bi, (r0, r1) in enumerate(bands):
+                if r0 <= r <= r1:
+                    band_index = bi
+                    offset_in_band = r - r0
+                    break
+
+            if band_index is None:
+                return None
+
+            best_unit = None
+
+            for unit_w in range(1, len(out_row) + 1):
+                if len(out_row) % unit_w != 0:
+                    continue
+
+                unit = out_row[:unit_w]
+                rebuilt = []
+                for c in range(len(out_row)):
+                    rebuilt.append(unit[c % unit_w])
+
+                if rebuilt == out_row:
+                    best_unit = unit
+                    break
+
+            if best_unit is None:
+                return None
+
+            role_key = (band_index, offset_in_band)
+
+            if role_key not in by_band_role:
+                by_band_role[role_key] = best_unit
+            else:
+                if by_band_role[role_key] != best_unit:
+                    return None
+
+    if not by_band_role:
+        return None
+
+    learned_rows = []
+    for (band_index, offset_in_band), unit in sorted(by_band_role.items()):
+        learned_rows.append({
+            "band_index": band_index,
+            "offset_in_band": offset_in_band,
+            "unit": unit,
+        })
+
+    return {
+        "type": "row_repeat_rule",
+        "rows": learned_rows,
+    }
+
+
+def apply_pattern_rule(input_grid, rule):
+    if rule is None:
+        return None
+
+    if rule["type"] == "cell_correction":
+        out = [row[:] for row in input_grid]
+
+        for r, c, old_val, new_val in rule["corrections"]:
+            if r < len(out) and c < len(out[0]) and out[r][c] == old_val:
+                out[r][c] = new_val
+
+        return out
+
+    if rule["type"] == "tile_consensus_repair":
+        out = [row[:] for row in input_grid]
+
+        row_spans = rule["row_spans"]
+        col_spans = rule["col_spans"]
+        canonical_tiles = rule["canonical_tiles"]
+
+        for (ri, ci), patch in canonical_tiles.items():
+            r0, r1 = row_spans[ri]
+            c0, c1 = col_spans[ci]
+
+            ph, pw = patch_shape(patch)
+            if ph != (r1 - r0 + 1) or pw != (c1 - c0 + 1):
+                return None
+
+            paste_patch(out, patch, r0, c0)
+
+        return out
+
+    if rule["type"] == "row_repeat_rule":
+        out = [row[:] for row in input_grid]
+
+        bands = split_into_row_bands(input_grid)
+        if not bands:
+            return None
+
+        for item in rule["rows"]:
+            band_index = item["band_index"]
+            offset_in_band = item["offset_in_band"]
+            unit = item["unit"]
+
+            if band_index >= len(bands):
+                continue
+
+            r0, r1 = bands[band_index]
+            target_row = r0 + offset_in_band
+
+            if target_row > r1 or target_row >= len(out):
+                continue
+
+            rebuilt = []
+            for c in range(len(out[target_row])):
+                rebuilt.append(unit[c % len(unit)])
+            out[target_row] = rebuilt
+
+        return out
+
+    return None
+
+
 def learn_pattern_rule_from_train_pairs(train_pairs):
     """
     Task-level learning entry point.
+    Try simpler, size-agnostic rules first.
     """
+    rule = learn_repeating_row_rule(train_pairs)
+    if rule is not None:
+        return rule
+
     rule = learn_tile_consensus_rule(train_pairs)
     if rule is not None:
         return rule

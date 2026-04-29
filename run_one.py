@@ -3,7 +3,6 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap, BoundaryNorm
-
 from reasoning.pattern_rule_engine import (
     solve_pair_pattern_rule,
     learn_pattern_rule_from_train_pairs,
@@ -27,7 +26,7 @@ from memory.rule_memory import save_successful_task_memory
 # ============================================================
 # CHANGE THIS TO THE TASK YOU WANT TO DEBUG
 # ============================================================
-TARGET_TASK_ID = "135"
+TARGET_TASK_ID = "269e22fb"
 
 
 # ============================================================
@@ -241,7 +240,9 @@ def main():
     test_pairs = task.get("test", [])
 
     task_level_choice = choose_task_level_strategy(train_pairs)
-    forced_strategy = task_level_choice["best_strategy"]
+    forced_strategy = task_level_choice.get("best_strategy")
+
+    print(f"FORCING STRATEGY: {forced_strategy}")
 
     learned_pattern_rule = None
     if forced_strategy == "pattern_rule":
@@ -423,10 +424,21 @@ def main():
             if forced_strategy == "motif_layout_rule":
                 from reasoning.motif_layout_rule import solve_pair_motif_layout_rule
                 result = solve_pair_motif_layout_rule(input_grid, None)
+                if result is not None:
+                    result["strategy"] = "motif_layout_rule"
+
+            elif forced_strategy == "object_grid_rule":
+                from reasoning.object_grid_rule import solve_pair_object_grid_rule
+
+                result = solve_pair_object_grid_rule(input_grid, None)
+
+                if result is not None:
+                    result["strategy"] = "object_grid_rule"
 
             elif forced_strategy == "pattern_rule":
                 if learned_pattern_rule is None:
-                    print("⚠️ No learned pattern rule available for test")
+                    print("⚠️ pattern_rule solved train pairs by pair-specific fitting.")
+                    print("⚠️ No reusable task-level pattern family was learned for test.")
                     result = None
                 else:
                     result = solve_pair_pattern_rule(
@@ -436,6 +448,12 @@ def main():
                     )
                     if result is not None:
                         result["strategy"] = "pattern_rule"
+
+            elif forced_strategy == "panel_pattern_rule":
+                from reasoning.panel_pattern_rule_engine import solve_pair_panel_pattern_rule
+                result = solve_pair_panel_pattern_rule(input_grid, None)
+                if result is not None:
+                    result["strategy"] = "panel_pattern_rule"
 
             else:
                 print(f"⚠️ Strategy {forced_strategy} not supported for direct test yet")

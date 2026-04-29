@@ -20,9 +20,9 @@ WRONG TRAIN PAIRS
    Transform: identity
 
 4. TASK: 20270e3b | PAIR: 4
-   Strategy : object_fc7
+   Strategy : object_v2_nonframe
    Score    : 82
-   Selector : most_multicolor_object
+   Selector : most_multicolor_nonframe_object
    Transform: identity
 
 5. TASK: 20a9e565 | PAIR: 1
@@ -74,10 +74,10 @@ WRONG TRAIN PAIRS
    Transform: identity
 
 13. TASK: 269e22fb | PAIR: 4
-   Strategy : partition_rule
-   Score    : 66
+   Strategy : object_grid_rule
+   Score    : 111
    Selector : None
-   Transform: identity
+   Transform: None
 
 14. TASK: 269e22fb | PAIR: 5
    Strategy : partition_rule
@@ -104,492 +104,468 @@ WRONG TRAIN PAIRS
    Transform: flip_vertical
 
 18. TASK: 291dc1e1 | PAIR: 4
-   Strategy : motif_layout_rule
-   Score    : 0
-   Selector : None
-   Transform: None
+   Strategy : object_v2_nonframe
+   Score    : 68
+   Selector : most_multicolor_nonframe_object
+   Transform: identity
 
-19. TASK: 2ba387bc | PAIR: 1
-   Strategy : region_rule
-   Score    : 155
-   Selector : None
-   Transform: None
-
-20. TASK: 2ba387bc | PAIR: 2
-   Strategy : region_rule
-   Score    : 153
-   Selector : None
-   Transform: None
-
-21. TASK: 2ba387bc | PAIR: 3
-   Strategy : region_rule
-   Score    : 134
-   Selector : None
-   Transform: None
-
-22. TASK: 2ba387bc | PAIR: 4
-   Strategy : region_rule
-   Score    : 150
-   Selector : None
-   Transform: None
-
-23. TASK: 2d0172a1 | PAIR: 1
+19. TASK: 2d0172a1 | PAIR: 1
    Strategy : region_rule
    Score    : 216
    Selector : None
    Transform: None
 
-24. TASK: 2d0172a1 | PAIR: 2
+20. TASK: 2d0172a1 | PAIR: 2
    Strategy : region_rule
    Score    : 127
    Selector : None
    Transform: None
 
-25. TASK: 2d0172a1 | PAIR: 3
+21. TASK: 2d0172a1 | PAIR: 3
    Strategy : region_rule
    Score    : 136
    Selector : None
    Transform: None
 
-26. TASK: 2d0172a1 | PAIR: 4
+22. TASK: 2d0172a1 | PAIR: 4
    Strategy : region_rule
    Score    : 190
    Selector : None
    Transform: None
 
-27. TASK: 38007db0 | PAIR: 1
+23. TASK: 38007db0 | PAIR: 1
    Strategy : region_rule
    Score    : 263
    Selector : None
    Transform: None
 
-28. TASK: 38007db0 | PAIR: 2
+24. TASK: 38007db0 | PAIR: 2
    Strategy : region_rule
    Score    : 263
    Selector : None
    Transform: None
 
-29. TASK: 3a25b0d8 | PAIR: 1
+25. TASK: 3a25b0d8 | PAIR: 1
    Strategy : region_rule
    Score    : 240
    Selector : None
    Transform: None
 
-30. TASK: 3a25b0d8 | PAIR: 2
+26. TASK: 3a25b0d8 | PAIR: 2
    Strategy : region_rule
    Score    : 189
    Selector : None
    Transform: None
 
-31. TASK: 45a5af55 | PAIR: 1
+27. TASK: 45a5af55 | PAIR: 1
    Strategy : partition_rule
    Score    : 88
    Selector : None
    Transform: identity
 
-32. TASK: 45a5af55 | PAIR: 2
+28. TASK: 45a5af55 | PAIR: 2
    Strategy : partition_rule
    Score    : 44
    Selector : None
    Transform: identity
 
-33. TASK: 4c7dc4dd | PAIR: 1
+29. TASK: 4c7dc4dd | PAIR: 1
    Strategy : region_rule
    Score    : 126
    Selector : None
    Transform: None
 
-34. TASK: 4c7dc4dd | PAIR: 2
+30. TASK: 4c7dc4dd | PAIR: 2
    Strategy : region_alignment_rule_v2
    Score    : 112
    Selector : None
    Transform: rotate_180
 
-35. TASK: 4e34c42c | PAIR: 1
+31. TASK: 4e34c42c | PAIR: 1
    Strategy : region_rule
    Score    : 176
    Selector : None
    Transform: None
 
-36. TASK: 4e34c42c | PAIR: 2
+32. TASK: 4e34c42c | PAIR: 2
    Strategy : partition_rule
    Score    : 47
    Selector : None
    Transform: flip_vertical
 
-37. TASK: 5545f144 | PAIR: 1
+33. TASK: 5545f144 | PAIR: 1
    Strategy : region_rule
    Score    : 194
    Selector : None
    Transform: None
 
-38. TASK: 5545f144 | PAIR: 2
+34. TASK: 5545f144 | PAIR: 2
    Strategy : region_rule
    Score    : 146
    Selector : None
    Transform: None
 
-39. TASK: 5545f144 | PAIR: 3
+35. TASK: 5545f144 | PAIR: 3
    Strategy : region_rule
    Score    : 265
    Selector : None
    Transform: None
 
-40. TASK: 58490d8a | PAIR: 1
+36. TASK: 58490d8a | PAIR: 1
    Strategy : region_rule
    Score    : 154
    Selector : None
    Transform: None
 
-41. TASK: 58490d8a | PAIR: 2
+37. TASK: 58490d8a | PAIR: 2
    Strategy : region_rule
    Score    : 187
    Selector : None
    Transform: None
 
-42. TASK: 58490d8a | PAIR: 3
+38. TASK: 58490d8a | PAIR: 3
    Strategy : region_rule
    Score    : 130
    Selector : None
    Transform: None
 
-43. TASK: 58f5dbd5 | PAIR: 1
+39. TASK: 58f5dbd5 | PAIR: 1
    Strategy : region_rule
    Score    : 248
    Selector : None
    Transform: None
 
-44. TASK: 58f5dbd5 | PAIR: 2
+40. TASK: 58f5dbd5 | PAIR: 2
    Strategy : region_rule
    Score    : 248
    Selector : None
    Transform: None
 
-45. TASK: 58f5dbd5 | PAIR: 3
+41. TASK: 58f5dbd5 | PAIR: 3
    Strategy : region_rule
    Score    : 291
    Selector : None
    Transform: None
 
-46. TASK: 5dbc8537 | PAIR: 1
+42. TASK: 5dbc8537 | PAIR: 1
    Strategy : region_alignment_rule_v2
    Score    : 164
    Selector : None
    Transform: identity
 
-47. TASK: 5dbc8537 | PAIR: 2
+43. TASK: 5dbc8537 | PAIR: 2
    Strategy : region_alignment_rule_v2
    Score    : 206
    Selector : None
    Transform: identity
 
-48. TASK: 65b59efc | PAIR: 1
+44. TASK: 65b59efc | PAIR: 1
    Strategy : region_alignment_rule_v2
    Score    : 126
    Selector : None
    Transform: rotate_270_flip_horizontal
 
-49. TASK: 65b59efc | PAIR: 2
+45. TASK: 65b59efc | PAIR: 2
    Strategy : region_alignment_rule_v2
    Score    : 127
    Selector : None
    Transform: rotate_270
 
-50. TASK: 65b59efc | PAIR: 3
+46. TASK: 65b59efc | PAIR: 3
    Strategy : partition_rule
    Score    : 34
    Selector : None
    Transform: flip_horizontal
 
-51. TASK: 67e490f4 | PAIR: 1
+47. TASK: 67e490f4 | PAIR: 1
    Strategy : region_alignment_rule_v2
    Score    : 192
    Selector : None
    Transform: identity
 
-52. TASK: 67e490f4 | PAIR: 2
+48. TASK: 67e490f4 | PAIR: 2
    Strategy : region_alignment_rule_v2
    Score    : 228
    Selector : None
    Transform: identity
 
-53. TASK: 6ffbe589 | PAIR: 1
+49. TASK: 6ffbe589 | PAIR: 1
    Strategy : region_rule
    Score    : 279
    Selector : None
    Transform: None
 
-54. TASK: 6ffbe589 | PAIR: 2
+50. TASK: 6ffbe589 | PAIR: 2
    Strategy : region_rule
    Score    : 206
    Selector : None
    Transform: None
 
-55. TASK: 78332cb0 | PAIR: 1
-   Strategy : object_fc7
+51. TASK: 78332cb0 | PAIR: 1
+   Strategy : object_v2_nonframe
    Score    : 103
-   Selector : most_multicolor_object
+   Selector : most_multicolor_nonframe_object
    Transform: identity
 
-56. TASK: 78332cb0 | PAIR: 2
-   Strategy : object_fc7
+52. TASK: 78332cb0 | PAIR: 2
+   Strategy : object_v2_nonframe
    Score    : 100
-   Selector : most_multicolor_object
+   Selector : most_multicolor_nonframe_object
    Transform: identity
 
-57. TASK: 78332cb0 | PAIR: 3
-   Strategy : object_fc7
+53. TASK: 78332cb0 | PAIR: 3
+   Strategy : object_v2_nonframe
    Score    : 100
-   Selector : most_multicolor_object
+   Selector : most_multicolor_nonframe_object
    Transform: identity
 
-58. TASK: 7b3084d4 | PAIR: 1
+54. TASK: 7b3084d4 | PAIR: 1
    Strategy : region_rule
    Score    : 116
    Selector : None
    Transform: None
 
-59. TASK: 7b3084d4 | PAIR: 2
+55. TASK: 7b3084d4 | PAIR: 2
    Strategy : region_rule
    Score    : 151
    Selector : None
    Transform: None
 
-60. TASK: 7b3084d4 | PAIR: 3
+56. TASK: 7b3084d4 | PAIR: 3
    Strategy : region_rule
    Score    : 110
    Selector : None
    Transform: None
 
-61. TASK: 7b5033c1 | PAIR: 1
-   Strategy : object_fc7
+57. TASK: 7b5033c1 | PAIR: 1
+   Strategy : object_v2_nonframe
    Score    : 43
-   Selector : most_multicolor_object
+   Selector : most_multicolor_nonframe_object
    Transform: identity
 
-62. TASK: 7b5033c1 | PAIR: 2
+58. TASK: 7b5033c1 | PAIR: 2
    Strategy : partition_rule
    Score    : 3
    Selector : None
    Transform: flip_horizontal
 
-63. TASK: 8698868d | PAIR: 1
+59. TASK: 8698868d | PAIR: 1
    Strategy : region_alignment_rule_v2
    Score    : 146
    Selector : None
    Transform: identity
 
-64. TASK: 8698868d | PAIR: 2
+60. TASK: 8698868d | PAIR: 2
    Strategy : region_alignment_rule_v2
    Score    : 241
    Selector : None
    Transform: identity
 
-65. TASK: 89565ca0 | PAIR: 1
+61. TASK: 89565ca0 | PAIR: 1
    Strategy : region_rule
    Score    : 115
    Selector : None
    Transform: None
 
-66. TASK: 89565ca0 | PAIR: 2
+62. TASK: 89565ca0 | PAIR: 2
    Strategy : region_rule
    Score    : 118
    Selector : None
    Transform: None
 
-67. TASK: 89565ca0 | PAIR: 3
+63. TASK: 89565ca0 | PAIR: 3
    Strategy : region_rule
    Score    : 116
    Selector : None
    Transform: None
 
-68. TASK: 898e7135 | PAIR: 1
+64. TASK: 898e7135 | PAIR: 1
    Strategy : region_alignment_rule_v2
    Score    : 130
    Selector : None
    Transform: rotate_270
 
-69. TASK: 898e7135 | PAIR: 2
+65. TASK: 898e7135 | PAIR: 2
    Strategy : partition_rule
    Score    : 114
    Selector : None
    Transform: flip_horizontal
 
-70. TASK: a251c730 | PAIR: 1
+66. TASK: a251c730 | PAIR: 1
    Strategy : region_rule
    Score    : 307
    Selector : None
    Transform: None
 
-71. TASK: a251c730 | PAIR: 2
+67. TASK: a251c730 | PAIR: 2
    Strategy : region_rule
    Score    : 280
    Selector : None
    Transform: None
 
-72. TASK: a32d8b75 | PAIR: 1
+68. TASK: a32d8b75 | PAIR: 1
    Strategy : region_rule
    Score    : 540
    Selector : None
    Transform: None
 
-73. TASK: a32d8b75 | PAIR: 2
+69. TASK: a32d8b75 | PAIR: 2
    Strategy : region_rule
    Score    : 599
    Selector : None
    Transform: None
 
-74. TASK: a32d8b75 | PAIR: 3
+70. TASK: a32d8b75 | PAIR: 3
    Strategy : region_rule
    Score    : 599
    Selector : None
    Transform: None
 
-75. TASK: a6f40cea | PAIR: 1
+71. TASK: a6f40cea | PAIR: 1
    Strategy : region_rule
    Score    : 131
    Selector : None
    Transform: None
 
-76. TASK: a6f40cea | PAIR: 2
+72. TASK: a6f40cea | PAIR: 2
    Strategy : region_rule
    Score    : 284
    Selector : None
    Transform: None
 
-77. TASK: a6f40cea | PAIR: 3
+73. TASK: a6f40cea | PAIR: 3
    Strategy : region_rule
    Score    : 156
    Selector : None
    Transform: None
 
-78. TASK: b0039139 | PAIR: 1
+74. TASK: b0039139 | PAIR: 1
    Strategy : region_alignment_rule_v2
    Score    : 105
    Selector : None
    Transform: rotate_180
 
-79. TASK: b0039139 | PAIR: 2
+75. TASK: b0039139 | PAIR: 2
    Strategy : region_alignment_rule_v2
    Score    : 112
    Selector : None
    Transform: identity
 
-80. TASK: b0039139 | PAIR: 3
+76. TASK: b0039139 | PAIR: 3
    Strategy : region_alignment_rule_v2
    Score    : 122
    Selector : None
    Transform: identity
 
-81. TASK: b0039139 | PAIR: 4
+77. TASK: b0039139 | PAIR: 4
    Strategy : region_alignment_rule_v2
    Score    : 107
    Selector : None
    Transform: identity
 
-82. TASK: bf45cf4b | PAIR: 1
+78. TASK: bf45cf4b | PAIR: 1
    Strategy : region_alignment_rule_v2
    Score    : 145
    Selector : None
    Transform: flip_horizontal
 
-83. TASK: bf45cf4b | PAIR: 2
+79. TASK: bf45cf4b | PAIR: 2
    Strategy : region_rule
    Score    : 188
    Selector : None
    Transform: None
 
-84. TASK: e8686506 | PAIR: 1
+80. TASK: e8686506 | PAIR: 1
    Strategy : region_alignment_rule_v2
    Score    : 114
    Selector : None
    Transform: identity
 
-85. TASK: e8686506 | PAIR: 2
+81. TASK: e8686506 | PAIR: 2
    Strategy : region_alignment_rule_v2
    Score    : 122
    Selector : None
    Transform: identity
 
-86. TASK: e87109e9 | PAIR: 1
+82. TASK: e87109e9 | PAIR: 1
    Strategy : region_rule
    Score    : 545
    Selector : None
    Transform: None
 
-87. TASK: e87109e9 | PAIR: 2
+83. TASK: e87109e9 | PAIR: 2
    Strategy : region_rule
    Score    : 539
    Selector : None
    Transform: None
 
-88. TASK: e87109e9 | PAIR: 3
+84. TASK: e87109e9 | PAIR: 3
    Strategy : region_rule
    Score    : 525
    Selector : None
    Transform: None
 
-89. TASK: edb79dae | PAIR: 1
+85. TASK: edb79dae | PAIR: 1
    Strategy : region_alignment_rule_v2
    Score    : 295
    Selector : None
    Transform: identity
 
-90. TASK: edb79dae | PAIR: 2
+86. TASK: edb79dae | PAIR: 2
    Strategy : region_alignment_rule_v2
    Score    : 238
    Selector : None
    Transform: identity
 
-91. TASK: eee78d87 | PAIR: 1
+87. TASK: eee78d87 | PAIR: 1
    Strategy : partition_rule
    Score    : 8
    Selector : None
    Transform: identity
 
-92. TASK: eee78d87 | PAIR: 2
+88. TASK: eee78d87 | PAIR: 2
    Strategy : partition_rule
    Score    : 4
    Selector : None
    Transform: identity
 
-93. TASK: eee78d87 | PAIR: 3
+89. TASK: eee78d87 | PAIR: 3
    Strategy : partition_rule
    Score    : 8
    Selector : None
    Transform: rotate_180
 
-94. TASK: f560132c | PAIR: 1
+90. TASK: f560132c | PAIR: 1
    Strategy : region_rule
    Score    : 102
    Selector : None
    Transform: None
 
-95. TASK: f560132c | PAIR: 2
+91. TASK: f560132c | PAIR: 2
    Strategy : region_alignment_rule_v2
    Score    : 103
    Selector : None
    Transform: identity
 
-96. TASK: f931b4a8 | PAIR: 1
-   Strategy : object_fc7
-   Score    : 80
-   Selector : most_multicolor_object
-   Transform: identity
-
-97. TASK: f931b4a8 | PAIR: 2
-   Strategy : partition_rule
-   Score    : 14
+92. TASK: f931b4a8 | PAIR: 1
+   Strategy : object_grid_rule
+   Score    : 108
    Selector : None
-   Transform: identity
+   Transform: None
 
-98. TASK: f931b4a8 | PAIR: 3
+93. TASK: f931b4a8 | PAIR: 2
+   Strategy : object_grid_rule
+   Score    : 112
+   Selector : None
+   Transform: None
+
+94. TASK: f931b4a8 | PAIR: 3
    Strategy : region_rule
    Score    : 168
    Selector : None
    Transform: None
 
-99. TASK: f931b4a8 | PAIR: 5
+95. TASK: f931b4a8 | PAIR: 5
    Strategy : region_rule
    Score    : 114
    Selector : None

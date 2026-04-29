@@ -57,7 +57,7 @@ def find_right_anchor(right_grid):
     for r, row in enumerate(right_grid):
         for c, val in enumerate(row):
             if val == 5:
-                return (r, c)
+                return r, c
     return None
 
 
@@ -382,7 +382,7 @@ def solve_pair_motif_layout_rule(input_grid, output_grid):
     print("Strategy: motif_layout_rule")
     print(f"Score: {score}")
     print(f"Exact: {exact}")
-    print_grid(predicted, title="MOTIF_LAYOUT PREDICTED")
+    print_grid(predicted, "MOTIF_LAYOUT PREDICTED")
 
     return {
         "predicted": predicted,

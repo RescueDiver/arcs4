@@ -175,6 +175,780 @@
           21
         ]
       }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "pattern_rule",
+      "exact_count": 2,
+      "total_pairs": 2,
+      "result": "exact",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "panel_pattern_rule",
+      "exact_count": 0,
+      "total_pairs": 2,
+      "result": "partial",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "panel_pattern_rule",
+      "exact_count": 0,
+      "total_pairs": 2,
+      "result": "partial",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "135",
+      "strategy": "panel_pattern_rule",
+      "exact_count": 0,
+      "total_pairs": 2,
+      "result": "partial",
+      "features": {
+        "pair_count": 2,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          13,
+          22
+        ],
+        "output_heights": [
+          5,
+          21
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "region_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "region_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "region_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "region_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "region_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "region_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "region_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 1,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 1,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 1,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 1,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 1,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 4,
+      "total_pairs": 4,
+      "result": "exact",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "2ba387bc",
+      "strategy": "object_grid_rule",
+      "exact_count": 4,
+      "total_pairs": 4,
+      "result": "exact",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      }
+    },
+    {
+      "task_id": "269e22fb",
+      "strategy": "object_grid_rule",
+      "exact_count": 0,
+      "total_pairs": 5,
+      "result": "partial",
+      "features": {
+        "pair_count": 5,
+        "has_divider_color_4": false,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "output_heights": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ]
+      }
     }
   ],
   "patterns": [
@@ -195,6 +969,28 @@
       },
       "suggested_strategy": "pattern_rule",
       "source_task": "135"
+    },
+    {
+      "name": "object_grid_rule_2ba387bc",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          8,
+          8,
+          8
+        ],
+        "output_heights": [
+          16,
+          12,
+          8,
+          12
+        ]
+      },
+      "suggested_strategy": "object_grid_rule",
+      "source_task": "2ba387bc"
     }
   ],
   "rules": []
