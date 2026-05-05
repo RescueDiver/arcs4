@@ -1,212 +1,321 @@
-from reasoning.object_rule_engine_v2 import solve_pair_object_rule_v2
+# reasoning/task_router.py
+
 from reasoning.pattern_rule_engine import solve_pair_pattern_rule
 from reasoning.region_rule_engine import solve_pair_region_rule
-from reasoning.partition_rule_engine import solve_pair_partition_rule
 from reasoning.region_alignment_rule_engine_v2 import solve_pair_region_alignment_rule_v2
 from reasoning.motif_layout_rule import solve_pair_motif_layout_rule
-from debug.debug_utils import debug_strategy_scores, debug_router_adjustments
 from reasoning.object_grid_rule import solve_pair_object_grid_rule
+from reasoning.pattern_expansion_rule import solve_pair_pattern_expansion
+from reasoning.seed_placement_expansion_rule import solve_pair_seed_placement_expansion
+
+# Disabled from active router for now:
+# from reasoning.object_rule_engine_v2 import solve_pair_object_rule_v2
+# from reasoning.partition_rule_engine import solve_pair_partition_rule
+
+
+# ============================================================
+# BASIC HELPERS
+# ============================================================
 
 def grid_shape(grid):
+    if grid is None:
+        return 0, 0
     h = len(grid)
     w = len(grid[0]) if h else 0
     return h, w
 
 
-def get_predicted_grid(result):
-    if result is None:
-        return None
-    return result.get("predicted")
-
-
-def get_selected_object_bbox(result):
-    """
-    Tries to read object bbox from different object-family result styles.
-    """
-    if result is None:
-        return None
-
-    obj = result.get("selected_object")
-    if isinstance(obj, dict) and "bbox" in obj:
-        return obj["bbox"]
-
-    if "bbox" in result and isinstance(result["bbox"], dict):
-        return result["bbox"]
-
-    if "region_bbox" in result and isinstance(result["region_bbox"], dict):
-        return result["region_bbox"]
-
-    return None
-
-
-def is_full_grid_bbox(bbox, input_grid):
-    if bbox is None:
-        return False
-
-    h, w = grid_shape(input_grid)
-
-    min_r = bbox.get("min_r", bbox.get("top"))
-    max_r = bbox.get("max_r", bbox.get("bottom"))
-    min_c = bbox.get("min_c", bbox.get("left"))
-    max_c = bbox.get("max_c", bbox.get("right"))
-
-    if min_r is None or max_r is None or min_c is None or max_c is None:
-        return False
-
-    return min_r == 0 and min_c == 0 and max_r == h - 1 and max_c == w - 1
-
-
-def compute_shape_penalty(predicted, expected):
-    """
-    Strongly penalize families whose prediction shape is far from output shape.
-    """
+def score_prediction(predicted, expected):
     if predicted is None or expected is None:
         return 0
 
     ph, pw = grid_shape(predicted)
     eh, ew = grid_shape(expected)
 
-    dh = abs(ph - eh)
-    dw = abs(pw - ew)
+    score = 0
 
-    return dh * 20 + dw * 20
+    for r in range(min(ph, eh)):
+        for c in range(min(pw, ew)):
+            if predicted[r][c] == expected[r][c]:
+                score += 1
+
+    if predicted == expected:
+        score += 1000000
+
+    return score
 
 
-def compute_full_grid_object_penalty(result, input_grid):
-    """
-    Penalize object families when they selected the entire grid as the 'object'.
-    """
-    if result is None:
+def shape_penalty(predicted, expected):
+    if predicted is None or expected is None:
         return 0
 
-    bbox = get_selected_object_bbox(result)
-    if bbox is not None and is_full_grid_bbox(bbox, input_grid):
-        return 120
+    ph, pw = grid_shape(predicted)
+    eh, ew = grid_shape(expected)
 
-    return 0
+    if ph == eh and pw == ew:
+        return 0
 
-
-def apply_router_adjustments(result, input_grid, output_grid):
-    """
-    Adds adjusted_score plus debug info.
-    """
-    if result is None:
-        return None
-
-    raw_score = result.get("score", -10**9)
-    predicted = get_predicted_grid(result)
-
-    shape_penalty = compute_shape_penalty(predicted, output_grid)
-    full_grid_penalty = 0
-
-    if result.get("strategy") in ("object_fc7", "object_v2_nonframe"):
-        full_grid_penalty = compute_full_grid_object_penalty(result, input_grid)
-
-    adjusted_score = raw_score - shape_penalty - full_grid_penalty
-
-    result["raw_score"] = raw_score
-    result["shape_penalty"] = shape_penalty
-    result["full_grid_penalty"] = full_grid_penalty
-    result["adjusted_score"] = adjusted_score
-
-    return result
-
-
-def print_adjusted_debug(candidates):
-    print("\nDEBUG ROUTER ADJUSTMENTS:")
-    for item in candidates:
-        predicted = item.get("predicted")
-        ph, pw = grid_shape(predicted) if predicted is not None else (0, 0)
-
-        print(
-            f" {item['strategy']:<24} "
-            f"raw={item.get('raw_score', None):<6} "
-            f"shape_penalty={item.get('shape_penalty', 0):<4} "
-            f"full_grid_penalty={item.get('full_grid_penalty', 0):<4} "
-            f"adjusted={item.get('adjusted_score', None):<6} "
-            f"pred_shape={ph}x{pw}"
-        )
+    return (abs(ph - eh) + abs(pw - ew)) * 20
 
 
 def find_divider_column(grid):
-    h = len(grid)
-    w = len(grid[0])
+    if grid is None:
+        return None
+
+    h, w = grid_shape(grid)
+
+    if h == 0 or w == 0:
+        return None
 
     for c in range(w):
-        column = [grid[r][c] for r in range(h)]
-        if len(set(column)) == 1:
+        col_vals = [grid[r][c] for r in range(h)]
+        if len(set(col_vals)) == 1 and col_vals[0] != 0:
             return c
 
     return None
 
 
+def detect_task_type(input_grid, output_grid):
+    in_h, in_w = grid_shape(input_grid)
+    out_h, out_w = grid_shape(output_grid)
+
+    divider_col = find_divider_column(input_grid)
+    if divider_col is not None and divider_col > 0:
+        return "motif_layout"
+
+    if output_grid is not None and in_h == out_h and in_w == out_w:
+        return "pattern_same_size"
+
+    if output_grid is not None and out_h <= in_h and out_w <= in_w:
+        return "region_extract"
+
+    if output_grid is not None and (out_h > in_h or out_w > in_w):
+        return "expansion"
+
+    return "general"
+
+
 def maybe_add_candidate(candidates, result, strategy_name, input_grid, output_grid):
-    """
-    Standard helper:
-    - attach strategy name
-    - apply router adjustments
-    - append if valid
-    """
     if result is None:
         return None
 
+    pred = result.get("predicted")
+    if pred is None:
+        return None
+
+    raw_score = result.get("score")
+    if raw_score is None:
+        raw_score = score_prediction(pred, output_grid)
+
+    penalty = shape_penalty(pred, output_grid)
+    adjusted = raw_score - penalty
+
     result["strategy"] = strategy_name
-    result = apply_router_adjustments(result, input_grid, output_grid)
+    result["raw_score"] = raw_score
+    result["score"] = raw_score
+    result["shape_penalty"] = penalty
+    result["full_grid_penalty"] = 0
+    result["adjusted_score"] = adjusted
+
+    if output_grid is not None:
+        result["exact"] = pred == output_grid
+    else:
+        result["exact"] = False
+
     candidates.append(result)
     return result
 
 
+# ============================================================
+# DEBUG HELPERS
+# ============================================================
+
+def print_adjusted_debug(candidates):
+    print("\nDEBUG ROUTER ADJUSTMENTS:")
+
+    if not candidates:
+        print("  No candidates.")
+        return
+
+    for result in candidates:
+        pred = result.get("predicted")
+        ph, pw = grid_shape(pred)
+
+        print(
+            f" {result.get('strategy'):<30} "
+            f"raw={result.get('raw_score'):<7} "
+            f"shape_penalty={result.get('shape_penalty'):<4} "
+            f"full_grid_penalty={result.get('full_grid_penalty'):<4} "
+            f"adjusted={result.get('adjusted_score'):<7} "
+            f"pred_shape={ph}x{pw}"
+        )
+
+
+def debug_strategy_scores(
+    result_seed_placement,
+    result_pattern,
+    result_region,
+    result_motif_layout,
+    result_region_alignment_v2,
+    result_object_grid,
+    result_pattern_expansion,
+):
+    print("\n=== STRATEGY SCORES ===")
+
+    rows = [
+        ("seed_placement_expansion_rule", result_seed_placement),
+        ("pattern_rule", result_pattern),
+        ("region_rule", result_region),
+        ("motif_layout_rule", result_motif_layout),
+        ("region_alignment_rule_v2", result_region_alignment_v2),
+        ("object_grid_rule", result_object_grid),
+        ("pattern_expansion_rule", result_pattern_expansion),
+    ]
+
+    for name, result in rows:
+        if result is None:
+            print(f"{name:<32}: None")
+        else:
+            print(f"{name:<32}: {result.get('score')}")
+
+
+def debug_router_adjustments(
+    result_seed_placement,
+    result_pattern,
+    result_region,
+    result_motif_layout,
+    result_region_alignment_v2,
+    result_object_grid,
+    result_pattern_expansion,
+):
+    print("\n=== ROUTER DECISION TABLE ===")
+
+    rows = [
+        ("seed_placement_expansion_rule", result_seed_placement),
+        ("pattern_rule", result_pattern),
+        ("region_rule", result_region),
+        ("motif_layout_rule", result_motif_layout),
+        ("region_alignment_rule_v2", result_region_alignment_v2),
+        ("object_grid_rule", result_object_grid),
+        ("pattern_expansion_rule", result_pattern_expansion),
+    ]
+
+    for name, result in rows:
+        if result is None:
+            print(f"{name:<32}: None")
+            continue
+
+        pred = result.get("predicted")
+        ph, pw = grid_shape(pred)
+
+        print(
+            f"{name:<32} "
+            f"raw={result.get('raw_score'):<7} "
+            f"adj={result.get('adjusted_score'):<7} "
+            f"shape_pen={result.get('shape_penalty'):<4} "
+            f"full_pen={result.get('full_grid_penalty'):<4} "
+            f"out={ph}x{pw}"
+        )
+
+
+# ============================================================
+# ACTIVE ROUTER
+# ============================================================
+
 def get_all_strategy_results(input_grid, output_grid):
-    """
-    Runs every active strategy and returns all adjusted candidate results.
-    """
     candidates = []
 
+    task_type = detect_task_type(input_grid, output_grid)
+    print(f"\n[TASK TYPE DETECTED] {task_type}")
 
-
-    result_v2 = maybe_add_candidate(
-        candidates,
-        solve_pair_object_rule_v2(input_grid, output_grid),
-        "object_v2_nonframe",
-        input_grid,
-        output_grid,
-    )
-
-    result_pattern = maybe_add_candidate(
-        candidates,
-        solve_pair_pattern_rule(input_grid, output_grid),
-        "pattern_rule",
-        input_grid,
-        output_grid,
-    )
-
-    result_partition = maybe_add_candidate(
-        candidates,
-        solve_pair_partition_rule(input_grid, output_grid),
-        "partition_rule",
-        input_grid,
-        output_grid,
-    )
-
-    result_object_grid = maybe_add_candidate(
-        candidates,
-        solve_pair_object_grid_rule(input_grid, output_grid),
-        "object_grid_rule",
-        input_grid,
-        output_grid,
-    )
-
-    result_region = maybe_add_candidate(
-        candidates,
-        solve_pair_region_rule(input_grid, output_grid),
-        "region_rule",
-        input_grid,
-        output_grid,
-    )
-
+    result_seed_placement = None
+    result_pattern = None
+    result_region = None
     result_motif_layout = None
-    divider_col = find_divider_column(input_grid)
-    if divider_col is not None and divider_col > 0:
+    result_region_alignment_v2 = None
+    result_object_grid = None
+    result_pattern_expansion = None
+
+    # --------------------------------------------------------
+    # Seed placement expansion family
+    #
+    # Priority rule for expansion tasks where the input appears
+    # inside the larger output as an embedded seed.
+    # --------------------------------------------------------
+    if task_type == "expansion":
+        result_seed_placement = maybe_add_candidate(
+            candidates,
+            solve_pair_seed_placement_expansion(input_grid, output_grid),
+            "seed_placement_expansion_rule",
+            input_grid,
+            output_grid,
+        )
+
+        if result_seed_placement is not None and result_seed_placement.get("exact"):
+            print("[ROUTER PRIORITY] seed_placement_expansion_rule exact match")
+
+            debug_strategy_scores(
+                result_seed_placement,
+                result_pattern,
+                result_region,
+                result_motif_layout,
+                result_region_alignment_v2,
+                result_object_grid,
+                result_pattern_expansion,
+            )
+
+            debug_router_adjustments(
+                result_seed_placement,
+                result_pattern,
+                result_region,
+                result_motif_layout,
+                result_region_alignment_v2,
+                result_object_grid,
+                result_pattern_expansion,
+            )
+
+            print_adjusted_debug(candidates)
+            return candidates
+
+    # --------------------------------------------------------
+    # Pattern family
+    # Strongest same-size/default family.
+    # --------------------------------------------------------
+    if task_type in ["pattern_same_size", "general", "motif_layout", "expansion"]:
+        result_pattern = maybe_add_candidate(
+            candidates,
+            solve_pair_pattern_rule(input_grid, output_grid),
+            "pattern_rule",
+            input_grid,
+            output_grid,
+        )
+
+    # --------------------------------------------------------
+    # Region families
+    # Strong on crop/extract/alignment tasks.
+    # --------------------------------------------------------
+    if task_type in ["region_extract", "general", "motif_layout"]:
+        result_region = maybe_add_candidate(
+            candidates,
+            solve_pair_region_rule(input_grid, output_grid),
+            "region_rule",
+            input_grid,
+            output_grid,
+        )
+
+        result_region_alignment_v2 = maybe_add_candidate(
+            candidates,
+            solve_pair_region_alignment_rule_v2(input_grid, output_grid),
+            "region_alignment_rule_v2",
+            input_grid,
+            output_grid,
+        )
+
+    # --------------------------------------------------------
+    # Motif family
+    # Only run when divider/task detector says motif.
+    # --------------------------------------------------------
+    if task_type == "motif_layout":
         result_motif_layout = maybe_add_candidate(
             candidates,
             solve_pair_motif_layout_rule(input_grid, output_grid),
@@ -215,38 +324,51 @@ def get_all_strategy_results(input_grid, output_grid):
             output_grid,
         )
     else:
-        print("Skipping motif_layout_rule (no divider)")
+        print("Skipping motif_layout_rule (task type not motif_layout)")
 
+    # --------------------------------------------------------
+    # Expansion baseline
+    # Only run when output is larger than input.
+    # --------------------------------------------------------
+    if task_type == "expansion":
+        result_pattern_expansion = maybe_add_candidate(
+            candidates,
+            solve_pair_pattern_expansion(input_grid, output_grid),
+            "pattern_expansion_rule",
+            input_grid,
+            output_grid,
+        )
 
-
-
-
-    result_region_alignment_v2 = maybe_add_candidate(
+    # --------------------------------------------------------
+    # Object grid
+    # Keep active but low priority.
+    # --------------------------------------------------------
+    result_object_grid = maybe_add_candidate(
         candidates,
-        solve_pair_region_alignment_rule_v2(input_grid, output_grid),
-        "region_alignment_rule_v2",
+        solve_pair_object_grid_rule(input_grid, output_grid),
+        "object_grid_rule",
         input_grid,
         output_grid,
     )
 
-
-
     debug_strategy_scores(
-        result_v2,
+        result_seed_placement,
         result_pattern,
         result_region,
         result_motif_layout,
-        result_partition,
         result_region_alignment_v2,
+        result_object_grid,
+        result_pattern_expansion,
     )
 
     debug_router_adjustments(
-        result_v2,
+        result_seed_placement,
         result_pattern,
         result_region,
         result_motif_layout,
-        result_partition,
         result_region_alignment_v2,
+        result_object_grid,
+        result_pattern_expansion,
     )
 
     print("\nOBJECT_GRID DEBUG RESULT:")
@@ -264,40 +386,29 @@ def get_all_strategy_results(input_grid, output_grid):
     return candidates
 
 
-def choose_best_candidate(candidates):
-    """
-    Best adjusted score wins.
-    """
+def choose_best_result(candidates):
     if not candidates:
         return None
 
-    candidates.sort(key=lambda x: x["adjusted_score"], reverse=True)
-    return candidates[0]
+    return max(
+        candidates,
+        key=lambda r: (
+            1 if r.get("exact") else 0,
+            r.get("adjusted_score", r.get("score", -10**9)),
+        ),
+    )
 
 
 def solve_pair_with_multiple_strategies(input_grid, output_grid):
     candidates = get_all_strategy_results(input_grid, output_grid)
-    return choose_best_candidate(candidates)
+    return choose_best_result(candidates)
 
 
-def solve_pair_with_forced_strategy(input_grid, output_grid, forced_strategy):
-    """
-    Solve a pair using only the strategy selected at task level.
-    """
-    candidates = get_all_strategy_results(input_grid, output_grid)
-
-    for candidate in candidates:
-        if candidate.get("strategy") == forced_strategy:
-            return candidate
-
-    return None
-
+# ============================================================
+# TASK-LEVEL STRATEGY PICKER
+# ============================================================
 
 def choose_task_level_strategy(train_pairs):
-    """
-    Evaluate all strategies across all train pairs and choose the most
-    consistent family for the whole task.
-    """
     strategy_stats = {}
 
     for pair in train_pairs:
@@ -305,50 +416,85 @@ def choose_task_level_strategy(train_pairs):
         output_grid = pair["output"]
 
         candidates = get_all_strategy_results(input_grid, output_grid)
-        by_strategy = {c["strategy"]: c for c in candidates}
 
-        for strategy_name in by_strategy.keys():
-            if strategy_name not in strategy_stats:
-                strategy_stats[strategy_name] = {
-                    "exact_count": 0,
-                    "total_adjusted_score": 0,
-                    "pair_count": 0,
-                    "results": [],
-                }
-
-        for strategy_name, stats in strategy_stats.items():
-            result = by_strategy.get(strategy_name)
-
-            if result is None:
-                stats["results"].append(None)
+        for result in candidates:
+            strategy = result.get("strategy")
+            if strategy is None:
                 continue
 
-            stats["pair_count"] += 1
-            stats["total_adjusted_score"] += result.get("adjusted_score", -10**9)
-            stats["results"].append(result)
+            if strategy not in strategy_stats:
+                strategy_stats[strategy] = {
+                    "pair_count": 0,
+                    "exact_count": 0,
+                    "total_adjusted_score": 0,
+                    "total_raw_score": 0,
+                }
 
-            if result.get("exact", False):
-                stats["exact_count"] += 1
+            strategy_stats[strategy]["pair_count"] += 1
+            strategy_stats[strategy]["total_adjusted_score"] += result.get(
+                "adjusted_score",
+                result.get("score", 0),
+            )
+            strategy_stats[strategy]["total_raw_score"] += result.get("score", 0)
 
-    if not strategy_stats:
-        return {
-            "best_strategy": None,
-            "strategy_stats": {},
-        }
+            if result.get("exact"):
+                strategy_stats[strategy]["exact_count"] += 1
 
-    ranked = sorted(
-        strategy_stats.items(),
-        key=lambda item: (
-            item[1]["exact_count"],
-            item[1]["total_adjusted_score"],
-            item[1]["pair_count"],
-        ),
-        reverse=True,
-    )
+    best_strategy = None
+    best_key = None
 
-    best_strategy = ranked[0][0]
+    for strategy, stats in strategy_stats.items():
+        key = (
+            stats.get("exact_count", 0),
+            stats.get("total_adjusted_score", 0),
+            stats.get("pair_count", 0),
+        )
+
+        if best_key is None or key > best_key:
+            best_key = key
+            best_strategy = strategy
 
     return {
         "best_strategy": best_strategy,
         "strategy_stats": strategy_stats,
     }
+
+
+# ============================================================
+# FORCED STRATEGY SOLVER
+# ============================================================
+
+def solve_pair_with_forced_strategy(input_grid, output_grid, strategy_name):
+    if strategy_name == "pattern_rule":
+        result = solve_pair_pattern_rule(input_grid, output_grid)
+
+    elif strategy_name == "region_rule":
+        result = solve_pair_region_rule(input_grid, output_grid)
+
+    elif strategy_name == "region_alignment_rule_v2":
+        result = solve_pair_region_alignment_rule_v2(input_grid, output_grid)
+
+    elif strategy_name == "motif_layout_rule":
+        result = solve_pair_motif_layout_rule(input_grid, output_grid)
+
+    elif strategy_name == "object_grid_rule":
+        result = solve_pair_object_grid_rule(input_grid, output_grid)
+
+    elif strategy_name == "pattern_expansion_rule":
+        result = solve_pair_pattern_expansion(input_grid, output_grid)
+
+    elif strategy_name == "seed_placement_expansion_rule":
+        result = solve_pair_seed_placement_expansion(input_grid, output_grid)
+
+    else:
+        print(f"[FORCED STRATEGY ERROR] Unknown strategy: {strategy_name}")
+        return None
+
+    candidates = []
+    return maybe_add_candidate(
+        candidates,
+        result,
+        strategy_name,
+        input_grid,
+        output_grid,
+    )

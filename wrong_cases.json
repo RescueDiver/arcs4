@@ -26,10 +26,10 @@
   {
     "task_id": "20270e3b",
     "pair_index": 4,
-    "strategy": "object_v2_nonframe",
-    "score": 82,
-    "selector": "most_multicolor_nonframe_object",
-    "transform": "identity"
+    "strategy": "pattern_expansion_rule",
+    "score": 50,
+    "selector": null,
+    "transform": null
   },
   {
     "task_id": "20a9e565",
@@ -58,58 +58,58 @@
   {
     "task_id": "21897d95",
     "pair_index": 1,
-    "strategy": "partition_rule",
-    "score": 20,
+    "strategy": "pattern_expansion_rule",
+    "score": 30,
     "selector": null,
-    "transform": "identity"
+    "transform": null
   },
   {
     "task_id": "21897d95",
     "pair_index": 3,
-    "strategy": "partition_rule",
-    "score": 13,
+    "strategy": "pattern_expansion_rule",
+    "score": 42,
     "selector": null,
-    "transform": "identity"
+    "transform": null
   },
   {
     "task_id": "269e22fb",
     "pair_index": 1,
-    "strategy": "partition_rule",
-    "score": 40,
+    "strategy": "pattern_expansion_rule",
+    "score": 255,
     "selector": null,
-    "transform": "identity"
+    "transform": null
   },
   {
     "task_id": "269e22fb",
     "pair_index": 2,
-    "strategy": "partition_rule",
-    "score": 38,
+    "strategy": "pattern_expansion_rule",
+    "score": 227,
     "selector": null,
-    "transform": "flip_vertical"
+    "transform": null
   },
   {
     "task_id": "269e22fb",
     "pair_index": 3,
-    "strategy": "partition_rule",
-    "score": 50,
+    "strategy": "pattern_expansion_rule",
+    "score": 263,
     "selector": null,
-    "transform": "identity"
+    "transform": null
   },
   {
     "task_id": "269e22fb",
     "pair_index": 4,
-    "strategy": "object_grid_rule",
-    "score": 111,
+    "strategy": "pattern_expansion_rule",
+    "score": 247,
     "selector": null,
     "transform": null
   },
   {
     "task_id": "269e22fb",
     "pair_index": 5,
-    "strategy": "partition_rule",
-    "score": 25,
+    "strategy": "pattern_expansion_rule",
+    "score": 217,
     "selector": null,
-    "transform": "flip_horizontal"
+    "transform": null
   },
   {
     "task_id": "291dc1e1",
@@ -130,18 +130,18 @@
   {
     "task_id": "291dc1e1",
     "pair_index": 3,
-    "strategy": "partition_rule",
-    "score": 31,
+    "strategy": "pattern_expansion_rule",
+    "score": 48,
     "selector": null,
-    "transform": "flip_vertical"
+    "transform": null
   },
   {
     "task_id": "291dc1e1",
     "pair_index": 4,
-    "strategy": "object_v2_nonframe",
-    "score": 68,
-    "selector": "most_multicolor_nonframe_object",
-    "transform": "identity"
+    "strategy": "pattern_expansion_rule",
+    "score": 30,
+    "selector": null,
+    "transform": null
   },
   {
     "task_id": "2d0172a1",
@@ -210,18 +210,18 @@
   {
     "task_id": "45a5af55",
     "pair_index": 1,
-    "strategy": "partition_rule",
-    "score": 88,
+    "strategy": "pattern_expansion_rule",
+    "score": 336,
     "selector": null,
-    "transform": "identity"
+    "transform": null
   },
   {
     "task_id": "45a5af55",
     "pair_index": 2,
-    "strategy": "partition_rule",
-    "score": 44,
+    "strategy": "pattern_expansion_rule",
+    "score": 368,
     "selector": null,
-    "transform": "identity"
+    "transform": null
   },
   {
     "task_id": "4c7dc4dd",
@@ -250,10 +250,10 @@
   {
     "task_id": "4e34c42c",
     "pair_index": 2,
-    "strategy": "partition_rule",
-    "score": 47,
+    "strategy": "pattern_expansion_rule",
+    "score": 50,
     "selector": null,
-    "transform": "flip_vertical"
+    "transform": null
   },
   {
     "task_id": "5545f144",
@@ -362,10 +362,10 @@
   {
     "task_id": "65b59efc",
     "pair_index": 3,
-    "strategy": "partition_rule",
-    "score": 34,
+    "strategy": "pattern_expansion_rule",
+    "score": 217,
     "selector": null,
-    "transform": "flip_horizontal"
+    "transform": null
   },
   {
     "task_id": "67e490f4",
@@ -402,26 +402,26 @@
   {
     "task_id": "78332cb0",
     "pair_index": 1,
-    "strategy": "object_v2_nonframe",
-    "score": 103,
-    "selector": "most_multicolor_nonframe_object",
-    "transform": "identity"
+    "strategy": "motif_layout_rule",
+    "score": 1,
+    "selector": null,
+    "transform": null
   },
   {
     "task_id": "78332cb0",
     "pair_index": 2,
-    "strategy": "object_v2_nonframe",
-    "score": 100,
-    "selector": "most_multicolor_nonframe_object",
-    "transform": "identity"
+    "strategy": "pattern_expansion_rule",
+    "score": 49,
+    "selector": null,
+    "transform": null
   },
   {
     "task_id": "78332cb0",
     "pair_index": 3,
-    "strategy": "object_v2_nonframe",
-    "score": 100,
-    "selector": "most_multicolor_nonframe_object",
-    "transform": "identity"
+    "strategy": "pattern_expansion_rule",
+    "score": 60,
+    "selector": null,
+    "transform": null
   },
   {
     "task_id": "7b3084d4",
@@ -450,18 +450,18 @@
   {
     "task_id": "7b5033c1",
     "pair_index": 1,
-    "strategy": "object_v2_nonframe",
-    "score": 43,
-    "selector": "most_multicolor_nonframe_object",
-    "transform": "identity"
+    "strategy": "pattern_expansion_rule",
+    "score": 2,
+    "selector": null,
+    "transform": null
   },
   {
     "task_id": "7b5033c1",
     "pair_index": 2,
-    "strategy": "partition_rule",
-    "score": 3,
+    "strategy": "pattern_expansion_rule",
+    "score": 4,
     "selector": null,
-    "transform": "flip_horizontal"
+    "transform": null
   },
   {
     "task_id": "8698868d",
@@ -514,10 +514,10 @@
   {
     "task_id": "898e7135",
     "pair_index": 2,
-    "strategy": "partition_rule",
-    "score": 114,
+    "strategy": "pattern_expansion_rule",
+    "score": 145,
     "selector": null,
-    "transform": "flip_horizontal"
+    "transform": null
   },
   {
     "task_id": "a251c730",
@@ -616,6 +616,14 @@
     "transform": "identity"
   },
   {
+    "task_id": "b6f77b65",
+    "pair_index": 1,
+    "strategy": "no_result",
+    "score": null,
+    "selector": null,
+    "transform": null
+  },
+  {
     "task_id": "bf45cf4b",
     "pair_index": 1,
     "strategy": "region_alignment_rule_v2",
@@ -690,26 +698,26 @@
   {
     "task_id": "eee78d87",
     "pair_index": 1,
-    "strategy": "partition_rule",
-    "score": 8,
+    "strategy": "pattern_expansion_rule",
+    "score": 100,
     "selector": null,
-    "transform": "identity"
+    "transform": null
   },
   {
     "task_id": "eee78d87",
     "pair_index": 2,
-    "strategy": "partition_rule",
-    "score": 4,
+    "strategy": "pattern_expansion_rule",
+    "score": 60,
     "selector": null,
-    "transform": "identity"
+    "transform": null
   },
   {
     "task_id": "eee78d87",
     "pair_index": 3,
-    "strategy": "partition_rule",
-    "score": 8,
+    "strategy": "pattern_expansion_rule",
+    "score": 120,
     "selector": null,
-    "transform": "rotate_180"
+    "transform": null
   },
   {
     "task_id": "f560132c",
@@ -758,5 +766,21 @@
     "score": 114,
     "selector": null,
     "transform": null
+  },
+  {
+    "task_id": "fc7cae8d",
+    "pair_index": 1,
+    "strategy": "region_alignment_rule_v2",
+    "score": 220,
+    "selector": null,
+    "transform": "rotate_180"
+  },
+  {
+    "task_id": "fc7cae8d",
+    "pair_index": 1,
+    "strategy": "region_alignment_rule_v2",
+    "score": 220,
+    "selector": null,
+    "transform": "rotate_180"
   }
 ]
