@@ -1,11 +1,19 @@
 import os
 import json
 
-from reasoning.task_router import solve_pair_with_multiple_strategies
-from reasoning.pattern_rule_engine import learn_pattern_rule_from_train_pairs
+from reasoning.task_router import (
+    choose_task_level_strategy,
+    apply_task_rule_to_input,
+    score_task_rule_prediction,
+    solve_pair_with_multiple_strategies,
+)
 
 from debug.debug_utils import print_grid, show_three_grids
 
+
+# ============================================================
+# TASK LOADING
+# ============================================================
 
 def load_tasks(filename):
     base_dir = os.path.join(os.path.dirname(__file__), "data")
@@ -54,19 +62,34 @@ def load_tasks(filename):
 
     if isinstance(raw, dict):
         tasks = []
+
         for k, v in raw.items():
             if isinstance(v, dict) and ("train" in v or "test" in v):
                 tasks.append((k, v))
+
         return tasks
 
     raise ValueError(f"Unexpected task format in {path}")
 
 
-def should_show_case(exact, shown_wrong, max_wrong, shown_correct, max_correct, show_correct):
+# ============================================================
+# DISPLAY / SAVE HELPERS
+# ============================================================
+
+def should_show_case(
+    exact,
+    shown_wrong,
+    max_wrong,
+    shown_correct,
+    max_correct,
+    show_correct,
+):
     if not exact and shown_wrong < max_wrong:
         return True
+
     if exact and show_correct and shown_correct < max_correct:
         return True
+
     return False
 
 
@@ -112,6 +135,155 @@ def save_wrong_cases_json(base_dir, wrong_cases):
     return output_path
 
 
+# ============================================================
+# RESULT HELPERS
+# ============================================================
+
+def make_no_result(task_id, pair_index):
+    return {
+        "task_id": task_id,
+        "pair_index": pair_index,
+        "strategy": "no_result",
+        "score": None,
+        "selector": None,
+        "transform": None,
+    }
+
+
+def make_wrong_case(task_id, pair_index, result):
+    return {
+        "task_id": task_id,
+        "pair_index": pair_index,
+        "strategy": result.get("strategy", "unknown"),
+        "score": result.get("score", None),
+        "selector": result.get("selector", None),
+        "transform": result.get("transform", None),
+    }
+
+
+def normalize_result(
+    strategy,
+    predicted,
+    expected,
+    score=None,
+    selector=None,
+    transform=None,
+):
+    if predicted is None:
+        return None
+
+    if score is None:
+        score = 0
+
+        if expected is not None:
+            # Local fallback score.
+            h = min(len(predicted), len(expected))
+            w = min(len(predicted[0]), len(expected[0])) if h else 0
+
+            for r in range(h):
+                for c in range(w):
+                    if predicted[r][c] == expected[r][c]:
+                        score += 1
+
+            if predicted == expected:
+                score += 1000000
+
+    return {
+        "strategy": strategy,
+        "predicted": predicted,
+        "score": score,
+        "adjusted_score": score,
+        "exact": predicted == expected if expected is not None else False,
+        "selector": selector,
+        "transform": transform,
+    }
+
+
+# ============================================================
+# TASK-LEVEL SOLVING
+# ============================================================
+
+def solve_train_pair_with_task_choice(
+    task_choice,
+    input_grid,
+    output_grid,
+    pair_index_zero_based,
+):
+    """
+    Apply the task-level chosen strategy to one train pair.
+
+    This is the important part:
+    run_solver.py now uses choose_task_level_strategy() once per task,
+    then applies that learned task rule to every train pair.
+
+    This allows multi_seed_composition_rule to win correctly.
+    """
+    chosen_strategy = task_choice.get("best_strategy")
+    task_rule = task_choice.get("task_rule") or task_choice.get("rule")
+
+    if chosen_strategy is None:
+        return None
+
+    # If the chosen strategy has a learned task rule, use the task-rule path.
+    # This is required for multi_seed_composition_rule.
+    if task_rule is not None:
+        result = score_task_rule_prediction(
+            strategy_name=chosen_strategy,
+            task_rule=task_rule,
+            input_grid=input_grid,
+            expected_grid=output_grid,
+            pair_index=pair_index_zero_based,
+        )
+
+        return result
+
+    # If no task rule exists, fall back to normal pair-level forced solving.
+    # apply_task_rule_to_input() internally calls the pair-level forced solver
+    # for normal strategies.
+    predicted = apply_task_rule_to_input(
+        strategy_name=chosen_strategy,
+        task_rule=None,
+        input_grid=input_grid,
+        expected_grid=output_grid,
+        pair_index=pair_index_zero_based,
+    )
+
+    return normalize_result(
+        strategy=chosen_strategy,
+        predicted=predicted,
+        expected=output_grid,
+    )
+
+
+def choose_task_strategy_safely(train_pairs):
+    """
+    Try task-level routing.
+
+    If something goes wrong, fall back to the old pair-level behavior.
+    """
+    try:
+        return choose_task_level_strategy(
+            train_pairs,
+            debug=False,
+        )
+    except TypeError:
+        # In case your current task_router.py does not accept debug yet.
+        return choose_task_level_strategy(train_pairs)
+    except Exception as e:
+        print("[TASK ROUTER ERROR]")
+        print(e)
+        return {
+            "best_strategy": None,
+            "strategy_stats": {},
+            "task_rule": None,
+            "rule": None,
+        }
+
+
+# ============================================================
+# MAIN RUNNER
+# ============================================================
+
 def run():
     base_dir = os.path.dirname(__file__)
 
@@ -144,37 +316,81 @@ def run():
         print("=" * 60)
 
         train_pairs = task.get("train", [])
+
         task_total = 0
         task_right = 0
         task_wrong = 0
         task_strategy_counts = {}
 
+        # ----------------------------------------------------
+        # NEW IMPORTANT STEP:
+        # choose one strategy/rule for the whole task first.
+        # ----------------------------------------------------
+        task_choice = choose_task_strategy_safely(train_pairs)
+
+        chosen_strategy = task_choice.get("best_strategy")
+        task_rule = task_choice.get("task_rule") or task_choice.get("rule")
+
+        print("\nTASK-LEVEL CHOICE")
+        print("-" * 60)
+        print(f"Chosen strategy: {chosen_strategy}")
+
+        if task_rule is not None:
+            print("Learned rule   : yes")
+            print(f"Rule family    : {task_rule.get('family')}")
+            print(f"Rule type      : {task_rule.get('rule_type')}")
+
+            if "exact_count" in task_rule and "pair_count" in task_rule:
+                print(
+                    f"Exact train    : "
+                    f"{task_rule.get('exact_count')} / {task_rule.get('pair_count')}"
+                )
+
+            residual_rule = task_rule.get("residual_rule")
+            if residual_rule is not None:
+                print(f"Residual rule  : {residual_rule.get('type')}")
+        else:
+            print("Learned rule   : no")
+
+        # ----------------------------------------------------
+        # Score each train pair using the chosen task-level path.
+        # ----------------------------------------------------
         for idx, pair in enumerate(train_pairs, start=1):
+            pair_index_zero_based = idx - 1
+
             input_grid = pair["input"]
             output_grid = pair["output"]
-
 
             task_total += 1
             total_pairs += 1
 
             print(f"\n--- TRAIN PAIR {idx} ---")
 
-            # 🔥 THIS LINE WAS MISSING
-            result = solve_pair_with_multiple_strategies(input_grid, output_grid)
+            result = solve_train_pair_with_task_choice(
+                task_choice=task_choice,
+                input_grid=input_grid,
+                output_grid=output_grid,
+                pair_index_zero_based=pair_index_zero_based,
+            )
+
+            # Safety fallback:
+            # if the new task-level path fails, use old pair-level solver.
+            if result is None:
+                print("[TASK-LEVEL RESULT FAILED] Falling back to pair-level solver.")
+                result = solve_pair_with_multiple_strategies(input_grid, output_grid)
 
             if result is None:
                 print("No result")
+
                 task_wrong += 1
                 total_wrong += 1
 
-                wrong_cases.append({
-                    "task_id": task_id,
-                    "pair_index": idx,
-                    "strategy": "no_result",
-                    "score": None,
-                    "selector": None,
-                    "transform": None,
-                })
+                wrong_cases.append(
+                    make_no_result(
+                        task_id=task_id,
+                        pair_index=idx,
+                    )
+                )
                 continue
 
             exact = result.get("exact", False)
@@ -192,15 +408,13 @@ def run():
             else:
                 task_wrong += 1
                 total_wrong += 1
-
-                wrong_cases.append({
-                    "task_id": task_id,
-                    "pair_index": idx,
-                    "strategy": strategy,
-                    "score": score,
-                    "selector": selector,
-                    "transform": transform,
-                })
+                wrong_cases.append(
+                    make_wrong_case(
+                        task_id=task_id,
+                        pair_index=idx,
+                        result=result,
+                    )
+                )
 
             print(f"Strategy: {strategy}")
             print(f"Score: {score}")
@@ -236,10 +450,17 @@ def run():
                 print_grid(result.get("predicted"), "PREDICTED")
 
                 try:
-                    show_three_grids(input_grid, result.get("predicted"), output_grid)
+                    show_three_grids(
+                        input_grid,
+                        result.get("predicted"),
+                        output_grid,
+                    )
                 except Exception as e:
                     print(f"[VISUAL ERROR] {e}")
 
+        # ----------------------------------------------------
+        # Task summary
+        # ----------------------------------------------------
         if task_total > 0:
             if task_right == task_total:
                 fully_solved_tasks += 1
@@ -258,10 +479,15 @@ def run():
         print(f"Percent Right: {right_pct:.2f}%")
         print(f"Percent Wrong: {wrong_pct:.2f}%")
         print("Strategy Wins:")
+
         for name, count in sorted(task_strategy_counts.items()):
             print(f"  {name}: {count}")
+
         print("-" * 60)
 
+    # --------------------------------------------------------
+    # Final summary
+    # --------------------------------------------------------
     total_right_pct = (total_right / total_pairs * 100) if total_pairs else 0.0
     total_wrong_pct = (total_wrong / total_pairs * 100) if total_pairs else 0.0
 
@@ -282,8 +508,10 @@ def run():
     print(f"Tasks Failed: {failed_tasks}")
     print()
     print("Overall Strategy Wins:")
+
     for name, count in sorted(overall_strategy_counts.items()):
         print(f"  {name}: {count}")
+
     print()
     print(f"Wrong-case list saved to : {wrong_cases_txt_path}")
     print(f"Wrong-task list saved to : {wrong_tasks_only_path}")
