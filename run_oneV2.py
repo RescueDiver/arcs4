@@ -8,7 +8,7 @@ import numpy as np
 from matplotlib.colors import ListedColormap, BoundaryNorm
 
 from core.scoring import score_prediction
-
+from reasoning.task_router import solve_pair_with_forced_strategy
 from reasoning.task_router import (
     choose_task_level_strategy,
     apply_task_rule_to_input,
@@ -397,13 +397,18 @@ def run_train_debug(train_pairs, chosen_strategy, task_rule):
 
         score = score_prediction(predicted, expected_grid)
         exact = predicted == expected_grid
-
+        pair_result = solve_pair_with_forced_strategy(
+            input_grid,
+            expected_grid,
+            chosen_strategy,
+        )
         print("\nCHOSEN TASK-LEVEL RESULT")
         print("-" * 60)
         print(f"Strategy: {chosen_strategy}")
         print(f"Score   : {score}")
         print(f"Exact   : {exact}")
-
+        print(f"Candidate: {pair_result.get('candidate') if pair_result else None}")
+        print(f"Transform: {pair_result.get('transform') if pair_result else None}")
         print_diff_summary(predicted, expected_grid)
 
         print("\nSIDE BY SIDE")
