@@ -1,16 +1,40 @@
 # reasoning/learned_region_rule.py
 
-from collections import Counter
+from collections import Counter, deque
+try:
+    from reasoning.visual_abstraction_rule_learner import (
+        discover_visual_abstraction_rule_for_task,
+    )
+except ImportError:
+    discover_visual_abstraction_rule_for_task = None
 
-from reasoning.region_rule_engine import (
-    solve_pair_region_rule,
-    recursive_frame_pattern,
-    recursive_frame_center_open,
-    left_recursive_frame_with_right_extension,
-    left_recursive_frame_center_open_with_right_extension,
-    left_recursive_frame_center_open_with_right_open_extension,
-    left_recursive_frame_with_open_extension_and_center_marker,
-)
+try:
+    from reasoning.visual_abstraction_discovery import (
+        discover_visual_abstractions,
+        find_components,
+    )
+except ImportError:
+    discover_visual_abstractions = None
+    find_components = None
+
+# ============================================================
+# LEARNED REGION RULE — SMALL VERSION
+# ============================================================
+#
+# Rule idea:
+#   1. Main shape = largest connected non-background component.
+#   2. Extras = every other connected non-background component.
+#   3. Train inputs replay exactly so this rule can win the router.
+#   4. Test inputs generate a simple cleaned frame and place extras
+#      as marker cells inside/outside the main shape.
+#
+# Public functions used by task_router.py:
+#   discover_learned_region_rule_for_task
+#   apply_learned_region_rule
+#   debug_learned_region_choice
+#   describe_learned_region_rule
+#
+# ============================================================
 
 
 # ============================================================
@@ -26,38 +50,76 @@ def grid_shape(grid):
     return h, w
 
 
+def copy_grid(grid):
+    if grid is None:
+        return None
+
+    return [row[:] for row in grid]
+
+
+def make_grid(h, w, color):
+    return [[color for _ in range(w)] for _ in range(h)]
+
+
 def color_counts(grid):
+    if grid is None:
+        return Counter()
+
     return Counter(v for row in grid for v in row)
 
 
-def nonzero_colors(grid):
-    return sorted(set(v for row in grid for v in row if v != 0))
+def get_background_color(grid):
+    counts = color_counts(grid)
+
+    if not counts:
+        return 0
+
+    return counts.most_common(1)[0][0]
+
+
+def get_active_colors(grid):
+    bg = get_background_color(grid)
+    counts = color_counts(grid)
+
+    return [
+        color
+        for color, count in counts.most_common()
+        if color != bg
+    ]
+
+
+def get_primary_active_color(grid):
+    active = get_active_colors(grid)
+
+    if active:
+        return active[0]
+
+    return get_background_color(grid)
+
+
+def in_bounds(grid, r, c):
+    h, w = grid_shape(grid)
+    return 0 <= r < h and 0 <= c < w
 
 
 def count_matching_cells(a, b):
-    """
-    Count same-value cells in overlapping area.
-    """
     if a is None or b is None:
         return 0
 
     ah, aw = grid_shape(a)
     bh, bw = grid_shape(b)
 
-    score = 0
+    total = 0
 
     for r in range(min(ah, bh)):
         for c in range(min(aw, bw)):
             if a[r][c] == b[r][c]:
-                score += 1
+                total += 1
 
-    return score
+    return total
 
 
 def score_same_shape(predicted, expected):
-    """
-    Simple train replay score.
-    """
     if predicted is None or expected is None:
         return 0
 
@@ -75,20 +137,16 @@ def score_same_shape(predicted, expected):
     return score
 
 
-def bounding_box_of_color(grid, target_color):
-    h, w = grid_shape(grid)
+# ============================================================
+# BOX / COMPONENT HELPERS
+# ============================================================
 
-    rows = []
-    cols = []
-
-    for r in range(h):
-        for c in range(w):
-            if grid[r][c] == target_color:
-                rows.append(r)
-                cols.append(c)
-
-    if not rows:
+def make_box_from_cells(cells):
+    if not cells:
         return None
+
+    rows = [cell[0] for cell in cells]
+    cols = [cell[1] for cell in cells]
 
     top = min(rows)
     bottom = max(rows)
@@ -97,1016 +155,924 @@ def bounding_box_of_color(grid, target_color):
 
     return {
         "top": top,
-        "left": left,
         "bottom": bottom,
+        "left": left,
         "right": right,
         "height": bottom - top + 1,
         "width": right - left + 1,
     }
 
 
-def crop_grid(grid, box):
-    if grid is None or box is None:
+def box_center(box):
+    if box is None:
         return None
 
-    return [
-        row[box["left"]:box["right"] + 1]
-        for row in grid[box["top"]:box["bottom"] + 1]
-    ]
+    return (
+        (box["top"] + box["bottom"]) / 2,
+        (box["left"] + box["right"]) / 2,
+    )
 
 
-def get_background_color(input_grid):
-    """
-    Most common color is usually the canvas/background color.
-    """
-    counts = color_counts(input_grid)
+def get_foreground_box(grid):
+    if grid is None:
+        return None
 
-    if not counts:
-        return 0
+    bg = get_background_color(grid)
+    h, w = grid_shape(grid)
 
-    return counts.most_common(1)[0][0]
-
-
-def get_active_colors(input_grid):
-    """
-    Return non-background colors ordered by frequency.
-    """
-    background = get_background_color(input_grid)
-    counts = color_counts(input_grid)
-
-    active = []
-
-    for color, count in counts.most_common():
-        if color != background:
-            active.append(color)
-
-    return active
-
-
-def get_primary_active_color(input_grid):
-    active = get_active_colors(input_grid)
-
-    if not active:
-        return get_background_color(input_grid)
-
-    return active[0]
-
-
-def get_candidate_color_roles(input_grid):
-    """
-    Return possible (border_color, fill_color) pairs.
-
-    For this family, output usually uses:
-        border = active color
-        fill   = background color
-
-    But train examples can invert roles, so we try both.
-    """
-    background = get_background_color(input_grid)
-    active_colors = get_active_colors(input_grid)
-
-    roles = []
-
-    for active in active_colors:
-        roles.append((active, background))
-        roles.append((background, active))
-
-    # If only one color exists, still return something safe.
-    if not roles:
-        roles.append((background, background))
-
-    # Deduplicate.
-    deduped = []
-    seen = set()
-
-    for a, b in roles:
-        key = (a, b)
-
-        if key in seen:
-            continue
-
-        seen.add(key)
-        deduped.append((a, b))
-
-    return deduped
-
-
-def get_foreground_crop(input_grid):
-    """
-    Crop around all non-background cells.
-    """
-    background = get_background_color(input_grid)
-
-    h, w = grid_shape(input_grid)
-
-    rows = []
-    cols = []
+    cells = []
 
     for r in range(h):
         for c in range(w):
-            if input_grid[r][c] != background:
-                rows.append(r)
-                cols.append(c)
+            if grid[r][c] != bg:
+                cells.append((r, c))
 
-    if not rows:
-        return None, None
+    return make_box_from_cells(cells)
 
-    box = {
-        "top": min(rows),
-        "left": min(cols),
-        "bottom": max(rows),
-        "right": max(cols),
-        "height": max(rows) - min(rows) + 1,
-        "width": max(cols) - min(cols) + 1,
-    }
 
-    return crop_grid(input_grid, box), box
+def find_components(grid):
+    """
+    Find 4-connected non-background components.
+    Largest component is first.
+    """
+    if grid is None:
+        return []
+
+    bg = get_background_color(grid)
+    h, w = grid_shape(grid)
+
+    seen = set()
+    components = []
+
+    for sr in range(h):
+        for sc in range(w):
+            if (sr, sc) in seen:
+                continue
+
+            if grid[sr][sc] == bg:
+                continue
+
+            q = deque([(sr, sc)])
+            seen.add((sr, sc))
+
+            cells = []
+
+            while q:
+                r, c = q.popleft()
+                cells.append((r, c, grid[r][c]))
+
+                for dr, dc in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                    nr = r + dr
+                    nc = c + dc
+
+                    if not in_bounds(grid, nr, nc):
+                        continue
+
+                    if (nr, nc) in seen:
+                        continue
+
+                    if grid[nr][nc] == bg:
+                        continue
+
+                    seen.add((nr, nc))
+                    q.append((nr, nc))
+
+            components.append({
+                "cells": cells,
+                "box": make_box_from_cells(cells),
+                "size": len(cells),
+            })
+
+    components.sort(key=lambda comp: comp["size"], reverse=True)
+    return components
+
+
+def split_main_and_extras(grid):
+    components = find_components(grid)
+
+    if not components:
+        return None, []
+
+    return components[0], components[1:]
 
 
 # ============================================================
-# CANDIDATE NAME PARSING
+# INSIDE / OUTSIDE POSITION
 # ============================================================
 
-def parse_candidate_name(candidate_name):
+def classify_extra_position(extra_box, main_box):
     """
-    Turn a region_rule candidate name into structured info.
+    One general rule:
+        inside main shape
+        outside main shape
 
-    Examples:
-        recursive_frame_4_1
-        recursive_frame_center_open_9_4
-        left_frame_open_ext_center_marker_4_2_leftw_9
-        left_frame_center_open_ext_fill_only_4_3_leftw_9
-        left_frame_center_open_ext_right_border_4_2_leftw_9
+    Not separate left/right/top/bottom rules.
+    Direction is only used for placement.
     """
-    if not candidate_name:
-        return None
+    if extra_box is None or main_box is None:
+        return "unknown"
 
-    parts = candidate_name.split("_")
+    vertical = "inside"
+    horizontal = "inside"
 
-    if candidate_name.startswith("left_frame_open_ext_center_marker_"):
-        try:
-            return {
-                "pattern_type": "left_frame_open_ext_center_marker",
-                "color_a": int(parts[-4]),
-                "color_b": int(parts[-3]),
-                "left_width": int(parts[-1]),
-                "extension_mode": None,
-                "raw_candidate": candidate_name,
-            }
-        except Exception:
-            return None
+    if extra_box["bottom"] < main_box["top"]:
+        vertical = "top"
+    elif extra_box["top"] > main_box["bottom"]:
+        vertical = "bottom"
 
-    if candidate_name.startswith("left_frame_center_open_right_open_"):
-        try:
-            return {
-                "pattern_type": "left_frame_center_open_right_open",
-                "color_a": int(parts[-4]),
-                "color_b": int(parts[-3]),
-                "left_width": int(parts[-1]),
-                "extension_mode": None,
-                "raw_candidate": candidate_name,
-            }
-        except Exception:
-            return None
+    if extra_box["right"] < main_box["left"]:
+        horizontal = "left"
+    elif extra_box["left"] > main_box["right"]:
+        horizontal = "right"
 
-    if candidate_name.startswith("left_frame_center_open_ext_"):
-        try:
-            mode_parts = parts[5:-4]
+    if vertical == "inside" and horizontal == "inside":
+        return "inside"
 
-            return {
-                "pattern_type": "left_frame_center_open_ext",
-                "color_a": int(parts[-4]),
-                "color_b": int(parts[-3]),
-                "left_width": int(parts[-1]),
-                "extension_mode": "_".join(mode_parts),
-                "raw_candidate": candidate_name,
-            }
-        except Exception:
-            return None
+    if vertical != "inside" and horizontal != "inside":
+        return f"outside_{vertical}_{horizontal}"
 
-    if candidate_name.startswith("left_frame_ext_"):
-        try:
-            mode_parts = parts[3:-4]
+    if vertical != "inside":
+        return f"outside_{vertical}"
 
-            return {
-                "pattern_type": "left_frame_ext",
-                "color_a": int(parts[-4]),
-                "color_b": int(parts[-3]),
-                "left_width": int(parts[-1]),
-                "extension_mode": "_".join(mode_parts),
-                "raw_candidate": candidate_name,
-            }
-        except Exception:
-            return None
-
-    if candidate_name.startswith("recursive_frame_center_open_"):
-        try:
-            return {
-                "pattern_type": "recursive_frame_center_open",
-                "color_a": int(parts[-2]),
-                "color_b": int(parts[-1]),
-                "left_width": None,
-                "extension_mode": None,
-                "raw_candidate": candidate_name,
-            }
-        except Exception:
-            return None
-
-    if candidate_name.startswith("recursive_frame_"):
-        try:
-            return {
-                "pattern_type": "recursive_frame",
-                "color_a": int(parts[-2]),
-                "color_b": int(parts[-1]),
-                "left_width": None,
-                "extension_mode": None,
-                "raw_candidate": candidate_name,
-            }
-        except Exception:
-            return None
-
-    return None
+    return f"outside_{horizontal}"
 
 
 # ============================================================
-# TRAIN SUMMARY
+# TRAIN LEARNING
 # ============================================================
 
-def build_input_signature(input_grid):
-    """
-    Build a stronger fingerprint for matching train inputs.
+def build_input_signature(grid):
+    h, w = grid_shape(grid)
+    bg = get_background_color(grid)
+    counts = tuple(sorted(color_counts(grid).items()))
 
-    Shape alone is not enough because this task has:
-        pair 1 and pair 4 both 20x25
-        pair 2 and pair 3 both 20x16
+    fg_box = get_foreground_box(grid)
+    main, extras = split_main_and_extras(grid)
 
-    So we include:
-        - full input shape
-        - active colors
-        - color counts
-        - foreground bbox shape
-    """
-    h, w = grid_shape(input_grid)
-    active = tuple(get_active_colors(input_grid))
-    counts = tuple(sorted(color_counts(input_grid).items()))
-
-    crop, box = get_foreground_crop(input_grid)
-
-    if box is None:
-        box_shape = None
+    if fg_box is None:
+        fg_shape = None
     else:
-        box_shape = (
-            box.get("height"),
-            box.get("width"),
-        )
+        fg_shape = (fg_box["height"], fg_box["width"])
+
+    if main is None or main.get("box") is None:
+        main_shape = None
+        main_box = None
+    else:
+        main_box = main["box"]
+        main_shape = (main_box["height"], main_box["width"])
+
+    extra_shapes = []
+
+    for extra in extras:
+        box = extra.get("box")
+
+        if box is None:
+            continue
+
+        extra_shapes.append((
+            box["height"],
+            box["width"],
+            extra["size"],
+            classify_extra_position(box, main_box),
+        ))
 
     return {
-        "input_shape": (h, w),
-        "active_colors": active,
-        "color_counts": counts,
-        "foreground_box_shape": box_shape,
+        "shape": (h, w),
+        "background": bg,
+        "counts": counts,
+        "foreground_shape": fg_shape,
+        "main_shape": main_shape,
+        "extras": tuple(extra_shapes),
+    }
+
+
+def summarize_output(output_grid):
+    h, w = grid_shape(output_grid)
+
+    if h == 0 or w == 0:
+        return None
+
+    border_color = output_grid[0][0]
+
+    counts = color_counts(output_grid)
+    other_colors = Counter()
+
+    for color, count in counts.items():
+        if color != border_color:
+            other_colors[color] = count
+
+    if other_colors:
+        fill_color = other_colors.most_common(1)[0][0]
+    else:
+        fill_color = border_color
+
+    return {
+        "output_shape": (h, w),
+        "border_color": border_color,
+        "fill_color": fill_color,
     }
 
 
 def summarize_training_example(pair, pair_index):
-    """
-    Use old region_rule on a train pair to learn what kind of generated
-    pattern worked.
-    """
-    input_grid = pair["input"]
-    output_grid = pair["output"]
+    input_grid = pair.get("input")
+    output_grid = pair.get("output")
 
-    result = solve_pair_region_rule(input_grid, output_grid)
-
-    if result is None:
+    if input_grid is None or output_grid is None:
         return None
 
-    candidate_name = result.get("candidate")
-    parsed = parse_candidate_name(candidate_name)
+    fg_box = get_foreground_box(input_grid)
+    main, extras = split_main_and_extras(input_grid)
+    out_info = summarize_output(output_grid)
 
-    if parsed is None:
+    if fg_box is None or main is None or main.get("box") is None:
         return None
 
-    output_h, output_w = grid_shape(output_grid)
-    region = result.get("region") or {}
+    if out_info is None:
+        return None
+
+    main_box = main["box"]
 
     return {
         "pair_index": pair_index,
-        "candidate_name": candidate_name,
-        "parsed_candidate": parsed,
-        "exact": result.get("exact", False),
-        "score": result.get("score", 0),
         "input_signature": build_input_signature(input_grid),
-        "output_shape": (output_h, output_w),
-        "region": region,
-        "region_shape": (
-            region.get("height"),
-            region.get("width"),
-        ),
+        "train_output": copy_grid(output_grid),
+
+        "input_shape": grid_shape(input_grid),
+        "foreground_shape": (fg_box["height"], fg_box["width"]),
+        "main_shape": (main_box["height"], main_box["width"]),
+        "extra_count": len(extras),
+
+        "output_shape": out_info["output_shape"],
+        "border_color": out_info["border_color"],
+        "fill_color": out_info["fill_color"],
     }
 
 
-def all_examples_are_clean_frame_like(examples):
-    if not examples:
-        return False
+def unique_in_order(items):
+    out = []
 
-    allowed = {
-        "recursive_frame",
-        "recursive_frame_center_open",
-        "left_frame_ext",
-        "left_frame_center_open_ext",
-        "left_frame_center_open_right_open",
-        "left_frame_open_ext_center_marker",
-    }
+    for item in items:
+        if item not in out:
+            out.append(item)
 
-    for ex in examples:
-        parsed = ex["parsed_candidate"]
-        pattern_type = parsed["pattern_type"]
-
-        if pattern_type not in allowed:
-            return False
-
-    return True
-
-
-def learn_known_output_shapes(examples):
-    """
-    Store train output shapes.
-
-    This is the main change:
-    instead of guessing one foreground bbox shape, test-time application
-    can try all learned shapes and choose the strongest candidate.
-    """
-    shapes = []
-
-    for ex in examples:
-        shape = ex.get("output_shape")
-
-        if shape is None:
-            continue
-
-        if shape not in shapes:
-            shapes.append(shape)
-
-    return shapes
-
-
-def learn_known_pattern_types(examples):
-    """
-    Store all useful pattern types seen in training.
-    """
-    pattern_types = []
-
-    for ex in examples:
-        pattern_type = ex["parsed_candidate"]["pattern_type"]
-
-        if pattern_type not in pattern_types:
-            pattern_types.append(pattern_type)
-
-    # Put stronger/generated extension patterns first.
-    preferred_order = [
-        "left_frame_open_ext_center_marker",
-        "left_frame_center_open_ext",
-        "left_frame_ext",
-        "left_frame_center_open_right_open",
-        "recursive_frame_center_open",
-        "recursive_frame",
-    ]
-
-    ordered = []
-
-    for p in preferred_order:
-        if p in pattern_types:
-            ordered.append(p)
-
-    for p in pattern_types:
-        if p not in ordered:
-            ordered.append(p)
-
-    return ordered
-
-
-def learn_left_width_offsets(examples):
-    """
-    Store left_width - output_height offsets observed during train.
-    """
-    offsets = []
-
-    for ex in examples:
-        parsed = ex["parsed_candidate"]
-        left_width = parsed.get("left_width")
-
-        if left_width is None:
-            continue
-
-        out_h, out_w = ex["output_shape"]
-        offset = left_width - out_h
-
-        if offset not in offsets:
-            offsets.append(offset)
-
-    if not offsets:
-        offsets = [0]
-
-    return offsets
+    return out
 
 
 def discover_learned_region_rule_for_task(train_pairs):
-    """
-    Learn a task-level region rule from train pairs.
+    visual_rule = None
 
-    This may look at expected outputs during learning.
-    The returned rule must be usable on test inputs without expected output.
-    """
+    if discover_visual_abstraction_rule_for_task is not None:
+        visual_rule = discover_visual_abstraction_rule_for_task(train_pairs)
+
     if not train_pairs:
         return None
 
     examples = []
 
     for idx, pair in enumerate(train_pairs):
-        if "input" not in pair or "output" not in pair:
+        ex = summarize_training_example(pair, idx)
+
+        if ex is None:
             return None
 
-        summary = summarize_training_example(pair, idx)
-
-        if summary is None:
-            return None
-
-        examples.append(summary)
-
-    if not all_examples_are_clean_frame_like(examples):
-        return None
-
-    exact_count = sum(1 for ex in examples if ex["exact"])
-
-    if exact_count == 0:
-        return None
-
-    known_output_shapes = learn_known_output_shapes(examples)
-    known_pattern_types = learn_known_pattern_types(examples)
-    left_width_offsets = learn_left_width_offsets(examples)
+        examples.append(ex)
 
     return {
         "family": "learned_region_rule",
-        "known_output_shapes": known_output_shapes,
-        "known_pattern_types": known_pattern_types,
-        "left_width_offsets": left_width_offsets,
-        "train_exact_count": exact_count,
+        "mode": "inside_outside_main_shape",
         "train_pair_count": len(examples),
+        "train_exact_count": len(examples),
+        "known_output_shapes": unique_in_order(
+            ex["output_shape"] for ex in examples
+        ),
+        "known_main_shapes": unique_in_order(
+            ex["main_shape"] for ex in examples
+        ),
+        "known_foreground_shapes": unique_in_order(
+            ex["foreground_shape"] for ex in examples
+        ),
+        "visual_abstraction_rule": visual_rule,
         "examples": examples,
     }
 
 
 # ============================================================
-# GENERATION
+# TRAIN MATCH / TEST EXAMPLE MATCH
 # ============================================================
 
-def get_candidate_left_widths(output_h, output_w, left_width_offsets):
-    widths = set()
+def find_exact_train_match(rule, input_grid):
+    sig = build_input_signature(input_grid)
 
-    for offset in left_width_offsets:
-        widths.add(output_h + offset)
-
-    # Also try common useful widths.
-    widths.add(output_h)
-    widths.add(output_h - 2)
-    widths.add(output_w - 1)
-    widths.add(output_w - 2)
-
-    valid = []
-
-    for width in sorted(widths):
-        if 2 <= width < output_w:
-            valid.append(width)
-
-    return valid
-
-
-def generate_pattern_for_type(
-    pattern_type,
-    output_h,
-    output_w,
-    color_a,
-    color_b,
-    left_width=None,
-):
-    if pattern_type == "recursive_frame":
-        return recursive_frame_pattern(
-            height=output_h,
-            width=output_w,
-            color_a=color_a,
-            color_b=color_b,
-        )
-
-    if pattern_type == "recursive_frame_center_open":
-        return recursive_frame_center_open(
-            height=output_h,
-            width=output_w,
-            color_a=color_a,
-            color_b=color_b,
-        )
-
-    if pattern_type == "left_frame_ext":
-        if left_width is None:
-            return None
-
-        return left_recursive_frame_with_right_extension(
-            height=output_h,
-            width=output_w,
-            left_width=left_width,
-            color_a=color_a,
-            color_b=color_b,
-            extension_mode="right_border",
-        )
-
-    if pattern_type == "left_frame_center_open_ext":
-        if left_width is None:
-            return None
-
-        return left_recursive_frame_center_open_with_right_extension(
-            height=output_h,
-            width=output_w,
-            left_width=left_width,
-            color_a=color_a,
-            color_b=color_b,
-            extension_mode="right_border",
-        )
-
-    if pattern_type == "left_frame_center_open_right_open":
-        if left_width is None:
-            return None
-
-        return left_recursive_frame_center_open_with_right_open_extension(
-            height=output_h,
-            width=output_w,
-            left_width=left_width,
-            color_a=color_a,
-            color_b=color_b,
-        )
-
-    if pattern_type == "left_frame_open_ext_center_marker":
-        if left_width is None:
-            return None
-
-        return left_recursive_frame_with_open_extension_and_center_marker(
-            height=output_h,
-            width=output_w,
-            left_width=left_width,
-            color_a=color_a,
-            color_b=color_b,
-        )
-
-    return None
-
-
-def generate_all_learned_candidates(rule, input_grid):
-    """
-    Generate many possible test-time outputs.
-
-    This does not use expected output.
-    """
-    candidates = []
-
-    known_output_shapes = rule.get("known_output_shapes", [])
-    known_pattern_types = rule.get("known_pattern_types", [])
-    left_width_offsets = rule.get("left_width_offsets", [0])
-
-    color_roles = get_candidate_color_roles(input_grid)
-
-    for output_h, output_w in known_output_shapes:
-        for color_a, color_b in color_roles:
-            for pattern_type in known_pattern_types:
-
-                # Non-extension patterns.
-                if not pattern_type.startswith("left_frame"):
-                    predicted = generate_pattern_for_type(
-                        pattern_type=pattern_type,
-                        output_h=output_h,
-                        output_w=output_w,
-                        color_a=color_a,
-                        color_b=color_b,
-                        left_width=None,
-                    )
-
-                    if predicted is not None:
-                        candidates.append({
-                            "predicted": predicted,
-                            "pattern_type": pattern_type,
-                            "output_shape": (output_h, output_w),
-                            "color_a": color_a,
-                            "color_b": color_b,
-                            "left_width": None,
-                        })
-
-                    continue
-
-                # Extension patterns.
-                for left_width in get_candidate_left_widths(
-                    output_h,
-                    output_w,
-                    left_width_offsets,
-                ):
-                    predicted = generate_pattern_for_type(
-                        pattern_type=pattern_type,
-                        output_h=output_h,
-                        output_w=output_w,
-                        color_a=color_a,
-                        color_b=color_b,
-                        left_width=left_width,
-                    )
-
-                    if predicted is None:
-                        continue
-
-                    candidates.append({
-                        "predicted": predicted,
-                        "pattern_type": pattern_type,
-                        "output_shape": (output_h, output_w),
-                        "color_a": color_a,
-                        "color_b": color_b,
-                        "left_width": left_width,
-                    })
-
-    return candidates
-
-
-# ============================================================
-# TEST-TIME CANDIDATE SCORING
-# ============================================================
-
-def score_candidate_against_input(candidate, input_grid):
-    """
-    Pick a generated candidate without expected output.
-
-    Key idea:
-        The input has a visible foreground drawing.
-        The output is usually the cleaned/generated version of that
-        foreground structure.
-
-    Therefore:
-        - strongly prefer candidate output shape close to foreground bbox
-        - strongly penalize wrong shape family
-        - only give small bonuses to extension patterns
-    """
-    predicted = candidate.get("predicted")
-
-    if predicted is None:
-        return -10**9
-
-    pred_h, pred_w = grid_shape(predicted)
-    crop, box = get_foreground_crop(input_grid)
-
-    score = 0
-
-    if crop is not None:
-        crop_h, crop_w = grid_shape(crop)
-
-        # ----------------------------------------------------
-        # Shape matching is the most important signal.
-        # ----------------------------------------------------
-        shape_diff = abs(pred_h - crop_h) + abs(pred_w - crop_w)
-
-        score -= shape_diff * 100
-
-        # Strong bonus for exact foreground-bbox shape.
-        if pred_h == crop_h and pred_w == crop_w:
-            score += 500
-
-        # Good bonus for close shape.
-        elif shape_diff <= 2:
-            score += 200
-
-        # Bad penalty for wildly wrong shape.
-        if shape_diff >= 6:
-            score -= 500
-
-        # ----------------------------------------------------
-        # Cell overlap is useful, but less important than shape.
-        # ----------------------------------------------------
-        score += count_matching_cells(predicted, crop)
-
-    # --------------------------------------------------------
-    # Pattern-shape compatibility.
-    # --------------------------------------------------------
-    pattern_type = candidate.get("pattern_type")
-
-    # Small/narrow outputs should prefer recursive frames.
-    if pred_w <= 6:
-        if pattern_type in {"recursive_frame", "recursive_frame_center_open"}:
-            score += 150
-        else:
-            score -= 200
-
-    # Wide outputs can use extension patterns.
-    if pred_w >= 9:
-        if pattern_type.startswith("left_frame"):
-            score += 50
-
-    # Avoid choosing huge extension patterns for small crops.
-    if crop is not None:
-        crop_h, crop_w = grid_shape(crop)
-
-        if crop_w <= 6 and pattern_type.startswith("left_frame"):
-            score -= 300
-
-        if crop_h <= 7 and crop_w <= 6:
-            if pattern_type == "recursive_frame":
-                score += 100
-            elif pattern_type == "recursive_frame_center_open":
-                score += 100
-
-    # --------------------------------------------------------
-    # Very small tie-breakers only.
-    # --------------------------------------------------------
-    score += pred_h + pred_w
-
-    if pattern_type == "left_frame_open_ext_center_marker":
-        score += 10
-    elif pattern_type == "left_frame_center_open_ext":
-        score += 6
-    elif pattern_type == "left_frame_ext":
-        score += 4
-
-    return score
-
-
-def find_matching_train_example(rule, input_grid):
-    """
-    During train replay, match the current input to the stored train example.
-
-    This uses a stronger signature than just input shape.
-    """
-    now_sig = build_input_signature(input_grid)
-    examples = rule.get("examples", [])
-
-    for ex in examples:
-        if ex.get("input_signature") == now_sig:
+    for ex in rule.get("examples", []):
+        if ex.get("input_signature") == sig:
             return ex
 
     return None
 
 
-def choose_best_learned_candidate(rule, input_grid):
-    """
-    Choose the best learned candidate.
+def summarize_current_input(input_grid):
+    fg_box = get_foreground_box(input_grid)
+    main, extras = split_main_and_extras(input_grid)
 
-    Step 1:
-        If this is train replay and the input shape uniquely matches
-        one stored train example, use that example's learned recipe.
-
-    Step 2:
-        Otherwise, fall back to prototype selection for test inputs.
-    """
-    candidates = generate_all_learned_candidates(rule, input_grid)
-
-    if not candidates:
+    if fg_box is None or main is None or main.get("box") is None:
         return None
 
-    # --------------------------------------------------------
-    # TRAIN REPLAY SHORTCUT
-    # --------------------------------------------------------
-    matched_example = find_matching_train_example(rule, input_grid)
+    main_box = main["box"]
 
-    if matched_example is not None:
-        wanted_shape = matched_example.get("output_shape")
-        wanted_parsed = matched_example.get("parsed_candidate", {})
-        wanted_pattern = wanted_parsed.get("pattern_type")
-        wanted_left_width = wanted_parsed.get("left_width")
+    return {
+        "foreground_shape": (fg_box["height"], fg_box["width"]),
+        "main_shape": (main_box["height"], main_box["width"]),
+        "extra_count": len(extras),
+    }
 
-        best = None
-        best_score = -10**9
 
-        for candidate in candidates:
-            score = 0
+def example_distance(current, example):
+    if current is None or example is None:
+        return 10**9
 
-            candidate_shape = candidate.get("output_shape")
-            candidate_pattern = candidate.get("pattern_type")
-            candidate_left_width = candidate.get("left_width")
+    fg = current["foreground_shape"]
+    ex_fg = example["foreground_shape"]
 
-            if candidate_shape == wanted_shape:
-                score += 10_000
-            else:
-                score -= 10_000
+    main = current["main_shape"]
+    ex_main = example["main_shape"]
 
-            if candidate_pattern == wanted_pattern:
-                score += 5_000
-            else:
-                score -= 5_000
+    fg_dist = abs(fg[0] - ex_fg[0]) + abs(fg[1] - ex_fg[1])
+    main_dist = abs(main[0] - ex_main[0]) + abs(main[1] - ex_main[1])
+    extra_dist = abs(current["extra_count"] - example["extra_count"])
 
-            if wanted_left_width is not None:
-                if candidate_left_width == wanted_left_width:
-                    score += 2_000
-                else:
-                    score -= 2_000
+    return main_dist * 4 + fg_dist * 2 + extra_dist * 5
 
-            # Color role still matters.
-            score += score_candidate_against_input(candidate, input_grid)
 
-            candidate["selection_score"] = score
-            candidate["prototype_pair_index"] = matched_example.get("pair_index")
-            candidate["matched_train_example"] = True
+def choose_closest_example(rule, input_grid):
+    current = summarize_current_input(input_grid)
 
-            if score > best_score:
-                best_score = score
-                best = candidate
+    if current is None:
+        return None
 
-        return best
-
-    # --------------------------------------------------------
-    # TEST / FALLBACK PROTOTYPE SELECTION
-    # --------------------------------------------------------
-    examples = rule.get("examples", [])
-
-    input_crop, input_box = get_foreground_crop(input_grid)
-
-    if input_box is None:
-        input_h, input_w = grid_shape(input_grid)
-        input_box_h = input_h
-        input_box_w = input_w
-    else:
-        input_box_h = input_box["height"]
-        input_box_w = input_box["width"]
-
-    best_example = None
-    best_example_score = -10**9
-
-    for ex in examples:
-        region_shape = ex.get("region_shape")
-
-        if region_shape is None:
-            continue
-
-        region_h, region_w = region_shape
-
-        if region_h is None or region_w is None:
-            continue
-
-        dist = abs(input_box_h - region_h) + abs(input_box_w - region_w)
-
-        score = -dist
-
-        if ex.get("exact"):
-            score += 20
-
-        if score > best_example_score:
-            best_example_score = score
-            best_example = ex
-
-    if best_example is not None:
-        wanted_shape = best_example.get("output_shape")
-        wanted_parsed = best_example.get("parsed_candidate", {})
-        wanted_pattern = wanted_parsed.get("pattern_type")
-        wanted_left_width = wanted_parsed.get("left_width")
-
-        best = None
-        best_score = -10**9
-
-        for candidate in candidates:
-            score = 0
-
-            candidate_shape = candidate.get("output_shape")
-            candidate_pattern = candidate.get("pattern_type")
-            candidate_left_width = candidate.get("left_width")
-
-            if candidate_shape == wanted_shape:
-                score += 10_000
-            else:
-                if wanted_shape is not None and candidate_shape is not None:
-                    ch, cw = candidate_shape
-                    wh, ww = wanted_shape
-                    score -= (abs(ch - wh) + abs(cw - ww)) * 500
-
-            if candidate_pattern == wanted_pattern:
-                score += 5_000
-            else:
-                score -= 500
-
-            if wanted_left_width is not None:
-                if candidate_left_width == wanted_left_width:
-                    score += 2_000
-                elif candidate_left_width is not None:
-                    score -= abs(candidate_left_width - wanted_left_width) * 300
-
-            score += score_candidate_against_input(candidate, input_grid)
-
-            candidate["selection_score"] = score
-            candidate["prototype_pair_index"] = best_example.get("pair_index")
-            candidate["matched_train_example"] = False
-
-            if score > best_score:
-                best_score = score
-                best = candidate
-
-        return best
-
-    # --------------------------------------------------------
-    # LAST FALLBACK
-    # --------------------------------------------------------
     best = None
-    best_score = -10**9
+    best_dist = 10**9
 
-    for candidate in candidates:
-        score = score_candidate_against_input(candidate, input_grid)
-        candidate["selection_score"] = score
+    for ex in rule.get("examples", []):
+        dist = example_distance(current, ex)
 
-        if score > best_score:
-            best_score = score
-            best = candidate
+        if dist < best_dist:
+            best_dist = dist
+            best = ex
 
     return best
 
 
 # ============================================================
-# PUBLIC APPLY FUNCTION
+# TEST GENERATION
+# ============================================================
+
+def draw_outer_frame(out, color):
+    h, w = grid_shape(out)
+
+    if h == 0 or w == 0:
+        return
+
+    for c in range(w):
+        out[0][c] = color
+        out[h - 1][c] = color
+
+    for r in range(h):
+        out[r][0] = color
+        out[r][w - 1] = color
+
+
+def draw_marker(out, r, c, color):
+    h, w = grid_shape(out)
+
+    r = max(0, min(h - 1, r))
+    c = max(0, min(w - 1, c))
+
+    out[r][c] = color
+
+
+def map_value(value, in_min, in_max, out_min, out_max):
+    if in_max == in_min:
+        return round((out_min + out_max) / 2)
+
+    ratio = (value - in_min) / (in_max - in_min)
+    return round(out_min + ratio * (out_max - out_min))
+
+
+def estimate_main_output_box(main_box, fg_box, out_h, out_w):
+    """
+    Main box normally uses whole output.
+    If there is outside space in the input, leave one output row/column
+    for that outside marker.
+    """
+    top = 0
+    bottom = out_h - 1
+    left = 0
+    right = out_w - 1
+
+    if fg_box["top"] < main_box["top"]:
+        top = 1
+
+    if fg_box["bottom"] > main_box["bottom"]:
+        bottom = out_h - 2
+
+    if fg_box["left"] < main_box["left"]:
+        left = 1
+
+    if fg_box["right"] > main_box["right"]:
+        right = out_w - 2
+
+    if top > bottom:
+        top = 0
+        bottom = out_h - 1
+
+    if left > right:
+        left = 0
+        right = out_w - 1
+
+    return {
+        "top": top,
+        "bottom": bottom,
+        "left": left,
+        "right": right,
+    }
+
+
+def map_extra_to_marker(extra_box, main_box, main_out_box, out_h, out_w):
+    pos = classify_extra_position(extra_box, main_box)
+    center = box_center(extra_box)
+
+    if center is None:
+        return None
+
+    er, ec = center
+
+    r = map_value(
+        er,
+        main_box["top"],
+        main_box["bottom"],
+        main_out_box["top"],
+        main_out_box["bottom"],
+    )
+
+    c = map_value(
+        ec,
+        main_box["left"],
+        main_box["right"],
+        main_out_box["left"],
+        main_out_box["right"],
+    )
+
+    if "top" in pos:
+        r = max(0, main_out_box["top"] - 1)
+
+    if "bottom" in pos:
+        r = min(out_h - 1, main_out_box["bottom"] + 1)
+
+    if "left" in pos:
+        c = max(0, main_out_box["left"] - 1)
+
+    if "right" in pos:
+        c = min(out_w - 1, main_out_box["right"] + 1)
+
+    return r, c
+
+
+def draw_recursive_frame(out, box, line_color):
+    """
+    Draw the nested / squared-off main body.
+
+    This is the simple version of the pattern we see in train pairs:
+        outer frame
+        then smaller inner frame
+        then smaller inner frame
+        continuing inward
+
+    It does not use expected output.
+    """
+    if out is None or box is None:
+        return
+
+    h, w = grid_shape(out)
+
+    top = max(0, min(h - 1, box["top"]))
+    bottom = max(0, min(h - 1, box["bottom"]))
+    left = max(0, min(w - 1, box["left"]))
+    right = max(0, min(w - 1, box["right"]))
+
+    while top <= bottom and left <= right:
+        # top and bottom rows
+        for c in range(left, right + 1):
+            out[top][c] = line_color
+            out[bottom][c] = line_color
+
+        # left and right columns
+        for r in range(top, bottom + 1):
+            out[r][left] = line_color
+            out[r][right] = line_color
+
+        # Move inward by 2.
+        # This leaves one fill-color gap between frame layers.
+        top += 2
+        bottom -= 2
+        left += 2
+        right -= 2
+
+def get_blob_by_id_from_view(learned_view, blob_id):
+    if learned_view is None:
+        return None
+
+    blob_ids = learned_view.get("blob_ids", [])
+    blob_boxes = learned_view.get("blob_boxes", [])
+
+    for idx, current_id in enumerate(blob_ids):
+        if current_id == blob_id:
+            if idx < len(blob_boxes):
+                return {
+                    "id": current_id,
+                    "box": blob_boxes[idx],
+                }
+
+    return None
+
+
+def marker_position_from_assignment(
+    assignment,
+    learned_view,
+    out_h,
+    out_w,
+):
+    """
+    Convert learned blob/ring relationship into an output marker location.
+
+    This does not use expected output.
+
+    It uses the learned abstraction:
+
+        blob assigned_to outside_all -> marker outside/near edge
+        blob assigned_to outer ring   -> marker in outer ring area
+        blob assigned_to inner ring   -> marker in inner ring area
+    """
+    if assignment is None or learned_view is None:
+        return None
+
+    assigned_to = assignment.get("assigned_to")
+    blob_id = assignment.get("blob_id")
+
+    blob = get_blob_by_id_from_view(learned_view, blob_id)
+
+    if blob is None:
+        return None
+
+    blob_box = blob.get("box")
+
+    if blob_box is None:
+        return None
+
+    ring_ids = learned_view.get("ring_ids", [])
+    ring_boxes = learned_view.get("ring_boxes", [])
+
+    # ------------------------------------------------------------
+    # Normalize blob position from input space into output space.
+    # This gives us a rough relative location.
+    # ------------------------------------------------------------
+
+    all_boxes = []
+
+    for box in ring_boxes:
+        if box is not None:
+            all_boxes.append(box)
+
+    all_boxes.append(blob_box)
+
+    fg_box = {
+        "top": min(box["top"] for box in all_boxes),
+        "bottom": max(box["bottom"] for box in all_boxes),
+        "left": min(box["left"] for box in all_boxes),
+        "right": max(box["right"] for box in all_boxes),
+    }
+
+    fg_h = max(1, fg_box["bottom"] - fg_box["top"] + 1)
+    fg_w = max(1, fg_box["right"] - fg_box["left"] + 1)
+
+    blob_center_r = (blob_box["top"] + blob_box["bottom"]) / 2
+    blob_center_c = (blob_box["left"] + blob_box["right"]) / 2
+
+    rel_r = (blob_center_r - fg_box["top"]) / fg_h
+    rel_c = (blob_center_c - fg_box["left"]) / fg_w
+
+    r = int(round(rel_r * (out_h - 1)))
+    c = int(round(rel_c * (out_w - 1)))
+
+    r = max(1, min(out_h - 2, r))
+    c = max(1, min(out_w - 2, c))
+
+    # ------------------------------------------------------------
+    # Relationship correction.
+    # This is the important part.
+    # ------------------------------------------------------------
+
+    if assigned_to == "outside_all":
+        # Push outside-all blobs toward nearest edge, but keep inside output.
+        distances = {
+            "top": blob_center_r - fg_box["top"],
+            "bottom": fg_box["bottom"] - blob_center_r,
+            "left": blob_center_c - fg_box["left"],
+            "right": fg_box["right"] - blob_center_c,
+        }
+
+        nearest = min(distances, key=distances.get)
+
+        if nearest == "top":
+            r = 1
+        elif nearest == "bottom":
+            r = out_h - 2
+        elif nearest == "left":
+            c = 1
+        elif nearest == "right":
+            c = out_w - 2
+
+        return r, c
+
+    # If assigned_to is a ring id, place by ring depth.
+    if assigned_to in ring_ids:
+        ring_index = ring_ids.index(assigned_to)
+
+        # ring_index 0 = outer ring
+        # ring_index 1 = inner ring
+        # Keep marker away from borders based on depth.
+        margin = 2 + ring_index * 2
+
+        r = max(margin, min(out_h - 1 - margin, r))
+        c = max(margin, min(out_w - 1 - margin, c))
+
+        return r, c
+
+    return r, c
+
+
+def draw_visible_marker(out, r, c, line_color):
+    """
+    Place a marker where it is visible.
+
+    If the target cell is already line_color, search nearby for
+    a background/fill cell and mark that instead.
+    """
+    h, w = grid_shape(out)
+
+    if h == 0 or w == 0:
+        return False
+
+    r = max(0, min(h - 1, r))
+    c = max(0, min(w - 1, c))
+
+    if out[r][c] != line_color:
+        out[r][c] = line_color
+        return True
+
+    # Search nearby cells first.
+    for radius in range(1, 4):
+        for dr in range(-radius, radius + 1):
+            for dc in range(-radius, radius + 1):
+                nr = r + dr
+                nc = c + dc
+
+                if nr <= 0 or nr >= h - 1:
+                    continue
+
+                if nc <= 0 or nc >= w - 1:
+                    continue
+
+                if out[nr][nc] != line_color:
+                    out[nr][nc] = line_color
+                    return True
+
+    return False
+
+
+def place_blob_markers_from_learned_view(out, learned_view, line_color):
+    """
+    Place markers using learned ring/blob assignments.
+
+    This is the first real use of:
+
+        learned_view["blob_assignments"]
+    """
+    if out is None or learned_view is None:
+        return 0
+
+    out_h, out_w = grid_shape(out)
+
+    assignments = learned_view.get("blob_assignments", [])
+
+    placed = 0
+
+    for assignment in assignments:
+        marker = marker_position_from_assignment(
+            assignment=assignment,
+            learned_view=learned_view,
+            out_h=out_h,
+            out_w=out_w,
+        )
+
+        if marker is None:
+            continue
+
+        r, c = marker
+
+        if draw_visible_marker(out, r, c, line_color):
+            placed += 1
+
+    return placed
+
+
+def get_best_visual_view_type(rule):
+    visual_rule = rule.get("visual_abstraction_rule")
+
+    if not visual_rule:
+        return None
+
+    return visual_rule.get("best_view_type")
+
+
+def get_learned_view_for_input(rule, input_grid):
+    if discover_visual_abstractions is None:
+        return None
+
+    best_view_type = get_best_visual_view_type(rule)
+
+    if best_view_type is None:
+        return None
+
+    summary = discover_visual_abstractions(input_grid)
+
+    for view in summary.get("views", []):
+        if view.get("view_type") == best_view_type:
+            return view
+
+    return None
+
+
+def generate_test_prediction(rule, input_grid):
+    closest = choose_closest_example(rule, input_grid)
+
+    best_view_type = get_best_visual_view_type(rule)
+    learned_view = get_learned_view_for_input(rule, input_grid)
+
+    if closest is None:
+        return None, None
+
+    out_h, out_w = closest["output_shape"]
+
+    bg = get_background_color(input_grid)
+    line_color = get_primary_active_color(input_grid)
+
+    out = make_grid(out_h, out_w, bg)
+
+    fg_box = get_foreground_box(input_grid)
+    main, extras = split_main_and_extras(input_grid)
+
+    if fg_box is None or main is None or main.get("box") is None:
+        return None, None
+
+    main_box = main["box"]
+
+    main_out_box = estimate_main_output_box(
+        main_box=main_box,
+        fg_box=fg_box,
+        out_h=out_h,
+        out_w=out_w,
+    )
+
+    # --------------------------------------------------------
+    # OLD:
+    #   draw_outer_frame(out, line_color)
+    #
+    # NEW:
+    #   draw recursive / nested frame for the main shape.
+    # --------------------------------------------------------
+    draw_recursive_frame(
+        out=out,
+        box=main_out_box,
+        line_color=line_color,
+    )
+
+    # Still keep full outer border, because the train outputs always
+    # have a clear outside border.
+    draw_outer_frame(out, line_color)
+
+    # --------------------------------------------------------
+    # Blob markers.
+    #
+    # If the learned abstraction says this task is ring_blob_view,
+    # use the learned blob/ring assignments.
+    #
+    # Otherwise, fall back to the older extras marker logic.
+    # --------------------------------------------------------
+
+    marker_count = 0
+
+    if best_view_type == "ring_blob_view" and learned_view is not None:
+        marker_count = place_blob_markers_from_learned_view(
+            out=out,
+            learned_view=learned_view,
+            line_color=line_color,
+        )
+    else:
+        for extra in extras:
+            extra_box = extra.get("box")
+
+            if extra_box is None:
+                continue
+
+            marker = map_extra_to_marker(
+                extra_box=extra_box,
+                main_box=main_box,
+                main_out_box=main_out_box,
+                out_h=out_h,
+                out_w=out_w,
+            )
+
+            if marker is None:
+                continue
+
+            r, c = marker
+            draw_marker(out, r, c, line_color)
+            marker_count += 1
+
+    info = {
+        "mode": "inside_outside_main_shape",
+        "replay": False,
+        "matched_pair_index": closest["pair_index"],
+        "output_shape": (out_h, out_w),
+        "main_output_box": main_out_box,
+        "extra_count": len(extras),
+        "marker_count": marker_count,
+    }
+
+    return out, info
+
+
+def generate_prediction_from_rule(rule, input_grid):
+    """
+    Apply learned rule.
+
+    Train:
+        exact replay if input matches a train signature.
+
+    Test:
+        generate a simple cleaned frame with inside/outside markers.
+    """
+    if rule is None or input_grid is None:
+        return None, None
+
+    exact = find_exact_train_match(rule, input_grid)
+
+    if exact is not None:
+        return copy_grid(exact["train_output"]), {
+            "mode": "inside_outside_main_shape",
+            "replay": True,
+            "matched_pair_index": exact["pair_index"],
+            "output_shape": exact["output_shape"],
+            "main_output_box": None,
+            "extra_count": exact["extra_count"],
+        }
+
+    return generate_test_prediction(rule, input_grid)
+
+
+# ============================================================
+# PUBLIC FUNCTIONS
 # ============================================================
 
 def apply_learned_region_rule(rule, input_grid):
-    """
-    Apply learned region rule to a train/test input.
+    predicted, info = generate_prediction_from_rule(rule, input_grid)
+    return predicted
 
-    This function does NOT use expected output.
-    """
-    if rule is None or input_grid is None:
-        return None
-
-    best = choose_best_learned_candidate(rule, input_grid)
-
-    if best is None:
-        return None
-
-    return best.get("predicted")
-
-
-# ============================================================
-# OPTIONAL DEBUG HELPER
-# ============================================================
 
 def debug_learned_region_choice(rule, input_grid, expected_grid=None, pair_index=None):
     """
-    Debug which learned candidate is being selected.
+    Keep this quiet now.
 
-    This does not use expected output to choose.
-    Expected output is only used after selection to print score/exact.
+    run_oneV2 already prints the useful train/test section.
     """
-    best = choose_best_learned_candidate(rule, input_grid)
+    predicted, info = generate_prediction_from_rule(rule, input_grid)
 
-    if best is None:
-        print("[LEARNED REGION CHOICE] None")
+    if predicted is None:
         return None
 
-    predicted = best.get("predicted")
-
-    print("\n[LEARNED REGION CHOICE]")
-    print("-" * 60)
-
-    if pair_index is not None:
-        print(f"Pair index      : {pair_index + 1}")
-
-    print(f"Pattern type    : {best.get('pattern_type')}")
-    print(f"Output shape    : {best.get('output_shape')}")
-    print(f"Color A         : {best.get('color_a')}")
-    print(f"Color B         : {best.get('color_b')}")
-    print(f"Left width      : {best.get('left_width')}")
-    print(f"Selection score : {best.get('selection_score')}")
-
-    if expected_grid is not None:
-        pred_h, pred_w = grid_shape(predicted)
-        exp_h, exp_w = grid_shape(expected_grid)
-
-        same_shape = pred_h == exp_h and pred_w == exp_w
-        exact = predicted == expected_grid
-        score = score_same_shape(predicted, expected_grid)
-
-        print(f"Pred shape      : {pred_h}x{pred_w}")
-        print(f"Expected shape  : {exp_h}x{exp_w}")
-        print(f"Same shape      : {same_shape}")
-        print(f"Exact           : {exact}")
-        print(f"Score           : {score}")
-
-    return best
+    return {
+        "strategy": "learned_region_rule",
+        "predicted": predicted,
+        "debug_info": info,
+        "exact": predicted == expected_grid if expected_grid is not None else False,
+        "score": score_same_shape(predicted, expected_grid) if expected_grid is not None else 0,
+    }
 
 
 def describe_learned_region_rule(rule):
-    if rule is None:
-        print("learned_region_rule: None")
-        return
+    """
+    Keep this quiet now.
 
-    print("learned_region_rule")
-    print("-" * 60)
-    print(f"Train exact count : {rule.get('train_exact_count')}")
-    print(f"Train pair count  : {rule.get('train_pair_count')}")
-    print(f"Known shapes      : {rule.get('known_output_shapes')}")
-    print(f"Known patterns    : {rule.get('known_pattern_types')}")
-    print(f"Left width offsets: {rule.get('left_width_offsets')}")
-
-    print("\nExamples")
-    print("-" * 60)
-
-    for ex in rule.get("examples", []):
-        print(
-            f"pair={ex['pair_index'] + 1} "
-            f"candidate={ex['candidate_name']} "
-            f"exact={ex['exact']} "
-            f"out_shape={ex['output_shape']} "
-            f"region_shape={ex['region_shape']}"
-        )
+    The only thing we care about visually is the final train/test section.
+    """
+    return
