@@ -14,7 +14,15 @@ from reasoning.task_router import (
     apply_task_rule_to_input,
     get_all_strategy_results,
 )
-
+from reasoning.visual_abstraction_discovery import (
+    discover_visual_abstractions,
+    print_visual_abstractions,
+)
+from reasoning.visual_symbolic_rule import (
+    discover_visual_symbolic_rule_for_task,
+    score_visual_symbolic_rule_on_train,
+    leave_one_out_visual_symbolic,
+)
 
 # ============================================================
 # TASK TO DEBUG
@@ -110,7 +118,6 @@ def print_diff_summary(predicted, expected, max_show=40):
             if pv != ev:
                 diffs.append((r, c, pv, ev))
 
-    # Count extra shape cells as shape mismatch info.
     shape_mismatch = (ph != eh or pw != ew)
 
     print(f"Different cells: {len(diffs)}")
@@ -123,6 +130,31 @@ def print_diff_summary(predicted, expected, max_show=40):
 
     if len(diffs) > max_show:
         print(f"  ... {len(diffs) - max_show} more")
+
+
+def print_task_level_debug(scored_rule, label="TASK-LEVEL DEBUG"):
+    print()
+    print(f"[{label}]")
+    print("-" * 60)
+
+    if scored_rule is None:
+        print("None")
+        return
+
+    print(f"Exact count: {scored_rule.get('exact_count')}")
+    print(f"Pair count : {scored_rule.get('pair_count')}")
+    print(f"Total score: {scored_rule.get('total_raw_score')}")
+
+    for result in scored_rule.get("results", []):
+        pred = result.get("predicted")
+        h, w = grid_shape(pred)
+
+        print(
+            f"  pair {result.get('pair_index')}: "
+            f"exact={result.get('exact')} "
+            f"score={result.get('score')} "
+            f"shape={h}x{w}"
+        )
 
 
 # ============================================================
@@ -212,31 +244,12 @@ def load_task(task_id):
         with open(path, "r", encoding="utf-8") as f:
             raw = json.load(f)
 
-        # Case 1:
-        # {
-        #   "269e22fb": {
-        #       "train": [...],
-        #       "test": [...]
-        #   }
-        # }
         if isinstance(raw, dict) and task_id in raw:
             return raw[task_id]
 
-        # Case 2:
-        # {
-        #   "train": [...],
-        #   "test": [...]
-        # }
         if isinstance(raw, dict) and ("train" in raw or "test" in raw):
             return raw
 
-        # Case 3:
-        # {
-        #   "some_id": {
-        #       "train": [...],
-        #       "test": [...]
-        #   }
-        # }
         if isinstance(raw, dict) and len(raw) == 1:
             only_value = next(iter(raw.values()))
 
@@ -397,11 +410,13 @@ def run_train_debug(train_pairs, chosen_strategy, task_rule):
 
         score = score_prediction(predicted, expected_grid)
         exact = predicted == expected_grid
+
         pair_result = solve_pair_with_forced_strategy(
             input_grid,
             expected_grid,
             chosen_strategy,
         )
+
         print("\nCHOSEN TASK-LEVEL RESULT")
         print("-" * 60)
         print(f"Strategy: {chosen_strategy}")
@@ -497,6 +512,37 @@ def run_test_debug(test_pairs, chosen_strategy, task_rule):
             print(e)
 
 
+def print_grid_diff_summary(predicted, expected, label):
+    print()
+    print(f"[{label} DIFF SUMMARY]")
+
+    if predicted is None:
+        print("predicted is None")
+        return
+
+    ph, pw = grid_shape(predicted)
+    eh, ew = grid_shape(expected)
+
+    print(f"pred shape: {ph}x{pw}")
+    print(f"exp  shape: {eh}x{ew}")
+
+    if ph != eh or pw != ew:
+        print("shape mismatch")
+        return
+
+    diffs = []
+
+    for r in range(eh):
+        for c in range(ew):
+            if predicted[r][c] != expected[r][c]:
+                diffs.append((r, c, predicted[r][c], expected[r][c]))
+
+    print(f"wrong cells: {len(diffs)}")
+
+    for r, c, p, e in diffs[:80]:
+        print(f"  r={r:2d} c={c:2d} pred={p} exp={e}")
+
+
 # ============================================================
 # MAIN
 # ============================================================
@@ -517,6 +563,73 @@ def main():
         print("No train pairs found.")
         return
 
+    print("\n" + "=" * 60)
+    print("VISUAL ABSTRACTION DISCOVERY TEST")
+    print("=" * 60)
+
+    for idx, pair in enumerate(train_pairs, start=1):
+        print("\n" + "-" * 60)
+        print(f"TRAIN PAIR {idx} INPUT VISUAL TREE")
+        print("-" * 60)
+        input_summary = discover_visual_abstractions(pair["input"])
+        print_visual_abstractions(input_summary)
+
+        print("\n" + "-" * 60)
+        print(f"TRAIN PAIR {idx} OUTPUT VISUAL TREE")
+        print("-" * 60)
+        output_summary = discover_visual_abstractions(pair["output"])
+        print_visual_abstractions(output_summary)
+
+    # ------------------------------------------------------------
+    # DIRECT VISUAL-SYMBOLIC CHECK
+    # ------------------------------------------------------------
+    # This is separate from the router.
+    # It tells us whether the visual_symbolic_rule itself can replay
+    # the full train set using symbolic learned rules.
+    # ------------------------------------------------------------
+    print("\n" + "=" * 60)
+    print("VISUAL SYMBOLIC FULL-TRAIN CHECK")
+    print("=" * 60)
+
+    visual_rule = discover_visual_symbolic_rule_for_task(train_pairs)
+
+    visual_scored = score_visual_symbolic_rule_on_train(
+        visual_rule,
+        train_pairs,
+    )
+
+    print_task_level_debug(
+        visual_scored,
+        label="visual_symbolic_rule FULL TRAIN",
+    )
+    print("\n" + "=" * 60)
+    print("VISUAL SYMBOLIC FULL-TRAIN DIFFS")
+    print("=" * 60)
+
+    for result in visual_scored.get("results", []):
+        pair_index = result.get("pair_index")
+        predicted = result.get("predicted")
+        expected = train_pairs[pair_index]["output"]
+
+        print_grid_diff_summary(
+            predicted,
+            expected,
+            label=f"VISUAL SYMBOLIC FULL TRAIN PAIR {pair_index}",
+        )
+    print("\n" + "=" * 60)
+    print("VISUAL SYMBOLIC LEAVE-ONE-OUT CHECK")
+    print("=" * 60)
+
+    visual_loo = leave_one_out_visual_symbolic(train_pairs)
+
+    print_task_level_debug(
+        visual_loo,
+        label="visual_symbolic_rule LEAVE ONE OUT",
+    )
+
+    # ------------------------------------------------------------
+    # NORMAL ROUTER CHECK
+    # ------------------------------------------------------------
     task_choice = choose_task_level_strategy(
         train_pairs,
         debug=True,

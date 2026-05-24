@@ -1,165 +1,94 @@
 # visual_review_leave_one_out.py
-"""
-HONEST Visual Review Tool — Leave-One-Out
 
-Purpose:
-    Show what the program actually predicts when it does NOT get to
-    learn from the train pair it is being tested on.
-
-For each task and each train pair:
-
-    1. Hide that train pair.
-    2. Learn from the other train pairs.
-    3. Predict the hidden input.
-    4. Show:
-
-        INPUT | EXPECTED | GUESSED
-
-This is much more honest than normal train replay.
-
-How to run:
-    python visual_review_leave_one_out.py
-
-Then type:
-    data
-
-or:
-    data_failures/extracted_tasks/2d0172a1.json
-"""
-
-import contextlib
-import io
 import json
 import os
-import tkinter as tk
-from tkinter import ttk
-from reasoning.archive.ring_blob_scene import learn_ring_blob_scene
-from reasoning.archive.ring_blob_rule_synthesizer import scene_signature
+import traceback
 
-# from reasoning.task_router import (
-#     choose_task_level_strategy,
-#     apply_task_rule_to_input,
-# )
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.colors import ListedColormap, BoundaryNorm
 
-from reasoning.archive.ring_blob_rule_synthesizer import (
-    learn_ring_blob_rule_synthesizer,
-    predict_with_ring_blob_rule_synthesizer,
+from core.scoring import score_prediction
+
+from reasoning.task_router import (
+    choose_task_level_strategy,
+    apply_task_rule_to_input,
 )
 
+
 # ============================================================
-# COLOR MAP
+# SETTINGS
 # ============================================================
 
-ARC_COLORS = {
-    0: "#000000",  # black
-    1: "#0074D9",  # blue
-    2: "#FF4136",  # red
-    3: "#2ECC40",  # green
-    4: "#FFDC00",  # yellow
-    5: "#AAAAAA",  # gray
-    6: "#F012BE",  # magenta
-    7: "#FF851B",  # orange
-    8: "#7FDBFF",  # light blue
-    9: "#870C25",  # dark red
-}
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
+SHOW_POPUPS = True
+PRINT_GRIDS = True
+PRINT_DIFFS = True
 
-TASK_LEVEL_STRATEGIES = {
-    "multi_seed_composition_rule",
-    "learned_region_rule",
-    "ring_blob_rule_synthesizer",
-}
+# Important:
+# This file is for HONEST testing.
+# The hidden output must NEVER be used while learning or predicting.
 
 
 # ============================================================
-# FILE LOADING
-# ============================================================
-
-def load_json_file(path):
-    with open(path, "r", encoding="utf-8") as file:
-        return json.load(file)
-
-
-def resolve_task_file(user_text):
-    base_dir = os.path.dirname(__file__)
-    user_text = user_text.strip()
-
-    if not user_text:
-        user_text = "data"
-
-    if user_text == "data":
-        return os.path.join(base_dir, "data", "data.json")
-
-    if user_text.endswith(".json"):
-        if os.path.isabs(user_text):
-            return user_text
-
-        candidate = os.path.join(base_dir, user_text)
-
-        if os.path.exists(candidate):
-            return candidate
-
-        candidate = os.path.join(base_dir, "data", user_text)
-
-        if os.path.exists(candidate):
-            return candidate
-
-        return os.path.join(base_dir, user_text)
-
-    candidate = os.path.join(base_dir, "data", user_text + ".json")
-
-    if os.path.exists(candidate):
-        return candidate
-
-    return os.path.join(base_dir, user_text)
-
-
-def normalize_loaded_tasks(raw_data):
-    if not isinstance(raw_data, dict):
-        return {}
-
-    if "train" in raw_data:
-        return {
-            "single_task": raw_data,
-        }
-
-    return raw_data
-
-
-# ============================================================
-# GRID HELPERS
+# BASIC GRID HELPERS
 # ============================================================
 
 def grid_shape(grid):
     if grid is None:
         return 0, 0
 
-    if not grid:
-        return 0, 0
+    h = len(grid)
+    w = len(grid[0]) if h else 0
+    return h, w
 
-    return len(grid), len(grid[0])
+
+def grids_equal(a, b):
+    return a == b
 
 
-def is_grid(grid):
-    if not isinstance(grid, list):
-        return False
+def print_grid(title, grid):
+    if grid is None:
+        print(f"{title}: None")
+        return
 
-    if not grid:
-        return False
-
-    if not all(isinstance(row, list) for row in grid):
-        return False
-
-    width = len(grid[0])
-
-    if width == 0:
-        return False
+    h, w = grid_shape(grid)
+    print(f"{title} (h={h}, w={w})")
 
     for row in grid:
-        if len(row) != width:
-            return False
+        print(" ".join(str(v) for v in row))
 
-    return True
+
+def print_side_by_side(title_left, grid_left, title_right, grid_right):
+    if grid_left is None or grid_right is None:
+        print_grid(title_left, grid_left)
+        print()
+        print_grid(title_right, grid_right)
+        return
+
+    lh, lw = grid_shape(grid_left)
+    rh, rw = grid_shape(grid_right)
+
+    left_header = f"{title_left} (h={lh}, w={lw})"
+    right_header = f"{title_right} (h={rh}, w={rw})"
+
+    print(left_header.ljust(50) + right_header)
+
+    max_h = max(lh, rh)
+
+    for r in range(max_h):
+        if r < lh:
+            left_line = " ".join(str(v) for v in grid_left[r])
+        else:
+            left_line = ""
+
+        if r < rh:
+            right_line = " ".join(str(v) for v in grid_right[r])
+        else:
+            right_line = ""
+
+        print(left_line.ljust(50) + right_line)
 
 
 def count_wrong_cells(predicted, expected):
@@ -169,425 +98,472 @@ def count_wrong_cells(predicted, expected):
     ph, pw = grid_shape(predicted)
     eh, ew = grid_shape(expected)
 
-    max_h = max(ph, eh)
-    max_w = max(pw, ew)
-
     wrong = 0
 
-    for r in range(max_h):
-        for c in range(max_w):
-            if r >= ph or c >= pw:
-                wrong += 1
-                continue
+    common_h = min(ph, eh)
+    common_w = min(pw, ew)
 
-            if r >= eh or c >= ew:
-                wrong += 1
-                continue
-
+    for r in range(common_h):
+        for c in range(common_w):
             if predicted[r][c] != expected[r][c]:
                 wrong += 1
+
+    # Count extra/missing cells as wrong.
+    predicted_area = ph * pw
+    expected_area = eh * ew
+    common_area = common_h * common_w
+
+    wrong += (predicted_area - common_area)
+    wrong += (expected_area - common_area)
 
     return wrong
 
 
-def make_leave_one_out_pairs(train_pairs, held_out_index):
-    learn_pairs = []
+def print_diff_summary(predicted, expected, max_show=50):
+    print("\nDIFF SUMMARY")
+    print("-" * 60)
 
-    for index, pair in enumerate(train_pairs):
-        if index == held_out_index:
+    if predicted is None:
+        print("Predicted is None.")
+        return
+
+    if expected is None:
+        print("Expected is None.")
+        return
+
+    ph, pw = grid_shape(predicted)
+    eh, ew = grid_shape(expected)
+
+    print(f"Predicted shape: {ph}x{pw}")
+    print(f"Expected shape : {eh}x{ew}")
+
+    if ph != eh or pw != ew:
+        print("Shape mismatch : yes")
+    else:
+        print("Shape mismatch : no")
+
+    diffs = []
+
+    for r in range(min(ph, eh)):
+        for c in range(min(pw, ew)):
+            pv = predicted[r][c]
+            ev = expected[r][c]
+
+            if pv != ev:
+                diffs.append((r, c, pv, ev))
+
+    wrong = count_wrong_cells(predicted, expected)
+
+    print(f"Wrong cells    : {wrong}")
+    print(f"Shown diffs    : {min(len(diffs), max_show)}")
+
+    for r, c, pv, ev in diffs[:max_show]:
+        print(f"  r={r:02d} c={c:02d} predicted={pv} expected={ev}")
+
+    if len(diffs) > max_show:
+        print(f"  ... {len(diffs) - max_show} more")
+
+
+# ============================================================
+# POPUP VIEWER
+# ============================================================
+
+def show_grids_popup(input_grid, expected_grid, predicted_grid, title_prefix):
+    if not SHOW_POPUPS:
+        return
+
+    arc_colors = [
+        "#000000",  # 0 black
+        "#0074D9",  # 1 blue
+        "#FF4136",  # 2 red
+        "#2ECC40",  # 3 green
+        "#FFDC00",  # 4 yellow
+        "#AAAAAA",  # 5 gray
+        "#F012BE",  # 6 magenta
+        "#FF851B",  # 7 orange
+        "#7FDBFF",  # 8 light blue
+        "#870C25",  # 9 dark red / brown
+    ]
+
+    cmap = ListedColormap(arc_colors)
+    norm = BoundaryNorm(np.arange(-0.5, 10.5, 1), cmap.N)
+
+    grids = [
+        ("Hidden Input", input_grid),
+        ("Hidden Expected", expected_grid),
+        ("Predicted", predicted_grid),
+    ]
+
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+    fig.suptitle(title_prefix, fontsize=16)
+
+    for ax, (name, grid) in zip(axes, grids):
+        if grid is None:
+            ax.set_title(f"{name}\nNone")
+            ax.axis("off")
             continue
 
-        learn_pairs.append(pair)
+        arr = np.array(grid)
+        ax.imshow(arr, cmap=cmap, norm=norm)
 
-    hidden_pair = train_pairs[held_out_index]
+        h, w = arr.shape
 
-    return learn_pairs, hidden_pair
+        ax.set_xticks(np.arange(-0.5, w, 1), minor=True)
+        ax.set_yticks(np.arange(-0.5, h, 1), minor=True)
+        ax.grid(which="minor", color="white", linestyle="-", linewidth=0.8)
+
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_title(name)
+
+    plt.tight_layout()
+    plt.show()
 
 
 # ============================================================
-# HONEST PREDICTION
+# TASK LOADING
 # ============================================================
 
-def predict_leave_one_out(train_pairs, held_out_index):
-    """
-    Honest ring/blob-only leave-one-out prediction.
+def normalize_task_id_or_path(user_text):
+    text = user_text.strip().strip('"').strip("'")
 
-    This bypasses the task router on purpose.
+    if text.lower() == "data":
+        return text
 
-    Test:
-        - hide one train pair
-        - learn ring_blob_rule_synthesizer from the other pairs
-        - predict hidden input
-        - compare to hidden expected output
+    return text
+
+
+def candidate_task_paths(user_text):
     """
-    learn_pairs, hidden_pair = make_leave_one_out_pairs(
-        train_pairs,
-        held_out_index,
+    Lets you type:
+        2d0172a1
+        2d0172a1.json
+        data_failures/extracted_tasks/2d0172a1.json
+        data/2d0172a1.json
+    """
+    text = normalize_task_id_or_path(user_text)
+
+    candidates = []
+
+    # Direct path as typed.
+    candidates.append(os.path.join(BASE_DIR, text))
+
+    # Direct path + .json.
+    if not text.endswith(".json"):
+        candidates.append(os.path.join(BASE_DIR, text + ".json"))
+
+    # Task id search.
+    task_id = text
+    task_id = task_id.replace("\\", "/").split("/")[-1]
+    if task_id.endswith(".json"):
+        task_id = task_id[:-5]
+
+    exact_filename = f"{task_id}.json"
+
+    candidates.extend([
+        os.path.join(BASE_DIR, "data_failures", "extracted_tasks", exact_filename),
+        os.path.join(BASE_DIR, "data_failures", exact_filename),
+        os.path.join(BASE_DIR, "data", exact_filename),
+    ])
+
+    # Remove duplicates while preserving order.
+    clean = []
+    seen = set()
+
+    for path in candidates:
+        norm = os.path.normpath(path)
+
+        if norm in seen:
+            continue
+
+        seen.add(norm)
+        clean.append(norm)
+
+    return clean
+
+
+def unwrap_task(raw, fallback_id=None):
+    """
+    Supports:
+        {"train": [...], "test": [...]}
+
+    and:
+        {"task_id": {"train": [...], "test": [...]}}
+
+    and:
+        [{"train": [...], "test": [...]}]
+    """
+    if isinstance(raw, dict) and ("train" in raw or "test" in raw):
+        return [("unknown", raw)]
+
+    if isinstance(raw, dict):
+        tasks = []
+
+        for task_id, value in raw.items():
+            if isinstance(value, dict) and ("train" in value or "test" in value):
+                tasks.append((task_id, value))
+
+        if tasks:
+            return tasks
+
+    if isinstance(raw, list):
+        tasks = []
+
+        for idx, value in enumerate(raw):
+            if isinstance(value, dict) and ("train" in value or "test" in value):
+                task_id = value.get("id", f"task_{idx}")
+                tasks.append((task_id, value))
+
+        if tasks:
+            return tasks
+
+    raise ValueError("Could not recognize ARC task format.")
+
+
+def load_tasks_from_user_text(user_text):
+    paths = candidate_task_paths(user_text)
+
+    found_path = None
+
+    for path in paths:
+        if os.path.exists(path):
+            found_path = path
+            break
+
+    if found_path is None:
+        print("File not found. Tried:")
+        for path in paths:
+            print(f"  {path}")
+        return None, []
+
+    with open(found_path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
+
+    tasks = unwrap_task(raw)
+
+    return found_path, tasks
+
+
+# ============================================================
+# HONEST LEAVE-ONE-OUT
+# ============================================================
+
+def build_training_subset(train_pairs, hidden_index):
+    """
+    Return all train pairs EXCEPT the hidden one.
+
+    This is the most important part of the file.
+
+    The hidden pair's expected output must not be used while learning.
+    """
+    subset = []
+
+    for idx, pair in enumerate(train_pairs):
+        if idx == hidden_index:
+            continue
+
+        subset.append(pair)
+
+    return subset
+
+
+def learn_from_visible_pairs_only(visible_train_pairs):
+    """
+    Learn task rule from visible train pairs only.
+
+    This calls the normal task router, but the hidden pair is absent.
+    """
+    task_choice = choose_task_level_strategy(
+        visible_train_pairs,
+        debug=True,
     )
 
-    hidden_input = hidden_pair["input"]
-    hidden_expected = hidden_pair["output"]
+    return task_choice
 
-    # --------------------------------------------------------
-    # Print what the program sees in the hidden input.
-    # --------------------------------------------------------
-    hidden_scene = learn_ring_blob_scene(hidden_input)
-    hidden_signature = scene_signature(hidden_scene)
 
-    print()
-    print("RAW HIDDEN SCENE KEYS")
-    print(hidden_scene.keys())
+def predict_hidden_input(task_choice, hidden_input):
+    """
+    Predict hidden output.
 
-    print()
-    print("RAW HIDDEN SCENE")
-    for key, value in hidden_scene.items():
-        if key in [
-            "ring_count",
-            "blob_count",
-            "outside_blob_count",
-            "ring_blob_counts",
-            "ring_layouts",
-            "rings",
-            "blobs",
-            "blobs_by_ring",
-            "outside_blobs",
-            "ring_summaries",
-            "ring_items",
-        ]:
-            print(f"{key}: {value}")
+    expected_grid is intentionally None.
 
-    print()
-    print(f"HIDDEN PAIR {held_out_index + 1} SIGNATURE")
-    print(f"  ring_count         : {hidden_signature.get('ring_count')}")
-    print(f"  blob_count         : {hidden_signature.get('blob_count')}")
-    print(f"  outside_blob_count : {hidden_signature.get('outside_blob_count')}")
-    print(f"  ring_blob_counts   : {hidden_signature.get('ring_blob_counts')}")
-    print(f"  ring_layouts       : {hidden_signature.get('ring_layouts')}")
+    If a strategy needs expected_grid to work, it is not a valid test-time rule.
+    """
+    chosen_strategy = task_choice.get("best_strategy")
+    task_rule = task_choice.get("task_rule") or task_choice.get("rule")
 
-    quiet_buffer = io.StringIO()
+    if chosen_strategy is None:
+        return None, chosen_strategy, task_rule
 
-    try:
-        with contextlib.redirect_stdout(quiet_buffer):
-            learned_rule = learn_ring_blob_rule_synthesizer(
-                learn_pairs,
+    predicted = apply_task_rule_to_input(
+        strategy_name=chosen_strategy,
+        task_rule=task_rule,
+        input_grid=hidden_input,
+        expected_grid=None,   # DO NOT LEAK HIDDEN ANSWER
+        pair_index=None,
+    )
+
+    return predicted, chosen_strategy, task_rule
+
+
+def print_task_choice(task_choice):
+    chosen_strategy = task_choice.get("best_strategy")
+    task_rule = task_choice.get("task_rule") or task_choice.get("rule")
+    strategy_stats = task_choice.get("strategy_stats", {})
+
+    print("\nLEARNED FROM VISIBLE PAIRS ONLY")
+    print("-" * 60)
+    print(f"Chosen strategy: {chosen_strategy}")
+
+    if task_rule is None:
+        print("Task rule      : None")
+    else:
+        print("Task rule      : yes")
+        print(f"Family         : {task_rule.get('family')}")
+        print(f"Rule type      : {task_rule.get('rule_type')}")
+
+        if "exact_count" in task_rule and "pair_count" in task_rule:
+            print(
+                f"Visible exact  : "
+                f"{task_rule.get('exact_count')} / {task_rule.get('pair_count')}"
             )
 
-            prediction_result = predict_with_ring_blob_rule_synthesizer(
-                learned_rule,
-                hidden_input,
+    if strategy_stats:
+        print("\nVisible strategy stats")
+        print("-" * 60)
+
+        rows = sorted(
+            strategy_stats.items(),
+            key=lambda item: (
+                item[1].get("exact_count", 0),
+                item[1].get("total_adjusted_score", 0),
+            ),
+            reverse=True,
+        )
+
+        for name, stats in rows:
+            print(
+                f"{name:<32} "
+                f"exact={stats.get('exact_count', 0):<3} "
+                f"pairs={stats.get('pair_count', 0):<3} "
+                f"total_adj={stats.get('total_adjusted_score', 0)}"
             )
 
-        predicted = prediction_result.get("prediction")
 
-        learned_shape_rule = prediction_result.get("learned_shape_rule")
-        symbolic_shape = prediction_result.get("symbolic_shape")
+def run_leave_one_out_for_task(task_id, task):
+    train_pairs = task.get("train", [])
+    test_pairs = task.get("test", [])
 
-        if learned_shape_rule is None:
-            print("  learned shape rule : None")
-        else:
-            height_formula = learned_shape_rule.get("height_formula", {})
-            width_formula = learned_shape_rule.get("width_formula", {})
+    print("\n" + "=" * 70)
+    print(f"TASK {task_id}")
+    print("=" * 70)
+    print(f"Train pairs: {len(train_pairs)}")
+    print(f"Test pairs : {len(test_pairs)}")
 
-            print("  learned shape rule :")
-            print(f"    height = {height_formula.get('description')}")
-            print(f"    width  = {width_formula.get('description')}")
-            print(f"  symbolic_shape     : {symbolic_shape}")
-
-    except Exception as exc:
-        predicted = None
-
+    if len(train_pairs) < 2:
+        print("Not enough train pairs for leave-one-out.")
         return {
-            "strategy": f"ring_blob_error: {type(exc).__name__}",
-            "predicted": predicted,
-            "exact": False,
-            "wrong": None,
-            "visible_pair_count": len(learn_pairs),
+            "task_id": task_id,
+            "right": 0,
+            "wrong": len(train_pairs),
+            "total": len(train_pairs),
         }
 
-    exact = predicted == hidden_expected
-    wrong = count_wrong_cells(predicted, hidden_expected)
+    right = 0
+    wrong = 0
 
-    return {
-        "strategy": "ring_blob_rule_synthesizer_ONLY",
-        "predicted": predicted,
-        "exact": exact,
-        "wrong": wrong,
-        "visible_pair_count": len(learn_pairs),
-    }
+    for hidden_index, hidden_pair in enumerate(train_pairs):
+        hidden_input = hidden_pair["input"]
+        hidden_expected = hidden_pair["output"]
 
-# ============================================================
-# DRAWING HELPERS
-# ============================================================
-
-def draw_grid(canvas, grid, x0, y0, cell_size, title):
-    canvas.create_text(
-        x0,
-        y0,
-        text=title,
-        anchor="nw",
-        font=("Arial", 12, "bold"),
-        fill="black",
-    )
-
-    label_y = y0 + 22
-
-    if grid is None:
-        canvas.create_text(
-            x0,
-            label_y,
-            text="None",
-            anchor="nw",
-            font=("Arial", 11),
-            fill="red",
+        visible_train_pairs = build_training_subset(
+            train_pairs=train_pairs,
+            hidden_index=hidden_index,
         )
-        return 150, 70
 
-    if not is_grid(grid):
-        canvas.create_text(
-            x0,
-            label_y,
-            text="Invalid grid",
-            anchor="nw",
-            font=("Arial", 11),
-            fill="red",
-        )
-        return 150, 70
+        print("\n" + "=" * 70)
+        print(f"HIDDEN PAIR {hidden_index + 1}")
+        print("=" * 70)
+        print(f"Visible train pairs: {len(visible_train_pairs)}")
+        print("Hidden expected was NOT used for learning.")
+        print("Hidden expected will ONLY be used for scoring.")
 
-    h, w = grid_shape(grid)
+        try:
+            task_choice = learn_from_visible_pairs_only(visible_train_pairs)
+            print_task_choice(task_choice)
 
-    canvas.create_text(
-        x0,
-        label_y,
-        text=f"{h} x {w}",
-        anchor="nw",
-        font=("Arial", 9),
-        fill="black",
-    )
-
-    grid_y = y0 + 42
-
-    for r in range(h):
-        for c in range(w):
-            value = grid[r][c]
-            color = ARC_COLORS.get(value, "#FFFFFF")
-
-            x1 = x0 + c * cell_size
-            y1 = grid_y + r * cell_size
-            x2 = x1 + cell_size
-            y2 = y1 + cell_size
-
-            canvas.create_rectangle(
-                x1,
-                y1,
-                x2,
-                y2,
-                fill=color,
-                outline="#333333",
+            predicted, chosen_strategy, task_rule = predict_hidden_input(
+                task_choice=task_choice,
+                hidden_input=hidden_input,
             )
 
-    width = w * cell_size
-    height = h * cell_size + 42
+            exact = grids_equal(predicted, hidden_expected)
+            score = score_prediction(predicted, hidden_expected)
+            wrong_cells = count_wrong_cells(predicted, hidden_expected)
 
-    return width, height
+            ph, pw = grid_shape(predicted)
+            eh, ew = grid_shape(hidden_expected)
 
+            print("\nHONEST HIDDEN RESULT")
+            print("-" * 60)
+            print(f"Strategy       : {chosen_strategy}")
+            print(f"Exact          : {exact}")
+            print(f"Score          : {score}")
+            print(f"Wrong cells    : {wrong_cells}")
+            print(f"Pred shape     : {ph}x{pw}")
+            print(f"Expected shape : {eh}x{ew}")
 
-def draw_pair_row(
-    canvas,
-    pair_index,
-    input_grid,
-    expected_grid,
-    predicted_grid,
-    strategy,
-    exact,
-    wrong,
-    visible_pair_count,
-    x0,
-    y0,
-    cell_size,
-):
-    title = (
-        f"HIDDEN TRAIN PAIR {pair_index + 1} | "
-        f"learned_from={visible_pair_count} other pairs | "
-        f"strategy={strategy} | exact={exact} | wrong={wrong}"
-    )
+            if exact:
+                right += 1
+            else:
+                wrong += 1
 
-    title_color = "green" if exact else "red"
+            if PRINT_DIFFS:
+                print_diff_summary(predicted, hidden_expected)
 
-    canvas.create_text(
-        x0,
-        y0,
-        text=title,
-        anchor="nw",
-        font=("Arial", 13, "bold"),
-        fill=title_color,
-    )
+            if PRINT_GRIDS:
+                print("\nSIDE BY SIDE")
+                print("-" * 60)
+                print_side_by_side("EXPECTED", hidden_expected, "PREDICTED", predicted)
 
-    row_y = y0 + 30
+            try:
+                show_grids_popup(
+                    input_grid=hidden_input,
+                    expected_grid=hidden_expected,
+                    predicted_grid=predicted,
+                    title_prefix=(
+                        f"{task_id} — HIDDEN PAIR {hidden_index + 1} — "
+                        f"exact={exact}"
+                    ),
+                )
+            except Exception as popup_error:
+                print("[POPUP ERROR]")
+                print(popup_error)
 
-    input_w, input_h = draw_grid(
-        canvas,
-        input_grid,
-        x0,
-        row_y,
-        cell_size,
-        "INPUT",
-    )
+        except Exception:
+            wrong += 1
 
-    expected_x = x0 + input_w + 50
+            print("\nERROR WHILE TESTING HIDDEN PAIR")
+            print("-" * 60)
+            traceback.print_exc()
 
-    expected_w, expected_h = draw_grid(
-        canvas,
-        expected_grid,
-        expected_x,
-        row_y,
-        cell_size,
-        "EXPECTED",
-    )
+    total = right + wrong
 
-    guessed_x = expected_x + expected_w + 50
+    print("\n" + "=" * 70)
+    print(f"TASK {task_id} LEAVE-ONE-OUT SUMMARY")
+    print("=" * 70)
+    print(f"Right: {right}")
+    print(f"Wrong: {wrong}")
 
-    guessed_w, guessed_h = draw_grid(
-        canvas,
-        predicted_grid,
-        guessed_x,
-        row_y,
-        cell_size,
-        "GUESSED",
-    )
+    if total:
+        print(f"Percent right: {(right / total) * 100:.2f}%")
 
-    row_width = guessed_x + guessed_w - x0
-    row_height = max(input_h, expected_h, guessed_h) + 60
-
-    return row_width, row_height
-
-
-# ============================================================
-# WINDOW
-# ============================================================
-
-def create_scrollable_task_window(root, task_id, task, x, y):
-    train_pairs = task.get("train", [])
-
-    window = tk.Toplevel(root)
-    window.title(f"HONEST LEAVE-ONE-OUT — TASK {task_id}")
-    window.geometry(f"1350x850+{x}+{y}")
-
-    outer = ttk.Frame(window)
-    outer.pack(fill="both", expand=True)
-
-    header = ttk.Label(
-        outer,
-        text=(
-            f"TASK: {task_id}    "
-            f"mode=LEAVE-ONE-OUT    "
-            f"train_pairs={len(train_pairs)}"
-        ),
-        font=("Arial", 13, "bold"),
-    )
-    header.pack(anchor="w", padx=8, pady=6)
-
-    canvas = tk.Canvas(
-        outer,
-        bg="white",
-        highlightthickness=0,
-    )
-
-    v_scroll = ttk.Scrollbar(
-        outer,
-        orient="vertical",
-        command=canvas.yview,
-    )
-
-    h_scroll = ttk.Scrollbar(
-        outer,
-        orient="horizontal",
-        command=canvas.xview,
-    )
-
-    canvas.configure(
-        yscrollcommand=v_scroll.set,
-        xscrollcommand=h_scroll.set,
-    )
-
-    canvas.pack(side="left", fill="both", expand=True)
-    v_scroll.pack(side="right", fill="y")
-    h_scroll.pack(side="bottom", fill="x")
-
-    current_y = 10
-    max_width = 1000
-    cell_size = 18
-
-    task_right = 0
-    task_wrong = 0
-
-    for held_out_index, pair in enumerate(train_pairs):
-        input_grid = pair.get("input")
-        expected_grid = pair.get("output")
-
-        prediction_info = predict_leave_one_out(
-            train_pairs=train_pairs,
-            held_out_index=held_out_index,
-        )
-
-        predicted_grid = prediction_info.get("predicted")
-        strategy = prediction_info.get("strategy")
-        exact = prediction_info.get("exact")
-        wrong = prediction_info.get("wrong")
-        visible_pair_count = prediction_info.get("visible_pair_count")
-
-        pred_h, pred_w = grid_shape(predicted_grid)
-        exp_h, exp_w = grid_shape(expected_grid)
-
-        print(
-            f"  hidden pair {held_out_index + 1}: "
-            f"strategy={strategy} "
-            f"exact={exact} "
-            f"wrong={wrong} "
-            f"pred_shape={pred_h}x{pred_w} "
-            f"expected_shape={exp_h}x{exp_w}"
-        )
-
-        if exact:
-            task_right += 1
-        else:
-            task_wrong += 1
-        row_width, row_height = draw_pair_row(
-            canvas=canvas,
-            pair_index=held_out_index,
-            input_grid=input_grid,
-            expected_grid=expected_grid,
-            predicted_grid=predicted_grid,
-            strategy=strategy,
-            exact=exact,
-            wrong=wrong,
-            visible_pair_count=visible_pair_count,
-            x0=10,
-            y0=current_y,
-            cell_size=cell_size,
-        )
-
-        max_width = max(max_width, row_width + 30)
-        current_y += row_height + 35
-
-        canvas.create_line(
-            10,
-            current_y - 18,
-            max_width,
-            current_y - 18,
-            fill="#999999",
-        )
-
-    print(
-        f"TASK {task_id}: "
-        f"leave-one-out right={task_right} "
-        f"wrong={task_wrong}"
-    )
-
-    canvas.configure(
-        scrollregion=(0, 0, max_width + 100, current_y + 100),
-    )
-
-    return window
+    return {
+        "task_id": task_id,
+        "right": right,
+        "wrong": wrong,
+        "total": total,
+    }
 
 
 # ============================================================
@@ -595,51 +571,45 @@ def create_scrollable_task_window(root, task_id, task, x, y):
 # ============================================================
 
 def main():
-    user_text = input("Enter task file, task json, or data: ").strip()
-    task_file = resolve_task_file(user_text)
+    user_text = input("Enter task file, task json, or task id: ").strip()
 
-    if not os.path.exists(task_file):
-        print(f"File not found: {task_file}")
-        return
-
-    raw_data = load_json_file(task_file)
-    tasks = normalize_loaded_tasks(raw_data)
+    loaded_path, tasks = load_tasks_from_user_text(user_text)
 
     if not tasks:
-        print("No tasks found.")
         return
 
-    print(f"Loaded: {task_file}")
+    print(f"Loaded: {loaded_path}")
     print(f"Task count: {len(tasks)}")
-    print()
-    print("Opening honest leave-one-out popup windows...")
-    print("Each guessed output is predicted after hiding that train pair.")
-    print("This should NOT be all correct unless the rule actually generalizes.")
 
-    root = tk.Tk()
-    root.withdraw()
+    print("\nOpening honest leave-one-out popup windows...")
+    print("Each hidden output is removed before learning.")
+    print("Hidden expected outputs are used ONLY for scoring.")
+    print("This prevents regurgitating the answer.")
 
-    start_x = 30
-    start_y = 30
-    step_x = 35
-    step_y = 35
+    all_right = 0
+    all_wrong = 0
+    all_total = 0
 
-    for index, (task_id, task) in enumerate(tasks.items()):
-        x = start_x + (index % 8) * step_x
-        y = start_y + (index % 8) * step_y
+    for task_id, task in tasks:
+        result = run_leave_one_out_for_task(task_id, task)
 
-        create_scrollable_task_window(
-            root=root,
-            task_id=task_id,
-            task=task,
-            x=x,
-            y=y,
-        )
+        all_right += result["right"]
+        all_wrong += result["wrong"]
+        all_total += result["total"]
 
-        root.update_idletasks()
-        root.update()
+    print("\n" + "=" * 70)
+    print("FINAL HONEST LEAVE-ONE-OUT SUMMARY")
+    print("=" * 70)
+    print(f"Tasks checked: {len(tasks)}")
+    print(f"Right        : {all_right}")
+    print(f"Wrong        : {all_wrong}")
 
-    root.mainloop()
+    if all_total:
+        print(f"Percent right: {(all_right / all_total) * 100:.2f}%")
+
+    print("\nRule trust rule:")
+    print("  A strategy is NOT trusted just because it solves visible train pairs.")
+    print("  It is trusted only when it predicts hidden train outputs correctly.")
 
 
 if __name__ == "__main__":

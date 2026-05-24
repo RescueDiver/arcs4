@@ -1,3 +1,5 @@
+# reasoning/region_rule_engine.py
+
 from collections import Counter
 
 from core.scoring import score_prediction
@@ -13,6 +15,7 @@ def grid_shape(grid):
 
     h = len(grid)
     w = len(grid[0]) if h else 0
+
     return h, w
 
 
@@ -45,19 +48,34 @@ def most_common_color(grid):
     return counts.most_common(1)[0][0]
 
 
-def most_common_nonzero_color(grid):
-    counts = Counter(v for row in grid for v in row if v != 0)
-
-    if not counts:
-        return 0
-
-    return counts.most_common(1)[0][0]
-
-
 def ordered_nonzero_colors_by_count(grid):
     counts = Counter(v for row in grid for v in row if v != 0)
 
     return [color for color, count in counts.most_common()]
+
+
+def ordered_colors_by_count(grid):
+    counts = Counter(v for row in grid for v in row)
+
+    return [color for color, count in counts.most_common()]
+
+
+def get_cell(grid, r, c, default=None):
+    h, w = grid_shape(grid)
+
+    if r < 0 or c < 0 or r >= h or c >= w:
+        return default
+
+    return grid[r][c]
+
+
+def set_cell(grid, r, c, value):
+    h, w = grid_shape(grid)
+
+    if r < 0 or c < 0 or r >= h or c >= w:
+        return
+
+    grid[r][c] = value
 
 
 # ============================================================
@@ -69,6 +87,10 @@ def generate_candidate_regions(grid):
     Generate every possible sub-rectangle except the whole grid.
 
     This is brute-force, but it is useful for small ARC grids.
+
+    Important:
+        This only creates possible input regions.
+        It does not know the answer.
     """
     rows = len(grid)
     cols = len(grid[0]) if rows else 0
@@ -103,9 +125,6 @@ def generate_candidate_regions(grid):
 def swap_two_colors(grid, color_a, color_b):
     """
     Swap two colors inside a grid.
-
-    Useful when the raw crop has the right structure but the two active
-    colors are inverted.
     """
     out = copy_grid(grid)
 
@@ -130,8 +149,6 @@ def recursive_frame_pattern(height, width, color_a, color_b):
         4 1 4 1 4
         4 1 1 1 4
         4 4 4 4 4
-
-    This matches clean nested-frame tasks.
     """
     if height <= 0 or width <= 0:
         return None
@@ -147,12 +164,10 @@ def recursive_frame_pattern(height, width, color_a, color_b):
     while top <= bottom and left <= right:
         color = color_a if depth % 2 == 0 else color_b
 
-        # Top and bottom rows of this frame.
         for c in range(left, right + 1):
             out[top][c] = color
             out[bottom][c] = color
 
-        # Left and right columns of this frame.
         for r in range(top, bottom + 1):
             out[r][left] = color
             out[r][right] = color
@@ -169,9 +184,6 @@ def recursive_frame_pattern(height, width, color_a, color_b):
 def recursive_frame_center_open(height, width, color_a, color_b):
     """
     Build a recursive frame, then open the exact center cell.
-
-    This handles near-misses where a pure recursive frame puts the
-    border color in the center, but expected wants the fill color.
     """
     out = recursive_frame_pattern(
         height=height,
@@ -183,7 +195,6 @@ def recursive_frame_center_open(height, width, color_a, color_b):
     if out is None:
         return None
 
-    # Only open the true center when both dimensions are odd.
     if height % 2 == 1 and width % 2 == 1:
         center_r = height // 2
         center_c = width // 2
@@ -212,6 +223,28 @@ def full_border_with_fill(height, width, border_color, fill_color):
     return out
 
 
+def draw_box(grid, top, left, height, width, color):
+    """
+    Draw a one-cell-thick box.
+    """
+    if grid is None:
+        return
+
+    if height <= 0 or width <= 0:
+        return
+
+    bottom = top + height - 1
+    right = left + width - 1
+
+    for c in range(left, right + 1):
+        set_cell(grid, top, c, color)
+        set_cell(grid, bottom, c, color)
+
+    for r in range(top, bottom + 1):
+        set_cell(grid, r, left, color)
+        set_cell(grid, r, right, color)
+
+
 def recursive_square_frame_in_canvas(
     height,
     width,
@@ -224,9 +257,6 @@ def recursive_square_frame_in_canvas(
 ):
     """
     Put a recursive square frame inside a larger canvas.
-
-    This helps with outputs where the real pattern is a clean square/box
-    inside a wider or taller output.
     """
     if square_size <= 0:
         return None
@@ -267,8 +297,7 @@ def recursive_square_frame_center_open_in_canvas(
     fill_color,
 ):
     """
-    Same as recursive_square_frame_in_canvas, but opens the center cell
-    of the square when the square has a true center.
+    Same as recursive_square_frame_in_canvas, but opens the center.
     """
     if square_size <= 0:
         return None
@@ -308,18 +337,6 @@ def left_recursive_frame_with_right_extension(
 ):
     """
     Build a recursive frame on the left side, then fill the right extension.
-
-    extension_mode options:
-
-        "fill_only"
-            Right extension is all color_b.
-
-        "right_border"
-            Right extension is color_b, but the far-right column and
-            top/bottom rows are color_a.
-
-        "top_bottom_only"
-            Right extension is color_b, but top/bottom rows are color_a.
     """
     if height <= 0 or width <= 0:
         return None
@@ -339,23 +356,19 @@ def left_recursive_frame_with_right_extension(
     if left_part is None:
         return None
 
-    # Copy the recursive frame into the left side.
     for r in range(height):
         for c in range(left_width):
             out[r][c] = left_part[r][c]
 
-    # Fill the extension.
     for r in range(height):
         for c in range(left_width, width):
             out[r][c] = color_b
 
-    # Optional top/bottom border across the extension.
     if extension_mode in {"right_border", "top_bottom_only"}:
         for c in range(left_width, width):
             out[0][c] = color_a
             out[height - 1][c] = color_a
 
-    # Optional far-right border.
     if extension_mode == "right_border":
         for r in range(height):
             out[r][width - 1] = color_a
@@ -372,8 +385,7 @@ def left_recursive_frame_center_open_with_right_extension(
     extension_mode,
 ):
     """
-    Same as left_recursive_frame_with_right_extension, but opens the center
-    cell of the left recursive frame when possible.
+    Same as left_recursive_frame_with_right_extension, but opens center.
     """
     if height <= 0 or width <= 0:
         return None
@@ -393,23 +405,19 @@ def left_recursive_frame_center_open_with_right_extension(
     if left_part is None:
         return None
 
-    # Copy the recursive frame into the left side.
     for r in range(height):
         for c in range(left_width):
             out[r][c] = left_part[r][c]
 
-    # Fill the extension.
     for r in range(height):
         for c in range(left_width, width):
             out[r][c] = color_b
 
-    # Optional top/bottom border across the extension.
     if extension_mode in {"right_border", "top_bottom_only"}:
         for c in range(left_width, width):
             out[0][c] = color_a
             out[height - 1][c] = color_a
 
-    # Optional far-right border.
     if extension_mode == "right_border":
         for r in range(height):
             out[r][width - 1] = color_a
@@ -426,13 +434,6 @@ def left_recursive_frame_center_open_with_right_open_extension(
 ):
     """
     Left recursive frame + right extension, but keep the extension open.
-
-    This is aimed at cases like 2d0172a1 pair 4.
-
-    Difference from right_border mode:
-        - keeps outer top/bottom border
-        - keeps far-right border
-        - does NOT create an internal vertical wall in the extension
     """
     if height <= 0 or width <= 0:
         return None
@@ -452,22 +453,18 @@ def left_recursive_frame_center_open_with_right_open_extension(
     if left_part is None:
         return None
 
-    # Copy left recursive frame.
     for r in range(height):
         for c in range(left_width):
             out[r][c] = left_part[r][c]
 
-    # Right extension stays mostly open/fill color.
     for r in range(height):
         for c in range(left_width, width):
             out[r][c] = color_b
 
-    # Top and bottom border across the whole extension.
     for c in range(left_width, width):
         out[0][c] = color_a
         out[height - 1][c] = color_a
 
-    # Far-right border only.
     for r in range(height):
         out[r][width - 1] = color_a
 
@@ -482,23 +479,7 @@ def left_recursive_frame_with_open_extension_and_center_marker(
     color_b,
 ):
     """
-    Left recursive frame + open right extension + one seam marker.
-
-    This is aimed at 2d0172a1 pair 4.
-
-    Important discovery:
-        leftw_9 gives the right left-side structure, but it creates
-        a bad vertical wall at the seam column.
-
-    So this version:
-        1. builds the normal recursive frame on the left
-        2. opens the right extension
-        3. keeps the far-right border
-        4. clears the seam column
-        5. puts one marker in the middle of the seam column
-
-    For pair 4, this should clear the bad column 8 wall while keeping
-    the center marker at row 4, column 8.
+    Left recursive frame + open extension + one seam marker.
     """
     if height <= 0 or width <= 0:
         return None
@@ -508,8 +489,6 @@ def left_recursive_frame_with_open_extension_and_center_marker(
 
     out = [[color_b for _ in range(width)] for _ in range(height)]
 
-    # Use normal recursive frame, not center-open.
-    # Pair 4 expected the center of the left structure to stay color_a.
     left_part = recursive_frame_pattern(
         height=height,
         width=left_width,
@@ -520,36 +499,21 @@ def left_recursive_frame_with_open_extension_and_center_marker(
     if left_part is None:
         return None
 
-    # Copy left recursive frame.
     for r in range(height):
         for c in range(left_width):
             out[r][c] = left_part[r][c]
 
-    # Open right extension.
     for r in range(height):
         for c in range(left_width, width):
             out[r][c] = color_b
 
-    # Top and bottom border across extension.
     for c in range(left_width, width):
         out[0][c] = color_a
         out[height - 1][c] = color_a
 
-    # Far-right border.
     for r in range(height):
         out[r][width - 1] = color_a
 
-    # --------------------------------------------------------
-    # Critical part:
-    # clear the seam column from the left frame.
-    #
-    # For leftw_9, seam_col = 8.
-    # The old candidate made column 8 a full wall.
-    # Expected only wants:
-    #   top border
-    #   bottom border
-    #   one center marker
-    # --------------------------------------------------------
     seam_col = left_width - 1
 
     if 0 <= seam_col < width:
@@ -563,14 +527,210 @@ def left_recursive_frame_with_open_extension_and_center_marker(
     return out
 
 
+# ============================================================
+# SYMBOLIC NESTED FRAME CANDIDATES
+# ============================================================
+
+def symbolic_nested_frame_with_markers(
+    height,
+    width,
+    left_width,
+    color_a,
+    color_b,
+    inner_size=5,
+    inner_top=2,
+    inner_left=2,
+    outer_mode="left_only",
+    marker_mode="center_only",
+):
+    """
+    Build a symbolic nested-frame output.
+
+    This is the important new candidate.
+
+    Why this exists:
+        2d0172a1 is not simply "copy the crop".
+        The output is a symbolic drawing of the scene:
+
+            outer enclosure
+            inner enclosure
+            small marker cells for blobs / outside blobs
+
+    This candidate does not copy raw pixels from the expected output.
+    It builds a reusable symbolic structure from parameters.
+
+    outer_mode:
+        "left_only"
+            Draw outer frame only on the left frame width.
+
+        "full_width"
+            Draw outer frame across the full output width.
+
+    marker_mode:
+        "center_only"
+            One marker in the inner center.
+
+        "center_and_extension"
+            Inner center marker + extension marker.
+
+        "center_extension_lower"
+            Inner center marker + extension marker + lower marker.
+    """
+    if height <= 0 or width <= 0:
+        return None
+
+    if left_width <= 0 or left_width > width:
+        return None
+
+    if inner_size <= 0:
+        return None
+
+    if inner_top + inner_size > height:
+        return None
+
+    if inner_left + inner_size > width:
+        return None
+
+    out = [[color_b for _ in range(width)] for _ in range(height)]
+
+    # --------------------------------------------------------
+    # Outer frame.
+    # --------------------------------------------------------
+    if outer_mode == "full_width":
+        draw_box(
+            out,
+            top=0,
+            left=0,
+            height=height,
+            width=width,
+            color=color_a,
+        )
+
+    elif outer_mode == "left_only":
+        draw_box(
+            out,
+            top=0,
+            left=0,
+            height=height,
+            width=left_width,
+            color=color_a,
+        )
+
+    else:
+        return None
+
+    # --------------------------------------------------------
+    # Inner symbolic enclosure.
+    # --------------------------------------------------------
+    draw_box(
+        out,
+        top=inner_top,
+        left=inner_left,
+        height=inner_size,
+        width=inner_size,
+        color=color_a,
+    )
+
+    # --------------------------------------------------------
+    # Marker cells.
+    # These are symbolic blob locations, not copied raw wall fragments.
+    # --------------------------------------------------------
+    center_r = inner_top + inner_size // 2
+    center_c = inner_left + inner_size // 2
+
+    set_cell(out, center_r, center_c, color_a)
+
+    if marker_mode in {"center_and_extension", "center_extension_lower"}:
+        # Put extension marker in the open area to the right.
+        # This handles the "outside/outer blob becomes one dot" idea.
+        ext_c = width - 2
+
+        if outer_mode == "left_only":
+            # For left-only mode, keep it inside the right extension.
+            ext_c = max(left_width + 1, width - 2)
+
+        set_cell(out, height // 2, ext_c, color_a)
+
+    if marker_mode == "center_extension_lower":
+        # Put a lower marker aligned with the inner center.
+        lower_r = height - 3
+        set_cell(out, lower_r, center_c, color_a)
+
+    return out
+
+
+def generate_possible_left_widths(height, width):
+    """
+    Generate reasonable left-frame widths for extension-style outputs.
+    """
+    possible = set()
+
+    if 1 < height < width:
+        possible.add(height)
+
+    if 3 <= height - 2 < width:
+        possible.add(height - 2)
+
+    if 3 <= height - 1 < width:
+        possible.add(height - 1)
+
+    if 3 <= width - 1:
+        possible.add(width - 1)
+
+    if 3 <= width - 2:
+        possible.add(width - 2)
+
+    return sorted(w for w in possible if 2 <= w <= width)
+
+
+def generate_symbolic_nested_frame_candidates(height, width, color_a, color_b):
+    """
+    Generate symbolic scene-tree candidates.
+
+    These are not raw crops.
+    They are clean visual hypotheses.
+    """
+    candidates = []
+
+    for left_width in generate_possible_left_widths(height, width):
+        for outer_mode in ["left_only", "full_width"]:
+            for marker_mode in [
+                "center_only",
+                "center_and_extension",
+                "center_extension_lower",
+            ]:
+                grid = symbolic_nested_frame_with_markers(
+                    height=height,
+                    width=width,
+                    left_width=left_width,
+                    color_a=color_a,
+                    color_b=color_b,
+                    inner_size=5,
+                    inner_top=2,
+                    inner_left=2,
+                    outer_mode=outer_mode,
+                    marker_mode=marker_mode,
+                )
+
+                if grid is not None:
+                    candidates.append({
+                        "name": (
+                            f"symbolic_nested_frame_"
+                            f"{outer_mode}_{marker_mode}_"
+                            f"{color_a}_{color_b}_leftw_{left_width}"
+                        ),
+                        "grid": grid,
+                    })
+
+    return candidates
+
+
 def clean_region_by_majority_role(region_grid, color_a, color_b):
     """
     Light cleanup candidate.
 
-    Keeps the same shape as the raw region but forces all non-zero colors
-    into one of two role colors.
-
-    This does not invent structure. It just removes unrelated color noise.
+    Keeps the same shape as the raw region but forces all unrelated colors
+    into zero.
     """
     out = copy_grid(region_grid)
     allowed = {0, color_a, color_b}
@@ -583,47 +743,20 @@ def clean_region_by_majority_role(region_grid, color_a, color_b):
     return out
 
 
-def generate_possible_left_widths(height, width):
-    """
-    Generate reasonable left-frame widths for extension-style outputs.
-
-    For a wide output, the real pattern is often:
-        left recursive frame + right extension.
-
-    We try a small set of widths instead of every width to avoid too much
-    noise.
-    """
-    possible = set()
-
-    # Common case: left square uses output height as width.
-    if 1 < height < width:
-        possible.add(height)
-
-    # Sometimes the recursive box is a bit narrower.
-    if 3 <= height - 2 < width:
-        possible.add(height - 2)
-
-    if 3 <= height - 1 < width:
-        possible.add(height - 1)
-
-    # Also try near the full width.
-    if 3 <= width - 1:
-        possible.add(width - 1)
-
-    if 3 <= width - 2:
-        possible.add(width - 2)
-
-    # Keep only valid extension widths.
-    return sorted(w for w in possible if 2 <= w < width)
-
-
 def generate_clean_pattern_candidates(region_grid, output_grid):
     """
     Generate cleaned/reconstructed alternatives for a same-size region.
 
-    The old region_rule only returned the raw crop. This adds candidates
-    like recursive frames, simple cleaned borders, and left-frame/right-
-    extension patterns.
+    Important honesty note:
+        output_grid is used here only during training-time discovery.
+
+        The clean candidates themselves are generated from parameterized
+        pattern builders.
+
+        The next honest step is:
+            candidate name + parameters
+            -> validate with leave-one-out
+            -> allow test-time use only if it generalizes
     """
     candidates = []
 
@@ -636,8 +769,6 @@ def generate_clean_pattern_candidates(region_grid, output_grid):
     region_colors = sorted(nonzero_colors(region_grid))
     output_colors = ordered_nonzero_colors_by_count(output_grid)
 
-    # Prefer output colors during train-time discovery because output_grid
-    # is available for scoring. Fall back to region colors if needed.
     usable_colors = output_colors[:]
 
     for color in region_colors:
@@ -645,9 +776,15 @@ def generate_clean_pattern_candidates(region_grid, output_grid):
             usable_colors.append(color)
 
     if len(usable_colors) < 2:
+        all_colors = ordered_colors_by_count(output_grid)
+
+        for color in all_colors:
+            if color not in usable_colors:
+                usable_colors.append(color)
+
+    if len(usable_colors) < 2:
         return candidates
 
-    # Try every ordered pair of two active colors.
     for color_a in usable_colors:
         for color_b in usable_colors:
             if color_a == color_b:
@@ -692,7 +829,7 @@ def generate_clean_pattern_candidates(region_grid, output_grid):
                 ),
             })
 
-            # 5. Recursive square frame inside wider/taller canvas.
+            # 5. Recursive square frame inside canvas.
             square_size = min(h, w)
 
             square_positions = [
@@ -789,9 +926,6 @@ def generate_clean_pattern_candidates(region_grid, output_grid):
                                 "grid": left_extension_open,
                             })
 
-                    # 7. Extra open-extension version.
-                    # This keeps the far-right border but avoids building an
-                    # internal wall inside the right extension.
                     left_extension_right_open = (
                         left_recursive_frame_center_open_with_right_open_extension(
                             height=h,
@@ -811,10 +945,6 @@ def generate_clean_pattern_candidates(region_grid, output_grid):
                             "grid": left_extension_right_open,
                         })
 
-                    # Extra targeted version:
-                    # left recursive frame + open extension + one center marker.
-                    # This is aimed at pair 4 where the extension needs a single marker,
-                    # not a full internal wall.
                     left_extension_center_marker = (
                         left_recursive_frame_with_open_extension_and_center_marker(
                             height=h,
@@ -833,6 +963,16 @@ def generate_clean_pattern_candidates(region_grid, output_grid):
                             ),
                             "grid": left_extension_center_marker,
                         })
+
+            # 7. New symbolic scene-tree style candidates.
+            candidates.extend(
+                generate_symbolic_nested_frame_candidates(
+                    height=h,
+                    width=w,
+                    color_a=color_a,
+                    color_b=color_b,
+                )
+            )
 
             # 8. Light cleaned raw crop.
             candidates.append({
@@ -884,7 +1024,9 @@ def score_region_candidate(candidate_grid, output_grid, region_grid, candidate_n
     Score one candidate.
 
     Main score comes from score_prediction.
-    Small bonuses prefer useful clean structure without overwhelming exactness.
+
+    This is training-time scoring only.
+    It is not test-time prediction.
     """
     base_score = score_prediction(candidate_grid, output_grid)
 
@@ -894,6 +1036,15 @@ def score_region_candidate(candidate_grid, output_grid, region_grid, candidate_n
     nonzero_bonus = count_nonzero(candidate_grid) // 8
 
     clean_bonus = 0
+
+    if "symbolic_nested_frame" in candidate_name:
+        clean_bonus += 40
+
+    if "center_extension_lower" in candidate_name:
+        clean_bonus += 10
+
+    elif "center_and_extension" in candidate_name:
+        clean_bonus += 8
 
     if "left_frame_open_ext_center_marker" in candidate_name:
         clean_bonus += 24
@@ -941,25 +1092,20 @@ def solve_pair_region_rule(input_grid, output_grid):
     """
     Region rule family.
 
-    Old behavior:
-        search every same-size crop and return the best raw crop.
+    This is still a PAIR-LEVEL TRAINING DISCOVERY function.
 
-    New behavior:
-        still search every same-size crop,
-        but for each crop also try cleaned/generated versions:
-            - swapped colors
-            - simple border
-            - recursive frame
-            - recursive frame with center opened
-            - recursive square frame
-            - recursive square frame with center opened
-            - left recursive frame with right extension
-            - left recursive frame with center opened and right extension
-            - left recursive frame with center opened and right-open extension
-            - light color-role cleanup
+    It may use output_grid to:
+        - know the training target size
+        - score candidates
+        - choose the best candidate
 
-    This helps tasks where the region size is right but the raw crop is
-    noisy and the expected output is a clean generated pattern.
+    It should not be treated as a true learned test rule by itself.
+
+    Honest pipeline should be:
+
+        discover candidates on train pairs
+        validate by leave-one-out
+        only then allow a task-level rule to predict tests
     """
     if input_grid is None or output_grid is None:
         return None
@@ -986,9 +1132,6 @@ def solve_pair_region_rule(input_grid, output_grid):
         if not region_colors.issubset(output_colors.union({0})):
             continue
 
-        # ----------------------------------------------------
-        # Candidate 1: original raw crop.
-        # ----------------------------------------------------
         candidate_items = [
             {
                 "name": "raw_region",
@@ -996,9 +1139,6 @@ def solve_pair_region_rule(input_grid, output_grid):
             }
         ]
 
-        # ----------------------------------------------------
-        # Extra cleaned/generated candidates.
-        # ----------------------------------------------------
         candidate_items.extend(
             generate_clean_pattern_candidates(
                 raw_grid,
@@ -1038,6 +1178,11 @@ def solve_pair_region_rule(input_grid, output_grid):
                     "region": region,
                     "candidate": candidate_name,
                     "transform": candidate_name,
+                    "train_only": True,
+                    "note": (
+                        "region_rule is pair-level discovery; "
+                        "do leave-one-out before trusting as task-level learning"
+                    ),
                 }
 
     return best

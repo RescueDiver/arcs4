@@ -62,6 +62,26 @@ except ImportError:
 
 
 # ============================================================
+# OPTIONAL TASK-LEVEL VISUAL SYMBOLIC RULE
+# ============================================================
+
+try:
+    from reasoning.visual_symbolic_rule import (
+        discover_visual_symbolic_rule_for_task,
+        apply_visual_symbolic_rule,
+        score_visual_symbolic_rule_on_train,
+        leave_one_out_visual_symbolic,
+    )
+except ImportError as exc:
+    print("[VISUAL SYMBOLIC IMPORT ERROR]", repr(exc))
+
+    discover_visual_symbolic_rule_for_task = None
+    apply_visual_symbolic_rule = None
+    score_visual_symbolic_rule_on_train = None
+    leave_one_out_visual_symbolic = None
+
+
+# ============================================================
 # BASIC HELPERS
 # ============================================================
 
@@ -149,15 +169,6 @@ def detect_task_type(input_grid, output_grid):
 def maybe_add_candidate(candidates, result, strategy_name, input_grid, output_grid):
     """
     Normalize one pair-level strategy result into the router's candidate format.
-
-    Most old strategies return:
-        {"predicted": grid, ...}
-
-    Some newer helpers may return:
-        {"prediction": grid, ...}
-
-    This function accepts either, then stores the standard key:
-        "predicted"
     """
     if result is None:
         return None
@@ -201,15 +212,6 @@ def maybe_add_candidate(candidates, result, strategy_name, input_grid, output_gr
 # ============================================================
 
 def is_strong_multi_seed_result(result, train_pairs):
-    """
-    Decide whether the multi-seed task-level rule should override
-    normal pair-level routing.
-
-    Strong means:
-      - it found one example per train pair
-      - it found all train input seeds inside every output
-      - every seed match ratio is perfect
-    """
     if result is None:
         return False
 
@@ -265,16 +267,6 @@ def build_multi_seed_strategy_stats(multi_seed_rule, train_pairs):
 # ============================================================
 
 def score_learned_region_rule_on_train(learned_rule, train_pairs):
-    """
-    Apply learned_region_rule to all train inputs and score against train outputs.
-
-    Important:
-        learned_region_rule must predict without using expected output.
-
-    Debug:
-        expected output is only used AFTER prediction so we can print
-        whether the selected learned candidate was right or wrong.
-    """
     if learned_rule is None or apply_learned_region_rule is None:
         return None
 
@@ -335,13 +327,6 @@ def score_learned_region_rule_on_train(learned_rule, train_pairs):
 
 
 def is_strong_learned_region_result(scored_rule):
-    """
-    Conservative learned-region rule gate.
-
-    Strong means:
-        - it produced one prediction for every train pair
-        - it solved every train pair exactly
-    """
     if scored_rule is None:
         return False
 
@@ -376,125 +361,12 @@ def build_learned_region_strategy_stats(scored_rule):
         }
     }
 
-# ============================================================
-# LEAVE-ONE-OUT VALIDATION HELPERS
-# ============================================================
-
-def make_leave_one_out_split(train_pairs, held_out_index):
-    """
-    Create a train subset and one hidden pair.
-
-    Example:
-        train_pairs = [pair0, pair1, pair2, pair3]
-
-        held_out_index = 2
-
-        learn_pairs = [pair0, pair1, pair3]
-        hidden_pair = pair2
-
-    This is the basic test for generalization:
-        can the rule learn from the other examples
-        and predict the hidden one?
-    """
-    learn_pairs = []
-
-    for index, pair in enumerate(train_pairs):
-        if index == held_out_index:
-            continue
-
-        learn_pairs.append(pair)
-
-    hidden_pair = train_pairs[held_out_index]
-
-    return learn_pairs, hidden_pair
-
-
-def score_leave_one_out_result(predicted, expected_grid, strategy_name, held_out_index):
-    """
-    Score one hidden train-pair prediction.
-    """
-    score = score_prediction(predicted, expected_grid)
-    exact = predicted == expected_grid
-
-    return {
-        "pair_index": held_out_index,
-        "strategy": strategy_name,
-        "predicted": predicted,
-        "score": score,
-        "exact": exact,
-    }
-
-
-def summarize_leave_one_out_results(strategy_name, results):
-    """
-    Build a standard scored-rule object from leave-one-out results.
-    """
-    pair_count = len(results)
-    exact_count = 0
-    total_score = 0
-
-    for result in results:
-        if result.get("exact"):
-            exact_count += 1
-
-        total_score += result.get("score", 0)
-
-    return {
-        "strategy": strategy_name,
-        "pair_count": pair_count,
-        "exact_count": exact_count,
-        "total_raw_score": total_score,
-        "total_adjusted_score": total_score,
-        "results": results,
-    }
-
-
-def is_strong_leave_one_out_result(scored_rule):
-    """
-    Conservative task-level gate.
-
-    A task-level rule is allowed to override only if it can:
-        - hide each training pair
-        - learn from the remaining pairs
-        - predict the hidden pair exactly
-
-    This prevents fake 100% train replay.
-    """
-    if scored_rule is None:
-        return False
-
-    pair_count = scored_rule.get("pair_count", 0)
-    exact_count = scored_rule.get("exact_count", 0)
-    results = scored_rule.get("results", [])
-
-    if pair_count == 0:
-        return False
-
-    if len(results) != pair_count:
-        return False
-
-    if exact_count != pair_count:
-        return False
-
-    for result in results:
-        if result.get("predicted") is None:
-            return False
-
-    return True
 
 # ============================================================
 # RING/BLOB SYNTHESIZER HELPERS
 # ============================================================
 
 def score_ring_blob_rule_synthesizer_on_train(task_rule, train_pairs):
-    """
-    Replay the all-train ring/blob synthesizer on every train input.
-
-    This checks whether the synthesized rule can reproduce all train outputs
-    without using the output during prediction.
-
-    The expected output is used only for scoring after prediction.
-    """
     if task_rule is None:
         return None
 
@@ -554,13 +426,6 @@ def score_ring_blob_rule_synthesizer_on_train(task_rule, train_pairs):
 
 
 def is_strong_ring_blob_rule_synthesizer_result(scored_rule):
-    """
-    Conservative gate for the ring/blob synthesizer.
-
-    Strong means:
-        - it replayed every training pair
-        - it solved every training pair exactly
-    """
     if scored_rule is None:
         return False
 
@@ -594,6 +459,53 @@ def build_ring_blob_strategy_stats(scored_rule):
             "task_rule": scored_rule.get("task_rule"),
         }
     }
+
+
+# ============================================================
+# VISUAL SYMBOLIC RULE HELPERS
+# ============================================================
+
+def build_visual_symbolic_strategy_stats(scored_rule, loo_scored=None):
+    return {
+        "visual_symbolic_rule": {
+            "pair_count": scored_rule.get("pair_count", 0) if scored_rule else 0,
+            "exact_count": scored_rule.get("exact_count", 0) if scored_rule else 0,
+            "total_adjusted_score": scored_rule.get("total_adjusted_score", 0) if scored_rule else 0,
+            "total_raw_score": scored_rule.get("total_raw_score", 0) if scored_rule else 0,
+            "loo_pair_count": loo_scored.get("pair_count", 0) if loo_scored else 0,
+            "loo_exact_count": loo_scored.get("exact_count", 0) if loo_scored else 0,
+            "loo_total_score": loo_scored.get("total_raw_score", 0) if loo_scored else 0,
+        }
+    }
+
+
+def is_strong_visual_symbolic_leave_one_out(loo_scored):
+    """
+    Honest gate for visual_symbolic_rule.
+
+    It can override only if it predicts every hidden train pair exactly.
+    """
+    if loo_scored is None:
+        return False
+
+    pair_count = loo_scored.get("pair_count", 0)
+    exact_count = loo_scored.get("exact_count", 0)
+    results = loo_scored.get("results", [])
+
+    if pair_count == 0:
+        return False
+
+    if len(results) != pair_count:
+        return False
+
+    if exact_count != pair_count:
+        return False
+
+    for item in results:
+        if item.get("predicted") is None:
+            return False
+
+    return True
 
 
 # ============================================================
@@ -713,21 +625,57 @@ def print_task_level_replay_debug(strategy_name, scored_rule):
         )
 
 
+def print_visual_symbolic_debug(visual_symbolic_scored, visual_symbolic_loo):
+    print()
+    print("[TASK-LEVEL DEBUG] visual_symbolic_rule")
+    print("-" * 60)
+
+    if visual_symbolic_scored is None:
+        print("Train replay: None")
+    else:
+        print("Train replay:")
+        print(f"  exact_count: {visual_symbolic_scored.get('exact_count')}")
+        print(f"  pair_count : {visual_symbolic_scored.get('pair_count')}")
+        print(f"  total_score: {visual_symbolic_scored.get('total_raw_score')}")
+
+        for item in visual_symbolic_scored.get("results", []):
+            pred = item.get("predicted")
+            ph, pw = grid_shape(pred)
+
+            print(
+                f"  pair {item.get('pair_index')}: "
+                f"exact={item.get('exact')} "
+                f"score={item.get('score')} "
+                f"shape={ph}x{pw}"
+            )
+
+    print()
+
+    if visual_symbolic_loo is None:
+        print("Leave-one-out: None")
+    else:
+        print("Leave-one-out:")
+        print(f"  exact_count: {visual_symbolic_loo.get('exact_count')}")
+        print(f"  pair_count : {visual_symbolic_loo.get('pair_count')}")
+        print(f"  total_score: {visual_symbolic_loo.get('total_raw_score')}")
+
+        for item in visual_symbolic_loo.get("results", []):
+            pred = item.get("predicted")
+            ph, pw = grid_shape(pred)
+
+            print(
+                f"  hidden pair {item.get('pair_index')}: "
+                f"exact={item.get('exact')} "
+                f"score={item.get('score')} "
+                f"shape={ph}x{pw}"
+            )
+
+
 # ============================================================
 # ACTIVE PAIR ROUTER
 # ============================================================
 
 def get_all_strategy_results(input_grid, output_grid, debug=True):
-    """
-    Run normal pair-level strategies.
-
-    This does NOT run task-level strategies like:
-        - multi_seed_composition_rule
-        - learned_region_rule
-        - ring_blob_rule_synthesizer
-
-    Those need all train pairs together.
-    """
     candidates = []
 
     task_type = detect_task_type(input_grid, output_grid)
@@ -743,9 +691,6 @@ def get_all_strategy_results(input_grid, output_grid, debug=True):
     result_object_grid = None
     result_pattern_expansion = None
 
-    # --------------------------------------------------------
-    # Seed placement expansion family
-    # --------------------------------------------------------
     if task_type == "expansion":
         result_seed_placement = maybe_add_candidate(
             candidates,
@@ -783,9 +728,6 @@ def get_all_strategy_results(input_grid, output_grid, debug=True):
 
             return candidates
 
-    # --------------------------------------------------------
-    # Pattern family
-    # --------------------------------------------------------
     if task_type in ["pattern_same_size", "general", "motif_layout", "expansion"]:
         result_pattern = maybe_add_candidate(
             candidates,
@@ -795,9 +737,6 @@ def get_all_strategy_results(input_grid, output_grid, debug=True):
             output_grid,
         )
 
-    # --------------------------------------------------------
-    # Region families
-    # --------------------------------------------------------
     if task_type in ["region_extract", "general", "motif_layout"]:
         result_region = maybe_add_candidate(
             candidates,
@@ -815,9 +754,6 @@ def get_all_strategy_results(input_grid, output_grid, debug=True):
             output_grid,
         )
 
-    # --------------------------------------------------------
-    # Motif family
-    # --------------------------------------------------------
     if task_type == "motif_layout":
         result_motif_layout = maybe_add_candidate(
             candidates,
@@ -830,9 +766,6 @@ def get_all_strategy_results(input_grid, output_grid, debug=True):
         if debug:
             print("Skipping motif_layout_rule (task type not motif_layout)")
 
-    # --------------------------------------------------------
-    # Expansion baseline
-    # --------------------------------------------------------
     if task_type == "expansion":
         result_pattern_expansion = maybe_add_candidate(
             candidates,
@@ -842,9 +775,6 @@ def get_all_strategy_results(input_grid, output_grid, debug=True):
             output_grid,
         )
 
-    # --------------------------------------------------------
-    # Object grid
-    # --------------------------------------------------------
     result_object_grid = maybe_add_candidate(
         candidates,
         solve_pair_object_grid_rule(input_grid, output_grid),
@@ -924,13 +854,21 @@ def choose_task_level_strategy(train_pairs, debug=True):
     """
     Choose ONE strategy for the whole task.
 
-    Task-level strategies:
-        1. multi_seed_composition_rule
-        2. ring_blob_rule_synthesizer
-        3. learned_region_rule
+    Honest rule:
+        Task-level rules may only override if they pass their strict gate.
 
-    Fallback:
-        normal pair-level strategy ranking
+    Current gates:
+        multi_seed_composition_rule:
+            strict internal seed match gate
+
+        visual_symbolic_rule:
+            honest leave-one-out gate
+
+        learned_region_rule:
+            blocked for now because it replayed visible train pairs
+
+        ring_blob_rule_synthesizer:
+            blocked for now unless later given leave-one-out gate
     """
 
     # --------------------------------------------------------
@@ -966,7 +904,7 @@ def choose_task_level_strategy(train_pairs, debug=True):
             print("[MULTI-SEED WARNING] multi_seed_composition_rule import failed")
 
     # --------------------------------------------------------
-    # 2. RING/BLOB ALL-TRAIN SYNTHESIZER
+    # 2. RING/BLOB SYNTHESIZER — DEBUG ONLY FOR NOW
     # --------------------------------------------------------
     ring_blob_rule = None
     ring_blob_scored = None
@@ -988,17 +926,10 @@ def choose_task_level_strategy(train_pairs, debug=True):
 
             if is_strong_ring_blob_rule_synthesizer_result(ring_blob_scored):
                 if debug:
-                    print("\n[ROUTER OVERRIDE] Using ring_blob_rule_synthesizer")
-                    print("[ROUTER OVERRIDE] Reason: all-train synthesized rule solved all train pairs")
-
-                stats = build_ring_blob_strategy_stats(ring_blob_scored)
-
-                return {
-                    "best_strategy": "ring_blob_rule_synthesizer",
-                    "strategy_stats": stats,
-                    "task_rule": ring_blob_rule,
-                    "rule": ring_blob_rule,
-                }
+                    print("\n[RING/BLOB BLOCKED]")
+                    print("ring_blob_rule_synthesizer solved visible train pairs.")
+                    print("Blocked because visible-pair replay is not honest learning.")
+                    print("It must pass leave-one-out before it can override.")
 
         except Exception as exc:
             if debug:
@@ -1009,7 +940,7 @@ def choose_task_level_strategy(train_pairs, debug=True):
             print("[RING/BLOB WARNING] ring_blob_rule_synthesizer import failed")
 
     # --------------------------------------------------------
-    # 3. LEARNED REGION TASK-LEVEL RULE
+    # 3. LEARNED REGION RULE — DEBUG ONLY FOR NOW
     # --------------------------------------------------------
     learned_region_scored = None
     learned_region_rule = None
@@ -1036,43 +967,105 @@ def choose_task_level_strategy(train_pairs, debug=True):
 
             if is_strong_learned_region_result(learned_region_scored):
                 if debug:
-                    print("\n[ROUTER OVERRIDE] Using learned_region_rule")
-                    print("[ROUTER OVERRIDE] Reason: learned rule solved all train pairs")
-
-                stats = build_learned_region_strategy_stats(learned_region_scored)
-
-                return {
-                    "best_strategy": "learned_region_rule",
-                    "strategy_stats": stats,
-                    "task_rule": learned_region_rule,
-                    "rule": learned_region_rule,
-                }
+                    print("\n[LEARNED REGION BLOCKED]")
+                    print("learned_region_rule solved visible train pairs.")
+                    print("Blocked because visible-pair replay is not honest learning.")
+                    print("It must pass leave-one-out before it can override.")
     else:
         if debug:
             print("[LEARNED REGION WARNING] learned_region_rule import failed")
 
     # --------------------------------------------------------
-    # 4. NORMAL PAIR-LEVEL STRATEGY RANKING
+    # 4. VISUAL SYMBOLIC TASK-LEVEL RULE
+    # --------------------------------------------------------
+    visual_symbolic_rule = None
+    visual_symbolic_scored = None
+    visual_symbolic_loo = None
+
+    if discover_visual_symbolic_rule_for_task is not None:
+        try:
+            visual_symbolic_rule = discover_visual_symbolic_rule_for_task(train_pairs)
+
+            if visual_symbolic_rule is not None:
+                visual_symbolic_scored = score_visual_symbolic_rule_on_train(
+                    visual_symbolic_rule,
+                    train_pairs,
+                )
+
+                visual_symbolic_loo = leave_one_out_visual_symbolic(train_pairs)
+
+                if debug:
+                    print_visual_symbolic_debug(
+                        visual_symbolic_scored,
+                        visual_symbolic_loo,
+                    )
+
+                if is_strong_visual_symbolic_leave_one_out(visual_symbolic_loo):
+                    if debug:
+                        print("\n[ROUTER OVERRIDE] Using visual_symbolic_rule")
+                        print("[ROUTER OVERRIDE] Reason: passed honest leave-one-out")
+
+                    stats = build_visual_symbolic_strategy_stats(
+                        visual_symbolic_scored,
+                        visual_symbolic_loo,
+                    )
+
+                    return {
+                        "best_strategy": "visual_symbolic_rule",
+                        "strategy_stats": stats,
+                        "task_rule": visual_symbolic_rule,
+                        "rule": visual_symbolic_rule,
+                    }
+
+                else:
+                    if debug:
+                        print("\n[VISUAL SYMBOLIC BLOCKED]")
+                        print("visual_symbolic_rule did not pass leave-one-out.")
+                        print("It will stay debug-only for now.")
+
+        except Exception as exc:
+            if debug:
+                print("[VISUAL SYMBOLIC WARNING] visual_symbolic_rule failed")
+                print("  error:", repr(exc))
+    else:
+        if debug:
+            print("[VISUAL SYMBOLIC WARNING] visual_symbolic_rule import failed")
+
+    # --------------------------------------------------------
+    # 5. NORMAL PAIR-LEVEL STRATEGY RANKING
     # --------------------------------------------------------
     strategy_stats = {}
 
-    # Keep non-winning task-level scores visible in stats.
     if ring_blob_scored is not None:
-        strategy_stats["ring_blob_rule_synthesizer"] = {
+        strategy_stats["BLOCKED_ring_blob_rule_synthesizer"] = {
             "pair_count": ring_blob_scored.get("pair_count", 0),
             "exact_count": ring_blob_scored.get("exact_count", 0),
             "total_adjusted_score": ring_blob_scored.get("total_adjusted_score", 0),
             "total_raw_score": ring_blob_scored.get("total_raw_score", 0),
             "task_rule": ring_blob_scored.get("task_rule"),
+            "blocked": True,
         }
 
     if learned_region_scored is not None:
-        strategy_stats["learned_region_rule"] = {
+        strategy_stats["BLOCKED_learned_region_rule"] = {
             "pair_count": learned_region_scored.get("pair_count", 0),
             "exact_count": learned_region_scored.get("exact_count", 0),
             "total_adjusted_score": learned_region_scored.get("total_adjusted_score", 0),
             "total_raw_score": learned_region_scored.get("total_raw_score", 0),
             "task_rule": learned_region_scored.get("task_rule"),
+            "blocked": True,
+        }
+
+    if visual_symbolic_scored is not None:
+        strategy_stats["BLOCKED_visual_symbolic_rule"] = {
+            "pair_count": visual_symbolic_scored.get("pair_count", 0),
+            "exact_count": visual_symbolic_scored.get("exact_count", 0),
+            "total_adjusted_score": visual_symbolic_scored.get("total_adjusted_score", 0),
+            "total_raw_score": visual_symbolic_scored.get("total_raw_score", 0),
+            "loo_pair_count": visual_symbolic_loo.get("pair_count", 0) if visual_symbolic_loo else 0,
+            "loo_exact_count": visual_symbolic_loo.get("exact_count", 0) if visual_symbolic_loo else 0,
+            "task_rule": visual_symbolic_scored.get("task_rule"),
+            "blocked": True,
         }
 
     for pair_index, pair in enumerate(train_pairs):
@@ -1097,6 +1090,7 @@ def choose_task_level_strategy(train_pairs, debug=True):
                     "exact_count": 0,
                     "total_adjusted_score": 0,
                     "total_raw_score": 0,
+                    "blocked": False,
                 }
 
             strategy_stats[strategy]["pair_count"] += 1
@@ -1113,6 +1107,9 @@ def choose_task_level_strategy(train_pairs, debug=True):
     best_key = None
 
     for strategy, stats in strategy_stats.items():
+        if stats.get("blocked"):
+            continue
+
         key = (
             stats.get("exact_count", 0),
             stats.get("total_adjusted_score", 0),
@@ -1123,19 +1120,11 @@ def choose_task_level_strategy(train_pairs, debug=True):
             best_key = key
             best_strategy = strategy
 
-    best_task_rule = None
-
-    if best_strategy == "ring_blob_rule_synthesizer":
-        best_task_rule = strategy_stats["ring_blob_rule_synthesizer"].get("task_rule")
-
-    elif best_strategy == "learned_region_rule":
-        best_task_rule = strategy_stats["learned_region_rule"].get("task_rule")
-
     return {
         "best_strategy": best_strategy,
         "strategy_stats": strategy_stats,
-        "task_rule": best_task_rule,
-        "rule": best_task_rule,
+        "task_rule": None,
+        "rule": None,
     }
 
 
@@ -1144,14 +1133,6 @@ def choose_task_level_strategy(train_pairs, debug=True):
 # ============================================================
 
 def solve_pair_with_forced_strategy(input_grid, output_grid, strategy_name):
-    """
-    Force a normal pair-level strategy.
-
-    Note:
-        task-level strategies require a learned task_rule, so use
-        apply_task_rule_to_input(...) for them.
-    """
-
     if strategy_name == "pattern_rule":
         result = solve_pair_pattern_rule(input_grid, output_grid)
 
@@ -1194,6 +1175,13 @@ def solve_pair_with_forced_strategy(input_grid, output_grid, strategy_name):
         )
         return None
 
+    elif strategy_name == "visual_symbolic_rule":
+        print(
+            "[FORCED STRATEGY ERROR] visual_symbolic_rule needs a learned "
+            "task_rule. Use apply_task_rule_to_input(...)."
+        )
+        return None
+
     else:
         print(f"[FORCED STRATEGY ERROR] Unknown strategy: {strategy_name}")
         return None
@@ -1220,16 +1208,6 @@ def apply_task_rule_to_input(
     expected_grid=None,
     pair_index=None,
 ):
-    """
-    Apply the chosen task-level rule.
-
-    Some strategies are true task-level rules and can run on test inputs
-    without expected output.
-
-    Other strategies are still pair-level discovery rules. Those need
-    expected_grid during debugging/training.
-    """
-
     # --------------------------------------------------------
     # Multi-seed task-level rule
     # --------------------------------------------------------
@@ -1238,7 +1216,6 @@ def apply_task_rule_to_input(
             print("[TASK RULE ERROR] Missing multi_seed task_rule.")
             return None
 
-        # Train replay.
         if pair_index is not None:
             if apply_multi_seed_composition_rule_for_train_pair is None:
                 print(
@@ -1252,7 +1229,6 @@ def apply_task_rule_to_input(
                 pair_index,
             )
 
-        # Test application.
         if apply_multi_seed_composition_rule is None:
             print("[TASK RULE ERROR] apply_multi_seed_composition_rule import failed.")
             return None
@@ -1263,7 +1239,7 @@ def apply_task_rule_to_input(
         )
 
     # --------------------------------------------------------
-    # Ring/blob all-train task-level rule
+    # Ring/blob task-level rule
     # --------------------------------------------------------
     if strategy_name == "ring_blob_rule_synthesizer":
         if task_rule is None:
@@ -1302,6 +1278,23 @@ def apply_task_rule_to_input(
         )
 
     # --------------------------------------------------------
+    # Visual symbolic task-level rule
+    # --------------------------------------------------------
+    if strategy_name == "visual_symbolic_rule":
+        if task_rule is None:
+            print("[TASK RULE ERROR] Missing visual_symbolic_rule task_rule.")
+            return None
+
+        if apply_visual_symbolic_rule is None:
+            print("[TASK RULE ERROR] apply_visual_symbolic_rule import failed.")
+            return None
+
+        return apply_visual_symbolic_rule(
+            task_rule,
+            input_grid,
+        )
+
+    # --------------------------------------------------------
     # Normal pair-level strategies
     # --------------------------------------------------------
     if expected_grid is None:
@@ -1330,10 +1323,6 @@ def score_task_rule_prediction(
     expected_grid,
     pair_index=None,
 ):
-    """
-    Convenience wrapper:
-        apply chosen rule, then score it.
-    """
     predicted = apply_task_rule_to_input(
         strategy_name=strategy_name,
         task_rule=task_rule,
