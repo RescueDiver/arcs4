@@ -31,8 +31,21 @@ from reasoning.visual_symbolic_rule import (
 TARGET_TASK_ID = "2d0172a1"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-SHOW_POPUPS = True
-SHOW_PAIR_LEVEL_CANDIDATES = True
+# ------------------------------------------------------------
+# DEBUG SPEED FLAGS
+# ------------------------------------------------------------
+# Keep these False for fast runs.
+# Turn them on only when you need that specific debug view.
+# ------------------------------------------------------------
+
+SHOW_POPUPS = False
+SHOW_PAIR_LEVEL_CANDIDATES = False
+DEBUG_VISUAL_TREE = False
+DEBUG_FULL_TRAIN_DIFFS = True
+DEBUG_LEAVE_ONE_OUT = True
+DEBUG_ROUTER = True
+DEBUG_TRAIN_PAIRS = False
+DEBUG_TEST_PAIRS = False
 
 
 # ============================================================
@@ -155,6 +168,37 @@ def print_task_level_debug(scored_rule, label="TASK-LEVEL DEBUG"):
             f"score={result.get('score')} "
             f"shape={h}x{w}"
         )
+
+
+def print_grid_diff_summary(predicted, expected, label):
+    print()
+    print(f"[{label} DIFF SUMMARY]")
+
+    if predicted is None:
+        print("predicted is None")
+        return
+
+    ph, pw = grid_shape(predicted)
+    eh, ew = grid_shape(expected)
+
+    print(f"pred shape: {ph}x{pw}")
+    print(f"exp  shape: {eh}x{ew}")
+
+    if ph != eh or pw != ew:
+        print("shape mismatch")
+        return
+
+    diffs = []
+
+    for r in range(eh):
+        for c in range(ew):
+            if predicted[r][c] != expected[r][c]:
+                diffs.append((r, c, predicted[r][c], expected[r][c]))
+
+    print(f"wrong cells: {len(diffs)}")
+
+    for r, c, p, e in diffs[:80]:
+        print(f"  r={r:2d} c={c:2d} pred={p} exp={e}")
 
 
 # ============================================================
@@ -381,6 +425,9 @@ def print_pair_level_candidates(input_grid, expected_grid):
 # ============================================================
 
 def run_train_debug(train_pairs, chosen_strategy, task_rule):
+    if not DEBUG_TRAIN_PAIRS:
+        return
+
     total_right = 0
     total_wrong = 0
 
@@ -460,6 +507,9 @@ def run_train_debug(train_pairs, chosen_strategy, task_rule):
 
 
 def run_test_debug(test_pairs, chosen_strategy, task_rule):
+    if not DEBUG_TEST_PAIRS:
+        return
+
     if not test_pairs:
         return
 
@@ -512,37 +562,6 @@ def run_test_debug(test_pairs, chosen_strategy, task_rule):
             print(e)
 
 
-def print_grid_diff_summary(predicted, expected, label):
-    print()
-    print(f"[{label} DIFF SUMMARY]")
-
-    if predicted is None:
-        print("predicted is None")
-        return
-
-    ph, pw = grid_shape(predicted)
-    eh, ew = grid_shape(expected)
-
-    print(f"pred shape: {ph}x{pw}")
-    print(f"exp  shape: {eh}x{ew}")
-
-    if ph != eh or pw != ew:
-        print("shape mismatch")
-        return
-
-    diffs = []
-
-    for r in range(eh):
-        for c in range(ew):
-            if predicted[r][c] != expected[r][c]:
-                diffs.append((r, c, predicted[r][c], expected[r][c]))
-
-    print(f"wrong cells: {len(diffs)}")
-
-    for r, c, p, e in diffs[:80]:
-        print(f"  r={r:2d} c={c:2d} pred={p} exp={e}")
-
-
 # ============================================================
 # MAIN
 # ============================================================
@@ -563,22 +582,30 @@ def main():
         print("No train pairs found.")
         return
 
-    print("\n" + "=" * 60)
-    print("VISUAL ABSTRACTION DISCOVERY TEST")
-    print("=" * 60)
+    # ------------------------------------------------------------
+    # OPTIONAL VISUAL TREE DUMP
+    # ------------------------------------------------------------
+    # This is very noisy and slow.
+    # Keep DEBUG_VISUAL_TREE = False unless you are debugging the
+    # abstraction reader itself.
+    # ------------------------------------------------------------
+    if DEBUG_VISUAL_TREE:
+        print("\n" + "=" * 60)
+        print("VISUAL ABSTRACTION DISCOVERY TEST")
+        print("=" * 60)
 
-    for idx, pair in enumerate(train_pairs, start=1):
-        print("\n" + "-" * 60)
-        print(f"TRAIN PAIR {idx} INPUT VISUAL TREE")
-        print("-" * 60)
-        input_summary = discover_visual_abstractions(pair["input"])
-        print_visual_abstractions(input_summary)
+        for idx, pair in enumerate(train_pairs, start=1):
+            print("\n" + "-" * 60)
+            print(f"TRAIN PAIR {idx} INPUT VISUAL TREE")
+            print("-" * 60)
+            input_summary = discover_visual_abstractions(pair["input"])
+            print_visual_abstractions(input_summary)
 
-        print("\n" + "-" * 60)
-        print(f"TRAIN PAIR {idx} OUTPUT VISUAL TREE")
-        print("-" * 60)
-        output_summary = discover_visual_abstractions(pair["output"])
-        print_visual_abstractions(output_summary)
+            print("\n" + "-" * 60)
+            print(f"TRAIN PAIR {idx} OUTPUT VISUAL TREE")
+            print("-" * 60)
+            output_summary = discover_visual_abstractions(pair["output"])
+            print_visual_abstractions(output_summary)
 
     # ------------------------------------------------------------
     # DIRECT VISUAL-SYMBOLIC CHECK
@@ -602,59 +629,64 @@ def main():
         visual_scored,
         label="visual_symbolic_rule FULL TRAIN",
     )
-    print("\n" + "=" * 60)
-    print("VISUAL SYMBOLIC FULL-TRAIN DIFFS")
-    print("=" * 60)
 
-    for result in visual_scored.get("results", []):
-        pair_index = result.get("pair_index")
-        predicted = result.get("predicted")
-        expected = train_pairs[pair_index]["output"]
+    if DEBUG_FULL_TRAIN_DIFFS:
+        print("\n" + "=" * 60)
+        print("VISUAL SYMBOLIC FULL-TRAIN DIFFS")
+        print("=" * 60)
 
-        print_grid_diff_summary(
-            predicted,
-            expected,
-            label=f"VISUAL SYMBOLIC FULL TRAIN PAIR {pair_index}",
+        for result in visual_scored.get("results", []):
+            pair_index = result.get("pair_index")
+            predicted = result.get("predicted")
+            expected = train_pairs[pair_index]["output"]
+
+            print_grid_diff_summary(
+                predicted,
+                expected,
+                label=f"VISUAL SYMBOLIC FULL TRAIN PAIR {pair_index}",
+            )
+
+    if DEBUG_LEAVE_ONE_OUT:
+        print("\n" + "=" * 60)
+        print("VISUAL SYMBOLIC LEAVE-ONE-OUT CHECK")
+        print("=" * 60)
+
+        visual_loo = leave_one_out_visual_symbolic(train_pairs)
+
+        print_task_level_debug(
+            visual_loo,
+            label="visual_symbolic_rule LEAVE ONE OUT",
         )
-    print("\n" + "=" * 60)
-    print("VISUAL SYMBOLIC LEAVE-ONE-OUT CHECK")
-    print("=" * 60)
-
-    visual_loo = leave_one_out_visual_symbolic(train_pairs)
-
-    print_task_level_debug(
-        visual_loo,
-        label="visual_symbolic_rule LEAVE ONE OUT",
-    )
 
     # ------------------------------------------------------------
     # NORMAL ROUTER CHECK
     # ------------------------------------------------------------
-    task_choice = choose_task_level_strategy(
-        train_pairs,
-        debug=True,
-    )
+    if DEBUG_ROUTER:
+        task_choice = choose_task_level_strategy(
+            train_pairs,
+            debug=False,
+        )
 
-    chosen_strategy = task_choice.get("best_strategy")
-    task_rule = task_choice.get("task_rule") or task_choice.get("rule")
+        chosen_strategy = task_choice.get("best_strategy")
+        task_rule = task_choice.get("task_rule") or task_choice.get("rule")
 
-    print_task_choice_summary(task_choice)
+        print_task_choice_summary(task_choice)
 
-    if chosen_strategy is None:
-        print("\nNo strategy was chosen.")
-        return
+        if chosen_strategy is None:
+            print("\nNo strategy was chosen.")
+            return
 
-    run_train_debug(
-        train_pairs=train_pairs,
-        chosen_strategy=chosen_strategy,
-        task_rule=task_rule,
-    )
+        run_train_debug(
+            train_pairs=train_pairs,
+            chosen_strategy=chosen_strategy,
+            task_rule=task_rule,
+        )
 
-    run_test_debug(
-        test_pairs=test_pairs,
-        chosen_strategy=chosen_strategy,
-        task_rule=task_rule,
-    )
+        run_test_debug(
+            test_pairs=test_pairs,
+            chosen_strategy=chosen_strategy,
+            task_rule=task_rule,
+        )
 
 
 if __name__ == "__main__":

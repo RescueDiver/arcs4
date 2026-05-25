@@ -181,7 +181,6 @@ def bbox_from_cells(cells):
         "area": (bottom - top + 1) * (right - left + 1),
     }
 
-
 def formula_feature_coefficient(formula, feature_name):
     total = 0
 
@@ -190,6 +189,7 @@ def formula_feature_coefficient(formula, feature_name):
             total += coef
 
     return total
+
 
 
 def formula_name(formula):
@@ -204,80 +204,6 @@ def print_shape_rule_debug(shape_rule, label="SHAPE RULE"):
     print(f"[{label}]")
     print("height_formula:", formula_name(shape_rule.get("height_formula")))
     print("width_formula :", formula_name(shape_rule.get("width_formula")))
-
-
-def print_box_rule_debug(box_rule, label="BOX RULE"):
-    print()
-    print(f"[{label}]")
-
-    if box_rule is None:
-        print("None")
-        return
-
-    print("top_formula   :", formula_name(box_rule.get("top_formula")))
-    print("left_formula  :", formula_name(box_rule.get("left_formula")))
-    print("height_formula:", formula_name(box_rule.get("height_formula")))
-    print("width_formula :", formula_name(box_rule.get("width_formula")))
-
-def debug_unseen_feature_values(visible_pairs, hidden_pair, label="LOO FEATURE COVERAGE"):
-    """
-    Honest-learning diagnostic.
-
-    Reports input-feature values in the hidden pair that were not represented
-    in the visible training examples.
-    """
-    feature_names = [
-        "ring_count",
-        "blob_count",
-        "nested_ring_count",
-        "outside_blob_count",
-        "inside_blob_count",
-    ]
-
-    visible_features = []
-
-    for pair in visible_pairs:
-        scene = analyze_input_scene(pair["input"])
-        out_h, out_w = grid_shape(pair["output"])
-
-        features = extract_rule_features(
-            scene,
-            output_height=out_h,
-            output_width=out_w,
-        )
-
-        visible_features.append(features)
-
-    hidden_scene = analyze_input_scene(hidden_pair["input"])
-    hidden_h, hidden_w = grid_shape(hidden_pair["output"])
-
-    hidden_features = extract_rule_features(
-        hidden_scene,
-        output_height=hidden_h,
-        output_width=hidden_w,
-    )
-
-    print()
-    print(f"[{label}]")
-
-    found_unseen = False
-
-    for name in feature_names:
-        hidden_value = hidden_features.get(name)
-        visible_values = sorted({
-            features.get(name)
-            for features in visible_features
-            if name in features
-        })
-
-        if hidden_value not in visible_values:
-            found_unseen = True
-            print(
-                f"unseen {name}: hidden={hidden_value} visible={visible_values}"
-            )
-
-    if not found_unseen:
-        print("No unseen input feature values found.")
 
 
 # ============================================================
@@ -362,13 +288,10 @@ def analyze_output_grid(output_grid):
     """
     Read output shape/colors.
 
-    Correct rule:
-        fill_color = most common output color
-        draw_color = least common output color
-
-    This avoids the bad edge-color assumption.
-    Some outputs have the drawn frame on the edge.
-    Some outputs have background on the edge.
+    We do NOT store the full output as a template to replay.
+    We only learn:
+        - output height/width
+        - border/background role colors
     """
     h, w = grid_shape(output_grid)
     ordered = ordered_colors_by_count(output_grid)
@@ -376,8 +299,23 @@ def analyze_output_grid(output_grid):
     if len(ordered) < 2:
         return None
 
-    fill_color = ordered[0]
-    draw_color = ordered[-1]
+    background_color = ordered[0]
+    mark_color = ordered[1]
+
+    edge_colors = []
+
+    for c in range(w):
+        edge_colors.append(output_grid[0][c])
+        edge_colors.append(output_grid[h - 1][c])
+
+    for r in range(h):
+        edge_colors.append(output_grid[r][0])
+        edge_colors.append(output_grid[r][w - 1])
+
+    edge_common = Counter(edge_colors).most_common(1)[0][0]
+
+    draw_color = edge_common
+    fill_color = background_color if background_color != draw_color else mark_color
 
     return {
         "shape": (h, w),
@@ -481,7 +419,7 @@ def generate_formulas(feature_names):
     """
     formulas = []
 
-    constants = list(range(-32, 31))
+    constants = list(range(0, 31))
     coefficients = [-8, -7, -6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6, 7, 8]
 
     for k in constants:
@@ -525,6 +463,7 @@ def generate_formulas(feature_names):
                         )
 
     return formulas
+
 
 def formula_complexity(formula):
     """
@@ -611,7 +550,6 @@ def formula_complexity(formula):
         + bonus
     )
 
-
 def formula_uses_feature(formula, feature_name):
     for coef, name in formula.get("terms", []):
         if name == feature_name and coef != 0:
@@ -671,6 +609,39 @@ def formula_generalization_priority(
     used = formula_used_features(formula)
     cost = 0
 
+    # ------------------------------------------------------------
+    # POSITION FORMULA BIAS
+    # ------------------------------------------------------------
+    # For box top/left, a constant zero is usually the most stable
+    # visual rule when it fits the examples.
+    #
+    # This is not forcing the answer. The formula still must fit all
+    # visible training examples before it can be selected.
+    used = formula_used_features(formula)
+
+    if target_name in {"top", "left"} and not used:
+        predicted_values = []
+
+        for ex in examples:
+            scene = ex["scene"]
+            output_info = ex.get("output_info", {})
+
+            features = extract_rule_features(
+                scene,
+                output_height=output_info.get("height"),
+                output_width=output_info.get("width"),
+            )
+
+            predicted_values.append(
+                apply_formula_to_features(formula, features)
+            )
+
+        if predicted_values and all(value == 0 for value in predicted_values):
+            cost -= 100000
+
+    # ------------------------------------------------------------
+    # SHAPE FORMULAS
+    # ------------------------------------------------------------
     if target_name == "height":
         preferred = [
             "blob_count",
@@ -694,6 +665,9 @@ def formula_generalization_priority(
             "output_width",
         ]
 
+    # ------------------------------------------------------------
+    # DRAWING ROW FORMULAS
+    # ------------------------------------------------------------
     elif target_name in {
         "row",
         "top",
@@ -702,77 +676,53 @@ def formula_generalization_priority(
         "inner_top",
         "inner_bottom",
         "marker_row",
+        "box_height",
     }:
         preferred = [
-            "outside_blob_count",
-            "blob_count",
-            "nested_ring_count",
             "output_height",
-        ]
-
-        discouraged = [
-            "output_width",
-        ]
-
-    elif target_name == "box_height":
-        preferred = [
-            "output_height",
-            "outside_blob_count",
             "blob_count",
             "nested_ring_count",
         ]
 
-        discouraged = [
-            "output_width",
-        ]
+        discouraged = []
 
-    elif target_name == "left":
-        preferred = [
-            "outside_blob_count",
-            "blob_count",
-            "nested_ring_count",
-        ]
-
-        discouraged = [
-            "output_width",
-            "output_height",
-        ]
-
+    # ------------------------------------------------------------
+    # DRAWING COLUMN FORMULAS
+    # ------------------------------------------------------------
     elif target_name in {
         "col",
+        "left",
         "right",
         "center_col",
         "inner_left",
         "inner_right",
         "marker_col",
+        "box_width",
     }:
         preferred = [
+            "output_width",
             "outside_blob_count",
             "nested_ring_count",
-            "blob_count",
-            "output_width",
         ]
 
-        discouraged = [
-            "output_height",
-        ]
+        discouraged = []
 
-    elif target_name == "box_width":
+    else:
         preferred = [
-            "output_width",
-            "outside_blob_count",
+            "blob_count",
             "nested_ring_count",
+            "outside_blob_count",
         ]
 
-        discouraged = [
-            "output_height",
-        ]
+        discouraged = []
 
+    # Features that vary in visible train examples matter.
     for feature in preferred:
         if examples_have_feature_variation(examples, feature):
             if feature not in used:
                 cost += 5000
 
+    # Features present in the input being predicted also matter.
     if prediction_scene is not None:
         prediction_features = extract_rule_features(prediction_scene)
 
@@ -780,12 +730,17 @@ def formula_generalization_priority(
             value = prediction_features.get(feature, 0)
 
             if value != 0 and feature not in used:
-                cost += 2000
+                cost += 7000
 
-    for feature in discouraged:
-        if feature in used:
-            cost += 12000
+    # Discourage leakage only for final shape formulas.
+    # Drawing formulas are allowed to use output_height/output_width
+    # because the canvas size has already been learned.
+    if target_name in {"height", "width"}:
+        for feature in discouraged:
+            if feature in used:
+                cost += 3000
 
+    # Width extension should add width, not shrink it.
     if target_name == "width":
         outside_coef = formula_feature_coefficient(
             formula,
@@ -868,9 +823,12 @@ def learn_best_shape_formula(examples, target_name, prediction_scene=None):
     feature_names = [
         "ring_count",
         "blob_count",
-        "nested_ring_count",
         "outside_blob_count",
         "inside_blob_count",
+        "max_ring_blob_count",
+        "min_ring_blob_count",
+        "nested_ring_count",
+        "total_scene_objects",
     ]
 
     return learn_best_formula_from_examples(
@@ -933,67 +891,118 @@ def predict_shape_from_rule(shape_rule, scene):
 
 def learn_color_rule(examples):
     """
-    Learn output color roles from analyzed examples.
+    Learn how output draw/fill colors relate to input colors.
 
-    This function receives visual-symbolic examples, not raw train_pairs.
-    So do NOT assume example["input"] exists.
+    This avoids hard-coding:
+        draw = input active
+        fill = input background
+
+    Instead, it tests simple color-role hypotheses and picks one
+    that fits all visible train examples.
     """
-    learned = []
-
+    print()
+    print("[COLOR LEARNING EXAMPLES]")
     for ex in examples:
-        output_grid = ex.get("output_grid") or ex.get("output")
+        scene = ex["scene"]
+        output_info = ex["output_info"]
 
-        if output_grid is None:
-            continue
+        print(
+            f"pair={ex.get('pair_index')} "
+            f"rings={scene.get('ring_count')} "
+            f"blobs={scene.get('blob_count')} "
+            f"outside={scene.get('outside_blob_count')} "
+            f"bg={scene.get('background')} "
+            f"active={scene.get('active_colors')} "
+            f"expected_draw={output_info.get('draw_color')} "
+            f"expected_fill={output_info.get('fill_color')}"
+        )
 
-        colors = choose_output_colors(output_grid)
 
-        scene = ex.get("scene", {})
-        input_background = scene.get("background")
+    hypotheses = [
 
-        learned.append({
-            "input_background": input_background,
-            "background_color": colors["background_color"],
-            "draw_color": colors["draw_color"],
-        })
+        {
+            "name": "nested_no_outside_uses_background_to_draw_else_active_to_draw",
+            "mode": "conditional",
+        },
+        {
+            "name": "input_active_to_draw__input_background_to_fill",
+            "draw_source": "input_active",
+            "fill_source": "input_background",
+        },
+        {
+            "name": "input_background_to_draw__input_active_to_fill",
+            "draw_source": "input_background",
+            "fill_source": "input_active",
+        },
+    ]
+
+    for hypothesis in hypotheses:
+        all_match = True
+
+        for ex in examples:
+            scene = ex["scene"]
+            output_info = ex["output_info"]
+
+            predicted_draw, predicted_fill = apply_color_rule_to_scene(
+                hypothesis,
+                scene,
+            )
+
+            if predicted_draw != output_info["draw_color"]:
+                all_match = False
+                break
+
+            if predicted_fill != output_info["fill_color"]:
+                all_match = False
+                break
+
+        if all_match:
+            return hypothesis
 
     return {
-        "type": "learned_output_colors",
-        "examples": learned,
+        "name": "fallback_input_active_to_draw__input_background_to_fill",
+        "draw_source": "input_active",
+        "fill_source": "input_background",
     }
 
 
 def apply_color_rule_to_scene(color_rule, scene):
-    """
-    Apply learned color roles.
+    bg = scene.get("background", 0)
+    active = scene.get("active_colors", [])
 
-    Match by input background when possible.
-    Otherwise use the first learned color mapping.
-    """
-    examples = color_rule.get("examples", [])
+    if active:
+        active_color = active[0]
+    else:
+        active_color = bg
 
-    input_background = None
+    name = color_rule.get("name")
 
-    if isinstance(scene, dict):
-        input_background = scene.get("background")
 
-    for ex in examples:
-        if ex.get("input_background") == input_background:
-            return {
-                "background_color": ex["background_color"],
-                "draw_color": ex["draw_color"],
-            }
 
-    if examples:
-        return {
-            "background_color": examples[0]["background_color"],
-            "draw_color": examples[0]["draw_color"],
-        }
+    # Conditional learned color grammar:
+    # nested ring scene with no outside blob flips color roles.
+    if name == "nested_no_outside_uses_background_to_draw_else_active_to_draw":
+        nested_ring_count = max(0, scene.get("ring_count", 0) - 1)
+        outside_blob_count = scene.get("outside_blob_count", 0)
 
-    return {
-        "background_color": 0,
-        "draw_color": 1,
-    }
+        if nested_ring_count > 0 and outside_blob_count == 0:
+            return bg, active_color
+
+        return active_color, bg
+
+    def resolve(source):
+        if source == "input_active":
+            return active_color
+
+        if source == "input_background":
+            return bg
+
+        return active_color
+
+    draw_color = resolve(color_rule.get("draw_source"))
+    fill_color = resolve(color_rule.get("fill_source"))
+
+    return draw_color, fill_color
 
 
 # ============================================================
@@ -1134,189 +1143,6 @@ def find_drawn_box_perimeters(grid, draw_color):
     return boxes
 
 
-def find_attached_side_chambers(grid, draw_color, outer_box, inner_boxes):
-    """
-    Detect chamber-like side boxes attached to an outer/inner structure.
-
-    This is still a reader, not a renderer.
-    It only extracts boxes that already exist in the expected output.
-    """
-    h, w = grid_shape(grid)
-    chambers = []
-
-    inner_box_set = {
-        (
-            box["top"],
-            box["bottom"],
-            box["left"],
-            box["right"],
-        )
-        for box in inner_boxes
-    }
-
-    for top in range(h):
-        for bottom in range(top + 2, h):
-            for left in range(w):
-                for right in range(left + 2, w):
-                    box = {
-                        "top": top,
-                        "bottom": bottom,
-                        "left": left,
-                        "right": right,
-                        "height": bottom - top + 1,
-                        "width": right - left + 1,
-                        "area": (bottom - top + 1) * (right - left + 1),
-                    }
-
-                    key = (
-                        box["top"],
-                        box["bottom"],
-                        box["left"],
-                        box["right"],
-                    )
-
-                    if key in inner_box_set:
-                        continue
-
-                    if box == outer_box:
-                        continue
-
-                    top_ok = all(grid[top][c] == draw_color for c in range(left, right + 1))
-                    bottom_ok = all(grid[bottom][c] == draw_color for c in range(left, right + 1))
-                    left_ok = all(grid[r][left] == draw_color for r in range(top, bottom + 1))
-                    right_ok = all(grid[r][right] == draw_color for r in range(top, bottom + 1))
-
-                    side_count = sum([top_ok, bottom_ok, left_ok, right_ok])
-
-                    if side_count < 3:
-                        continue
-
-                    # Ignore the full outer frame.
-                    if (
-                        box["top"] == outer_box["top"]
-                        and box["bottom"] == outer_box["bottom"]
-                        and box["left"] == outer_box["left"]
-                    ):
-                        continue
-
-                    chambers.append(box)
-
-    chambers.sort(
-        key=lambda box: (
-            box["top"],
-            box["left"],
-            box["height"],
-            box["width"],
-        )
-    )
-
-    return chambers
-
-
-def find_enclosure_tree_view_anywhere(obj):
-    """
-    Search whatever discover_visual_abstractions returns
-    and find the enclosure_tree_view dictionary.
-
-    This is needed because discover_visual_abstractions may return
-    a list, not a single dictionary.
-    """
-    if isinstance(obj, dict):
-        if obj.get("view_type") == "enclosure_tree_view":
-            return obj
-
-        for value in obj.values():
-            found = find_enclosure_tree_view_anywhere(value)
-            if found is not None:
-                return found
-
-    if isinstance(obj, list):
-        for item in obj:
-            found = find_enclosure_tree_view_anywhere(item)
-            if found is not None:
-                return found
-
-    return None
-
-
-def extract_chamber_boxes_from_output_abstraction(output_grid, outer_box, inner_boxes):
-    """
-    Reads chamber boxes already discovered by the visual abstraction tree.
-
-    This does not force a chamber.
-    It only uses enclosures that the abstraction system already found.
-    """
-    abstraction = discover_visual_abstractions(output_grid)
-
-    tree_view = find_enclosure_tree_view_anywhere(abstraction)
-
-    if tree_view is None:
-        return []
-
-    enclosures = tree_view.get("enclosures", [])
-
-    chamber_boxes = []
-
-    outer_key = (
-        outer_box["top"],
-        outer_box["bottom"],
-        outer_box["left"],
-        outer_box["right"],
-    )
-
-    inner_keys = {
-        (
-            box["top"],
-            box["bottom"],
-            box["left"],
-            box["right"],
-        )
-        for box in inner_boxes
-    }
-
-    for enclosure in enclosures:
-        box = enclosure.get("box")
-
-        if box is None:
-            continue
-
-        key = (
-            box["top"],
-            box["bottom"],
-            box["left"],
-            box["right"],
-        )
-
-        if key == outer_key:
-            continue
-
-        if key in inner_keys:
-            continue
-
-        chamber_boxes.append(box)
-
-    if not chamber_boxes:
-        return []
-
-    smallest_area = min(box["area"] for box in chamber_boxes)
-
-    chamber_boxes = [
-        box for box in chamber_boxes
-        if box["area"] == smallest_area
-    ]
-
-    chamber_boxes.sort(
-        key=lambda box: (
-            box["top"],
-            box["left"],
-            box["height"],
-            box["width"],
-        )
-    )
-
-    return chamber_boxes
-
-
 def analyze_output_drawing(output_grid, output_info):
     """
     Read output drawing symbolically.
@@ -1325,7 +1151,6 @@ def analyze_output_drawing(output_grid, output_info):
     It extracts:
         - outer frame box
         - inner frame boxes
-        - extra drawn boxes / chambers
         - marker cells
 
     These become training targets for learn_drawing_rule().
@@ -1377,16 +1202,16 @@ def analyze_output_drawing(output_grid, output_info):
 
     all_drawn_boxes = find_drawn_box_perimeters(output_grid, draw_color)
 
-    # Legacy scanner is too noisy.
-    # Keep it disabled now that chamber_boxes comes from enclosure_tree_view.
+    # Extra boxes includes attached chambers that component detection can miss.
+    # We remove the main outer box and exact duplicates only.
     extra_boxes = []
 
-    chamber_boxes = extract_chamber_boxes_from_output_abstraction(
-        output_grid,
-        outer_box,
-        inner_boxes,
-    )
+    for box in all_drawn_boxes:
+        if box == outer_box:
+            continue
 
+        if box not in extra_boxes:
+            extra_boxes.append(box)
 
     covered = set()
     covered.update(perimeter_cells_for_box(outer_box))
@@ -1394,22 +1219,9 @@ def analyze_output_drawing(output_grid, output_info):
     for box in inner_boxes:
         covered.update(perimeter_cells_for_box(box))
 
-    for box in extra_boxes:
-        covered.update(perimeter_cells_for_box(box))
-
-    for box in chamber_boxes:
-        covered.update(perimeter_cells_for_box(box))
-
-    markers = []
-
     markers = []
 
     for comp in components:
-        # Real markers in this symbolic task are isolated 1-cell components.
-        # Do not treat leftover connected frame/chamber cells as markers.
-        if comp.get("size") != 1:
-            continue
-
         for r, c in comp.get("cells", []):
             if (r, c) in covered:
                 continue
@@ -1425,9 +1237,10 @@ def analyze_output_drawing(output_grid, output_info):
         "outer_box": outer_box,
         "inner_boxes": inner_boxes,
         "extra_boxes": extra_boxes,
-        "chamber_boxes": chamber_boxes,
         "markers": markers,
     }
+
+
 # ============================================================
 # LEARNING DRAWING RULE
 # ============================================================
@@ -1630,7 +1443,20 @@ def learn_one_ring_marker_rule(examples):
         for ex in examples
         if ex["scene"].get("ring_count", 0) == 1
     ]
+    print()
+    print("[ONE RING MARKER LEARNING EXAMPLES]")
+    for ex in one_ring_examples:
+        scene = ex["scene"]
+        output_info = ex["output_info"]
+        drawing_info = ex["drawing_info"]
 
+        print(
+            f"pair={ex.get('pair_index')} "
+            f"rings={scene.get('ring_count')} "
+            f"blobs={scene.get('blob_count')} "
+            f"shape={output_info.get('height')}x{output_info.get('width')} "
+            f"markers={drawing_info.get('markers')}"
+        )
     if not one_ring_examples:
         return None
 
@@ -1647,11 +1473,7 @@ def learn_one_ring_marker_rule(examples):
             continue
 
         expected_center_col = output_info["width"] // 2
-        marker_rows = sorted(
-            m["row"]
-            for m in markers
-            if m["col"] == expected_center_col
-        )
+        marker_rows = sorted(m["row"] for m in markers if m["col"] == expected_center_col)
 
         if len(marker_rows) != blob_count:
             return None
@@ -1668,7 +1490,6 @@ def learn_one_ring_marker_rule(examples):
                 marker_rows[i + 1] - marker_rows[i]
                 for i in range(len(marker_rows) - 1)
             ]
-
             if len(set(diffs)) == 1:
                 steps.append(diffs[0])
             else:
@@ -1687,6 +1508,9 @@ def learn_one_ring_marker_rule(examples):
         step = steps[0]
     else:
         step = 2
+
+
+
 
     return {
         "type": "one_ring_repeating_center_markers",
@@ -1712,6 +1536,11 @@ def get_outer_only_blob_directions(scene):
     if len(rings) < 2:
         return []
 
+    rings_by_id = {
+        ring.get("id"): ring
+        for ring in rings
+    }
+
     rings_sorted = sorted(
         rings,
         key=lambda ring: box_area(ring.get("box", {})),
@@ -1731,6 +1560,8 @@ def get_outer_only_blob_directions(scene):
 
     if inner_center is None:
         return []
+
+    inner_center_r, inner_center_c = inner_center
 
     blobs_by_id = {
         blob.get("id"): blob
@@ -1834,6 +1665,8 @@ def relation_for_marker(marker, output_info, inner_box, outer_box):
         "row_relation": row_relation,
         "col_relation": col_relation,
     }
+
+
 def apply_marker_relation(relation, output_height, output_width, inner_box, outer_box):
     if relation is None:
         return None
@@ -2011,37 +1844,6 @@ def learn_nested_marker_rules(examples):
     }
 
 
-def learn_chamber_rule(examples):
-    """
-    Learn chamber drawing behavior from extracted chamber_boxes.
-
-    This is symbolic:
-        - chamber size is learned from observed chamber boxes
-        - one-ring scenes learn stacked chambers
-        - nested scenes learn chamber relations through existing marker rules
-    """
-    chamber_sizes = []
-
-    for ex in examples:
-        for box in ex["drawing_info"].get("chamber_boxes", []):
-            chamber_sizes.append((box["height"], box["width"]))
-
-    if not chamber_sizes:
-        return {
-            "type": "no_chambers",
-            "enabled": False,
-        }
-
-    most_common_size = Counter(chamber_sizes).most_common(1)[0][0]
-
-    return {
-        "type": "learned_chambers",
-        "enabled": True,
-        "height": most_common_size[0],
-        "width": most_common_size[1],
-    }
-
-
 def learn_drawing_rule(examples, prediction_scene=None):
     """
     Learn symbolic drawing instructions from train outputs.
@@ -2068,22 +1870,16 @@ def learn_drawing_rule(examples, prediction_scene=None):
         ex = dict(ex)
         ex["drawing_info"] = drawing_info
         examples_with_drawing.append(ex)
-        print()
-        print(f"[DRAWING INFO pair={ex.get('pair_index')}]")
-        print("outer_box :", drawing_info.get("outer_box"))
-        print("inner_boxes:", drawing_info.get("inner_boxes"))
-        print("extra_boxes:", drawing_info.get("extra_boxes"))
-        print("chamber_boxes:", drawing_info.get("chamber_boxes"))
-        print("markers   :", drawing_info.get("markers"))
+
     outer_box_rule = learn_box_formula_rule(
         examples_with_drawing,
         box_getter=lambda ex: ex["drawing_info"].get("outer_box"),
         prediction_scene=prediction_scene
     )
-    print_box_rule_debug(
-        outer_box_rule,
-        label="VISUAL SYMBOLIC LEARNED OUTER BOX RULE",
-    )
+    print()
+    print("[LEARNED OUTER BOX RULE]")
+    print(outer_box_rule)
+
     inner_presence_rule = learn_inner_box_presence_rule(examples_with_drawing)
 
     inner_box_rule = learn_box_formula_rule(
@@ -2095,7 +1891,7 @@ def learn_drawing_rule(examples, prediction_scene=None):
     one_ring_marker_rule = learn_one_ring_marker_rule(examples_with_drawing)
 
     nested_marker_rules = learn_nested_marker_rules(examples_with_drawing)
-    chamber_rule = learn_chamber_rule(examples_with_drawing)
+
     return {
         "type": "learned_drawing_rule",
         "outer_box_rule": outer_box_rule,
@@ -2103,7 +1899,6 @@ def learn_drawing_rule(examples, prediction_scene=None):
         "inner_box_rule": inner_box_rule,
         "one_ring_marker_rule": one_ring_marker_rule,
         "nested_marker_rules": nested_marker_rules,
-        "chamber_rule": chamber_rule,
     }
 
 
@@ -2129,15 +1924,6 @@ def draw_box(grid, top, left, height, width, color):
     for r in range(top, bottom + 1):
         set_cell(grid, r, left, color)
         set_cell(grid, r, right, color)
-
-
-def draw_center_marker_for_box(grid, box, color):
-    center = box_center(box)
-
-    if center is None:
-        return
-
-    set_cell(grid, center[0], center[1], color)
 
 
 def render_learned_drawing(scene, height, width, draw_color, fill_color, drawing_rule):
@@ -2262,93 +2048,8 @@ def render_learned_drawing(scene, height, width, draw_color, fill_color, drawing
 
             if marker is not None:
                 set_cell(out, marker[0], marker[1], draw_color)
-    # ------------------------------------------------------------
-    # LEARNED CHAMBERS
-    # ------------------------------------------------------------
-    chamber_rule = drawing_rule.get("chamber_rule", {})
 
-    if chamber_rule.get("enabled"):
-        chamber_h = chamber_rule.get("height", 3)
-        chamber_w = chamber_rule.get("width", 3)
-
-        # One-ring case:
-        # draw one learned-size chamber per blob, stacked vertically.
-        if ring_count == 1:
-            chamber_top = outer_box["top"]
-            chamber_left = outer_box["left"]
-
-            for idx in range(blob_count):
-                top = chamber_top + idx * (chamber_h - 1)
-                left = chamber_left
-
-                draw_box(
-                    out,
-                    top,
-                    left,
-                    chamber_h,
-                    chamber_w,
-                    draw_color,
-                )
-
-        # Nested-ring case:
-        # use the same marker relations as symbolic chamber centers,
-        # then draw chamber boxes around those centers.
-        if ring_count >= 2:
-            chamber_centers = []
-
-            if inner_box is not None:
-                center = box_center(inner_box)
-                if center is not None:
-                    chamber_centers.append(center)
-
-            outside_relation = nested_rules.get("outside_marker_relation")
-
-            if scene.get("outside_blob_count", 0) > 0 and outside_relation is not None:
-                marker = apply_marker_relation(
-                    outside_relation,
-                    output_height=height,
-                    output_width=width,
-                    inner_box=inner_box,
-                    outer_box=outer_box,
-                )
-
-                if marker is not None:
-                    chamber_centers.append(marker)
-
-            direction_relations = nested_rules.get("outer_blob_direction_relations", {})
-            directions = get_outer_only_blob_directions(scene)
-
-            for direction in directions:
-                relation = direction_relations.get(direction)
-
-                if relation is None:
-                    continue
-
-                marker = apply_marker_relation(
-                    relation,
-                    output_height=height,
-                    output_width=width,
-                    inner_box=inner_box,
-                    outer_box=outer_box,
-                )
-
-                if marker is not None:
-                    chamber_centers.append(marker)
-
-            for center_r, center_c in chamber_centers:
-                top = center_r - chamber_h // 2
-                left = center_c - chamber_w // 2
-
-                draw_box(
-                    out,
-                    top,
-                    left,
-                    chamber_h,
-                    chamber_w,
-                    draw_color,
-                )
     return out
-
 
 
 # ============================================================
@@ -2391,13 +2092,13 @@ def discover_visual_symbolic_rule_for_task(train_pairs, prediction_scene=None):
         examples,
         prediction_scene=prediction_scene,
     )
-
     color_rule = learn_color_rule(examples)
-
     drawing_rule = learn_drawing_rule(
         examples,
         prediction_scene=prediction_scene,
     )
+    print("[VISUAL SYMBOLIC COLOR RULE]")
+    print(color_rule)
 
     print_shape_rule_debug(
         shape_rule,
@@ -2415,45 +2116,13 @@ def discover_visual_symbolic_rule_for_task(train_pairs, prediction_scene=None):
     }
 
 
-def choose_output_colors(output_grid):
-    """
-    Learn output colors directly from the expected output.
+def choose_output_colors(rule, input_grid, scene):
+    color_rule = rule.get("color_rule")
 
-    In these enclosure tasks:
-        - background/fill color is the most common output color
-        - draw color is the least common output color
+    if color_rule is None:
+        return None, None
 
-    This avoids accidentally swapping canvas fill and line color.
-    """
-    counts = color_counts(output_grid)
-
-    if not counts:
-        return {
-            "background_color": 0,
-            "draw_color": 0,
-        }
-
-    ordered = sorted(
-        counts.items(),
-        key=lambda item: (-item[1], item[0]),
-    )
-
-    background_color = ordered[0][0]
-
-    draw_candidates = [
-        color for color, count in ordered
-        if color != background_color
-    ]
-
-    if draw_candidates:
-        draw_color = draw_candidates[-1]
-    else:
-        draw_color = background_color
-
-    return {
-        "background_color": background_color,
-        "draw_color": draw_color,
-    }
+    return apply_color_rule_to_scene(color_rule, scene)
 
 
 def apply_visual_symbolic_rule(rule, input_grid):
@@ -2480,13 +2149,11 @@ def apply_visual_symbolic_rule(rule, input_grid):
 
     height, width = predicted_shape
 
-    color_info = apply_color_rule_to_scene(
-        rule.get("color_rule", {}),
+    draw_color, fill_color = choose_output_colors(
+        rule,
+        input_grid,
         scene,
     )
-
-    fill_color = color_info["background_color"]
-    draw_color = color_info["draw_color"]
 
     if draw_color is None or fill_color is None:
         return None
@@ -2660,12 +2327,6 @@ def leave_one_out_visual_symbolic(train_pairs):
                 predicted,
                 expected,
                 label=f"LOO HIDDEN PAIR {hidden_index}",
-            )
-
-            debug_unseen_feature_values(
-                visible_pairs=visible_pairs,
-                hidden_pair=hidden_pair,
-                label=f"LOO HIDDEN PAIR {hidden_index} FEATURE COVERAGE",
             )
 
     exact_count = sum(1 for r in results if r.get("exact"))
