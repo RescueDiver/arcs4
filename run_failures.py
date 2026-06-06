@@ -118,6 +118,7 @@ def solve_train_pair(
         "multi_seed_composition_rule",
         "learned_region_rule",
         "ring_blob_rule_synthesizer",
+        "visual_symbolic_ruleV2",
     }
 
     if strategy_name in task_level_strategies and task_rule is not None:

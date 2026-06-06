@@ -23,10 +23,10 @@ from reasoning.task_router import (
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 SHOW_POPUPS = True
-PRINT_GRIDS = True
+PRINT_GRIDS = False
 PRINT_DIFFS = True
 
-# Important:
+# Important:    b0039139.json
 # This file is for HONEST testing.
 # The hidden output must NEVER be used while learning or predicting.
 

@@ -294,61 +294,266 @@ def learn_scene_to_layout_rule(learning_examples):
 
 def predict_layout_targets_for_scene(source_facts, scene_layout_rule):
     """
-    Predict the output marker target set for a new scene.
+    Predict output layout targets from input-side symbolic source facts.
 
-    Order:
-        1. exact whole-scene template match
-        2. abstract whole-scene template match
-        3. learned source-to-target translations
-        4. natural symbolic fallback
+    Safe learning priority:
+
+        1. Exact whole-scene example match
+        2. Abstract whole-scene example match
+        3. Per-source learned translations
+        4. Natural fallback for sources without learned translations
+
+    Important:
+        Do not return a partial learned translation list too early.
+        A partial list can delete valid markers from the scene.
     """
+
+    if not source_facts:
+        return []
 
     if scene_layout_rule is None:
         return []
 
-    scene_signature = scene_signature_from_source_facts(source_facts)
+    def sorted_unique(items):
+        result = []
 
-    exact_key = scene_signature["exact"]
-    abstract_key = scene_signature["abstract"]
+        for item in items:
+            if item is None:
+                continue
 
-    exact_templates = scene_layout_rule.get("exact_templates", {})
-    abstract_templates = scene_layout_rule.get("abstract_templates", {})
-    learned_translations = scene_layout_rule.get("learned_translations", {})
+            if item not in result:
+                result.append(item)
 
-    if exact_key in exact_templates:
-        return list(exact_templates[exact_key])
+        return sorted(result)
 
-    if abstract_key in abstract_templates:
-        return list(abstract_templates[abstract_key])
+    def source_fact_to_abstract_key_local(source_key):
+        if source_key is None:
+            return None
 
+        parts = source_key.split("_")
+
+        if len(parts) < 3:
+            return source_key
+
+        role = parts[0]
+
+        if role not in ("single", "inner", "outer"):
+            return source_key
+
+        blob_part = parts[1]
+
+        if not blob_part.endswith("blobs"):
+            return source_key
+
+        direction = "_".join(parts[2:])
+
+        return f"{role}_anyblobs_{direction}"
+
+    def exact_scene_signature_from_facts(facts):
+        return tuple(
+            sorted(
+                fact.get("source_key")
+                for fact in facts
+                if fact.get("source_key") is not None
+            )
+        )
+
+    def abstract_scene_signature_from_facts(facts):
+        return tuple(
+            sorted(
+                source_fact_to_abstract_key_local(fact.get("source_key"))
+                for fact in facts
+                if fact.get("source_key") is not None
+            )
+        )
+
+    def get_examples(rule):
+        examples = rule.get("examples")
+
+        if isinstance(examples, list):
+            return examples
+
+        return []
+
+    def get_example_signature(example, key_options):
+        for key in key_options:
+            value = example.get(key)
+
+            if value is None:
+                continue
+
+            if isinstance(value, tuple):
+                return value
+
+            if isinstance(value, list):
+                return tuple(value)
+
+        return None
+
+    def get_example_layout(example):
+        for key in (
+            "layout",
+            "layout_signature",
+            "target_layout",
+            "output_layout",
+        ):
+            value = example.get(key)
+
+            if value is None:
+                continue
+
+            if isinstance(value, tuple):
+                return list(value)
+
+            if isinstance(value, list):
+                return value
+
+        return None
+
+    def get_translations(rule):
+        for key in (
+            "learned_translations",
+            "translations",
+            "source_translations",
+            "translation_rules",
+        ):
+            value = rule.get(key)
+
+            if isinstance(value, dict):
+                return value
+
+        return {}
+
+    def best_target_from_translation(record):
+        if record is None:
+            return None
+
+        if isinstance(record, str):
+            return record
+
+        if isinstance(record, dict):
+            if record.get("ambiguous"):
+                return None
+
+            for key in (
+                "best_target",
+                "target",
+                "target_key",
+                "layout_target",
+            ):
+                value = record.get(key)
+
+                if value is not None:
+                    return value
+
+            counts = record.get("counts")
+
+            if counts is None:
+                counts = record.get("target_counts")
+
+            if isinstance(counts, dict) and counts:
+                return max(
+                    counts,
+                    key=lambda item: counts[item],
+                )
+
+        return None
+
+    def natural_target_from_fact(fact):
+        container_role = fact.get("container_role")
+        direction = fact.get("direction")
+
+        if container_role == "outside_all":
+            return "outside_right"
+
+        if direction not in ("center", "above", "below", "left", "right"):
+            return None
+
+        if container_role == "inner":
+            return f"inner_{direction}"
+
+        if container_role == "outer":
+            return f"outer_{direction}"
+
+        if container_role == "single":
+            return f"outer_{direction}"
+
+        return None
+
+    exact_scene = exact_scene_signature_from_facts(source_facts)
+    abstract_scene = abstract_scene_signature_from_facts(source_facts)
+
+    examples = get_examples(scene_layout_rule)
+
+    # ------------------------------------------------------------
+    # 1. Exact whole-scene example match.
+    # ------------------------------------------------------------
+    for example in examples:
+        example_exact = get_example_signature(
+            example,
+            (
+                "scene_exact",
+                "exact_scene",
+                "scene_signature",
+                "exact_signature",
+            ),
+        )
+
+        if example_exact == exact_scene:
+            layout = get_example_layout(example)
+
+            if layout is not None:
+                return sorted_unique(layout)
+
+    # ------------------------------------------------------------
+    # 2. Abstract whole-scene example match.
+    # ------------------------------------------------------------
+    for example in examples:
+        example_abstract = get_example_signature(
+            example,
+            (
+                "scene_abstract",
+                "abstract_scene",
+                "abstract_signature",
+            ),
+        )
+
+        if example_abstract == abstract_scene:
+            layout = get_example_layout(example)
+
+            if layout is not None:
+                return sorted_unique(layout)
+
+    translations = get_translations(scene_layout_rule)
+
+    # ------------------------------------------------------------
+    # 3. Per-source learned translations.
+    #
+    # Use exact translation first.
+    # If missing, use abstract translation.
+    # If both missing, use natural fallback.
+    #
+    # This prevents partial learned lists from deleting markers.
+    # ------------------------------------------------------------
     targets = []
 
-    for source in source_facts:
-        possible_keys = [
-            source.get("source_key"),
-            source.get("simple_source_key"),
-            source_fact_to_abstract_key(source),
-        ]
+    for fact in source_facts:
+        source_key = fact.get("source_key")
+        abstract_key = source_fact_to_abstract_key_local(source_key)
 
-        chosen_target = None
+        target = best_target_from_translation(
+            translations.get(source_key)
+        )
 
-        for key in possible_keys:
-            mapping = learned_translations.get(key)
+        if target is None:
+            target = best_target_from_translation(
+                translations.get(abstract_key)
+            )
 
-            if mapping is None:
-                continue
+        if target is None:
+            target = natural_target_from_fact(fact)
 
-            if mapping.get("ambiguous"):
-                continue
-
-            chosen_target = mapping.get("best_target")
-            break
-
-        if chosen_target is None:
-            chosen_target = expected_target_for_source(source)
-
-        if chosen_target is not None:
-            targets.append(chosen_target)
+        targets.append(target)
 
     return sorted_unique(targets)
 

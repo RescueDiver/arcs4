@@ -81,6 +81,46 @@ except ImportError as exc:
     leave_one_out_visual_symbolic = None
 
 
+try:
+    from reasoning.visual_symbolic_ruleV2 import (
+        discover_visual_symbolic_rule_v2_for_task,
+        apply_visual_symbolic_rule_v2,
+        extract_scene_facts,
+    )
+except ImportError as exc:
+    print("[VISUAL SYMBOLIC V2 IMPORT ERROR]", repr(exc))
+
+    discover_visual_symbolic_rule_v2_for_task = None
+    apply_visual_symbolic_rule_v2 = None
+    extract_scene_facts = None
+
+
+# ============================================================
+# OPTIONAL TASK-LEVEL VISUAL SYMBOLIC RULE V2
+# ============================================================
+
+try:
+    from reasoning.visual_symbolic_ruleV2 import (
+        explain_visual_symbolic_prediction,
+        extract_scene_facts,
+    )
+
+    from reasoning.visual_symbolic_output_learner import (
+        build_marker_learning_example,
+        learn_marker_placement_rule,
+        apply_learned_marker_rule,
+    )
+
+except ImportError as exc:
+    print("[VISUAL SYMBOLIC V2 IMPORT ERROR]", repr(exc))
+
+    explain_visual_symbolic_prediction = None
+    extract_scene_facts = None
+    build_marker_learning_example = None
+    learn_marker_placement_rule = None
+    apply_learned_marker_rule = None
+
+
 # ============================================================
 # BASIC HELPERS
 # ============================================================
@@ -506,6 +546,300 @@ def is_strong_visual_symbolic_leave_one_out(loo_scored):
             return False
 
     return True
+
+
+def is_ring_blob_style_task(train_pairs):
+    """
+    Gate visual_symbolic_ruleV2.
+
+    This prevents the ring/blob solver from running on unrelated ARC tasks.
+    It only checks whether the task has rings + blobs.
+    """
+
+    if extract_scene_facts is None:
+        return False
+
+    if not train_pairs:
+        return False
+
+    for pair in train_pairs:
+        input_grid = pair.get("input")
+
+        if input_grid is None:
+            return False
+
+        try:
+            scene = extract_scene_facts(input_grid)
+        except Exception:
+            return False
+
+        ring_count = scene.get("ring_count", 0)
+        blob_count = scene.get("blob_count", 0)
+
+        if ring_count < 1:
+            return False
+
+        if blob_count < 1:
+            return False
+
+    return True
+
+
+def discover_visual_symbolic_rule_v2_for_router(train_pairs):
+    """
+    Learn the real V2 task-level rule:
+        frame prediction + learned marker placement.
+
+    This matches the successful run_onceV3 path.
+    """
+
+    if explain_visual_symbolic_prediction is None:
+        return None
+
+    if build_marker_learning_example is None:
+        return None
+
+    if learn_marker_placement_rule is None:
+        return None
+
+    learning_examples = []
+
+    for pair_index, pair in enumerate(train_pairs):
+        input_grid = pair["input"]
+        output_grid = pair["output"]
+
+        explanation = explain_visual_symbolic_prediction(input_grid)
+
+        learning_example = build_marker_learning_example(
+            pair_index=pair_index,
+            input_grid=input_grid,
+            output_grid=output_grid,
+            explanation=explanation,
+        )
+
+        learning_examples.append(learning_example)
+
+    marker_rule = learn_marker_placement_rule(learning_examples)
+
+    return {
+        "family": "visual_symbolic_ruleV2",
+        "mode": "learned_marker_router_rule",
+        "marker_rule": marker_rule,
+    }
+
+
+def apply_visual_symbolic_rule_v2_for_router(task_rule, input_grid):
+    """
+    Apply the learned V2 marker rule.
+
+    This is not the frame-only result.
+    It does:
+        1. explain/build frame prediction
+        2. apply learned output markers
+    """
+
+    if task_rule is None:
+        return None
+
+    if explain_visual_symbolic_prediction is None:
+        return None
+
+    if apply_learned_marker_rule is None:
+        return None
+
+    marker_rule = task_rule.get("marker_rule")
+
+    if marker_rule is None:
+        return None
+
+    explanation = explain_visual_symbolic_prediction(input_grid)
+    frame_prediction = explanation.get("prediction")
+
+    if frame_prediction is None:
+        return None
+
+    learned_prediction, applied_markers = apply_learned_marker_rule(
+        prediction=frame_prediction,
+        explanation=explanation,
+        marker_rule=marker_rule,
+    )
+
+    return learned_prediction
+
+
+def score_visual_symbolic_v2_on_train(task_rule, train_pairs):
+    if task_rule is None:
+        return None
+
+    total_score = 0
+    exact_count = 0
+    pair_count = 0
+    results = []
+
+    for pair_index, pair in enumerate(train_pairs):
+        input_grid = pair["input"]
+        output_grid = pair["output"]
+
+        try:
+            predicted = apply_visual_symbolic_rule_v2_for_router(
+                task_rule,
+                input_grid,
+            )
+
+        except Exception as exc:
+            predicted = None
+            print(
+                "[VISUAL SYMBOLIC V2 SCORE WARNING]",
+                f"pair={pair_index}",
+                repr(exc),
+            )
+
+        score = score_prediction(predicted, output_grid)
+        exact = predicted == output_grid
+
+        if exact:
+            exact_count += 1
+
+        pair_count += 1
+        total_score += score
+
+        results.append({
+            "pair_index": pair_index,
+            "predicted": predicted,
+            "score": score,
+            "exact": exact,
+        })
+
+    return {
+        "strategy": "visual_symbolic_ruleV2",
+        "task_rule": task_rule,
+        "rule": task_rule,
+        "pair_count": pair_count,
+        "exact_count": exact_count,
+        "total_raw_score": total_score,
+        "total_adjusted_score": total_score,
+        "results": results,
+    }
+
+
+def leave_one_out_visual_symbolic_v2(train_pairs):
+    """
+    Diagnostic only.
+
+    We do not require perfect LOO for this family because some hidden pairs
+    remove the only example of a needed marker behavior.
+    """
+
+    total_score = 0
+    exact_count = 0
+    pair_count = 0
+    results = []
+
+    for hidden_index in range(len(train_pairs)):
+        visible_pairs = [
+            pair
+            for idx, pair in enumerate(train_pairs)
+            if idx != hidden_index
+        ]
+
+        hidden_pair = train_pairs[hidden_index]
+
+        try:
+            rule = discover_visual_symbolic_rule_v2_for_router(
+                visible_pairs,
+            )
+
+            predicted = apply_visual_symbolic_rule_v2_for_router(
+                rule,
+                hidden_pair["input"],
+            )
+
+        except Exception as exc:
+            predicted = None
+            print(
+                "[VISUAL SYMBOLIC V2 LOO WARNING]",
+                f"hidden_pair={hidden_index}",
+                repr(exc),
+            )
+
+        expected = hidden_pair["output"]
+
+        score = score_prediction(predicted, expected)
+        exact = predicted == expected
+
+        if exact:
+            exact_count += 1
+
+        pair_count += 1
+        total_score += score
+
+        results.append({
+            "pair_index": hidden_index,
+            "predicted": predicted,
+            "score": score,
+            "exact": exact,
+        })
+
+    return {
+        "strategy": "visual_symbolic_ruleV2",
+        "pair_count": pair_count,
+        "exact_count": exact_count,
+        "total_raw_score": total_score,
+        "total_adjusted_score": total_score,
+        "results": results,
+    }
+
+
+def is_strong_visual_symbolic_v2_result(scored_rule, loo_scored):
+    """
+    Gate for allowing visual_symbolic_ruleV2 to control the task.
+
+    Requirements:
+        1. It must solve every visible train pair.
+        2. It must have at least some honest LOO success.
+        3. It must only run on ring/blob-style tasks.
+    """
+
+    if scored_rule is None:
+        return False
+
+    pair_count = scored_rule.get("pair_count", 0)
+    exact_count = scored_rule.get("exact_count", 0)
+
+    if pair_count == 0:
+        return False
+
+    if exact_count != pair_count:
+        return False
+
+    if loo_scored is None:
+        return False
+
+    loo_pair_count = loo_scored.get("pair_count", 0)
+    loo_exact_count = loo_scored.get("exact_count", 0)
+
+    if loo_pair_count == 0:
+        return False
+
+    # 50% LOO is acceptable here because hidden pairs may remove unique evidence.
+    if loo_exact_count < max(1, loo_pair_count // 2):
+        return False
+
+    return True
+
+
+def build_visual_symbolic_v2_strategy_stats(scored_rule, loo_scored=None):
+    return {
+        "visual_symbolic_ruleV2": {
+            "pair_count": scored_rule.get("pair_count", 0) if scored_rule else 0,
+            "exact_count": scored_rule.get("exact_count", 0) if scored_rule else 0,
+            "total_adjusted_score": scored_rule.get("total_adjusted_score", 0) if scored_rule else 0,
+            "total_raw_score": scored_rule.get("total_raw_score", 0) if scored_rule else 0,
+            "loo_pair_count": loo_scored.get("pair_count", 0) if loo_scored else 0,
+            "loo_exact_count": loo_scored.get("exact_count", 0) if loo_scored else 0,
+            "loo_total_score": loo_scored.get("total_raw_score", 0) if loo_scored else 0,
+        }
+    }
 
 
 # ============================================================
@@ -940,6 +1274,77 @@ def choose_task_level_strategy(train_pairs, debug=True):
             print("[RING/BLOB WARNING] ring_blob_rule_synthesizer import failed")
 
     # --------------------------------------------------------
+    # 3. VISUAL SYMBOLIC RULE V2 — RING/BLOB TASK-LEVEL RULE
+    # --------------------------------------------------------
+    visual_symbolic_v2_rule = None
+    visual_symbolic_v2_scored = None
+    visual_symbolic_v2_loo = None
+
+    if is_ring_blob_style_task(train_pairs):
+        if discover_visual_symbolic_rule_v2_for_router is not None:
+            try:
+                visual_symbolic_v2_rule = discover_visual_symbolic_rule_v2_for_router(
+                    train_pairs,
+                )
+
+                visual_symbolic_v2_scored = score_visual_symbolic_v2_on_train(
+                    visual_symbolic_v2_rule,
+                    train_pairs,
+                )
+
+                visual_symbolic_v2_loo = leave_one_out_visual_symbolic_v2(
+                    train_pairs,
+                )
+
+                if debug:
+                    print_task_level_replay_debug(
+                        "visual_symbolic_ruleV2",
+                        visual_symbolic_v2_scored,
+                    )
+
+                    print_task_level_replay_debug(
+                        "visual_symbolic_ruleV2 leave-one-out",
+                        visual_symbolic_v2_loo,
+                    )
+
+                if is_strong_visual_symbolic_v2_result(
+                    visual_symbolic_v2_scored,
+                    visual_symbolic_v2_loo,
+                ):
+                    if debug:
+                        print("\n[ROUTER OVERRIDE] Using visual_symbolic_ruleV2")
+                        print("[ROUTER OVERRIDE] Reason: ring/blob task, full train exact, LOO acceptable")
+
+                    stats = build_visual_symbolic_v2_strategy_stats(
+                        visual_symbolic_v2_scored,
+                        visual_symbolic_v2_loo,
+                    )
+
+                    return {
+                        "best_strategy": "visual_symbolic_ruleV2",
+                        "strategy_stats": stats,
+                        "task_rule": visual_symbolic_v2_rule,
+                        "rule": visual_symbolic_v2_rule,
+                    }
+
+                else:
+                    if debug:
+                        print("\n[VISUAL SYMBOLIC V2 BLOCKED]")
+                        print("visual_symbolic_ruleV2 did not pass its task-level gate.")
+
+            except Exception as exc:
+                if debug:
+                    print("[VISUAL SYMBOLIC V2 WARNING] visual_symbolic_ruleV2 failed")
+                    print("  error:", repr(exc))
+        else:
+            if debug:
+                print("[VISUAL SYMBOLIC V2 WARNING] visual_symbolic_ruleV2 import failed")
+    else:
+        if debug:
+            print("[VISUAL SYMBOLIC V2 SKIPPED] not a ring/blob-style task")
+
+
+    # --------------------------------------------------------
     # 3. LEARNED REGION RULE — DEBUG ONLY FOR NOW
     # --------------------------------------------------------
     learned_region_scored = None
@@ -976,60 +1381,14 @@ def choose_task_level_strategy(train_pairs, debug=True):
             print("[LEARNED REGION WARNING] learned_region_rule import failed")
 
     # --------------------------------------------------------
-    # 4. VISUAL SYMBOLIC TASK-LEVEL RULE
+    # 4. OLD VISUAL SYMBOLIC RULE — DISABLED
     # --------------------------------------------------------
     visual_symbolic_rule = None
     visual_symbolic_scored = None
     visual_symbolic_loo = None
 
-    if discover_visual_symbolic_rule_for_task is not None:
-        try:
-            visual_symbolic_rule = discover_visual_symbolic_rule_for_task(train_pairs)
-
-            if visual_symbolic_rule is not None:
-                visual_symbolic_scored = score_visual_symbolic_rule_on_train(
-                    visual_symbolic_rule,
-                    train_pairs,
-                )
-
-                visual_symbolic_loo = leave_one_out_visual_symbolic(train_pairs)
-
-                if debug:
-                    print_visual_symbolic_debug(
-                        visual_symbolic_scored,
-                        visual_symbolic_loo,
-                    )
-
-                if is_strong_visual_symbolic_leave_one_out(visual_symbolic_loo):
-                    if debug:
-                        print("\n[ROUTER OVERRIDE] Using visual_symbolic_rule")
-                        print("[ROUTER OVERRIDE] Reason: passed honest leave-one-out")
-
-                    stats = build_visual_symbolic_strategy_stats(
-                        visual_symbolic_scored,
-                        visual_symbolic_loo,
-                    )
-
-                    return {
-                        "best_strategy": "visual_symbolic_rule",
-                        "strategy_stats": stats,
-                        "task_rule": visual_symbolic_rule,
-                        "rule": visual_symbolic_rule,
-                    }
-
-                else:
-                    if debug:
-                        print("\n[VISUAL SYMBOLIC BLOCKED]")
-                        print("visual_symbolic_rule did not pass leave-one-out.")
-                        print("It will stay debug-only for now.")
-
-        except Exception as exc:
-            if debug:
-                print("[VISUAL SYMBOLIC WARNING] visual_symbolic_rule failed")
-                print("  error:", repr(exc))
-    else:
-        if debug:
-            print("[VISUAL SYMBOLIC WARNING] visual_symbolic_rule import failed")
+    if debug:
+        print("[OLD VISUAL SYMBOLIC SKIPPED] disabled; use visual_symbolic_ruleV2 only")
 
     # --------------------------------------------------------
     # 5. NORMAL PAIR-LEVEL STRATEGY RANKING
@@ -1138,6 +1497,13 @@ def solve_pair_with_forced_strategy(input_grid, output_grid, strategy_name):
 
     elif strategy_name == "region_rule":
         result = solve_pair_region_rule(input_grid, output_grid)
+
+    elif strategy_name == "visual_symbolic_ruleV2":
+        print(
+            "[FORCED STRATEGY ERROR] visual_symbolic_ruleV2 needs a learned "
+            "task_rule. Use apply_task_rule_to_input(...)."
+        )
+        return None
 
     elif strategy_name == "region_alignment_rule_v2":
         result = solve_pair_region_alignment_rule_v2(input_grid, output_grid)
@@ -1293,6 +1659,20 @@ def apply_task_rule_to_input(
             task_rule,
             input_grid,
         )
+
+    # --------------------------------------------------------
+    # Visual symbolic V2 task-level rule
+    # --------------------------------------------------------
+    if strategy_name == "visual_symbolic_ruleV2":
+        if task_rule is None:
+            print("[TASK RULE ERROR] Missing visual_symbolic_ruleV2 task_rule.")
+            return None
+
+        return apply_visual_symbolic_rule_v2_for_router(
+            task_rule,
+            input_grid,
+        )
+
 
     # --------------------------------------------------------
     # Normal pair-level strategies

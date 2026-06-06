@@ -28,7 +28,7 @@ from reasoning.visual_symbolic_rule import (
 # TASK TO DEBUG
 # ============================================================
 
-TARGET_TASK_ID = "2d0172a1"
+TARGET_TASK_ID = "b0039139"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ------------------------------------------------------------
@@ -38,14 +38,14 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Turn them on only when you need that specific debug view.
 # ------------------------------------------------------------
 
-SHOW_POPUPS = False
-SHOW_PAIR_LEVEL_CANDIDATES = False
-DEBUG_VISUAL_TREE = False
+SHOW_POPUPS = True
+SHOW_PAIR_LEVEL_CANDIDATES = True
+DEBUG_VISUAL_TREE = True
 DEBUG_FULL_TRAIN_DIFFS = True
 DEBUG_LEAVE_ONE_OUT = True
 DEBUG_ROUTER = True
-DEBUG_TRAIN_PAIRS = False
-DEBUG_TEST_PAIRS = False
+DEBUG_TRAIN_PAIRS = True
+DEBUG_TEST_PAIRS = True
 
 
 # ============================================================
