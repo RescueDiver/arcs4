@@ -11,7 +11,7 @@ from reasoning.motif_layout_rule import solve_pair_motif_layout_rule
 from reasoning.object_grid_rule import solve_pair_object_grid_rule
 from reasoning.pattern_expansion_rule import solve_pair_pattern_expansion
 from reasoning.seed_placement_expansion_rule import solve_pair_seed_placement_expansion
-
+from reasoning.anchor_compass_merge_rule import predict_anchor_compass_merge_for_pair
 
 # ============================================================
 # OPTIONAL TASK-LEVEL MULTI-SEED RULE
@@ -895,15 +895,9 @@ def debug_strategy_scores(
             print(f"{name:<34}: {result.get('score')}")
 
 
-def debug_router_adjustments(
-    result_seed_placement,
-    result_pattern,
-    result_region,
-    result_motif_layout,
-    result_region_alignment_v2,
-    result_object_grid,
-    result_pattern_expansion,
-):
+def debug_router_adjustments(result_seed_placement, result_pattern, result_region, result_motif_layout, result_region_alignment_v2,
+         result_object_grid, result_pattern_expansion,):
+
     print("\n=== ROUTER DECISION TABLE ===")
 
     rows = [
@@ -1492,6 +1486,7 @@ def choose_task_level_strategy(train_pairs, debug=True):
 # ============================================================
 
 def solve_pair_with_forced_strategy(input_grid, output_grid, strategy_name):
+
     if strategy_name == "pattern_rule":
         result = solve_pair_pattern_rule(input_grid, output_grid)
 
@@ -1567,13 +1562,7 @@ def solve_pair_with_forced_strategy(input_grid, output_grid, strategy_name):
 # APPLY LEARNED TASK RULE
 # ============================================================
 
-def apply_task_rule_to_input(
-    strategy_name,
-    task_rule,
-    input_grid,
-    expected_grid=None,
-    pair_index=None,
-):
+def apply_task_rule_to_input(strategy_name, task_rule, input_grid, expected_grid=None, pair_index=None,):
     # --------------------------------------------------------
     # Multi-seed task-level rule
     # --------------------------------------------------------
@@ -1696,13 +1685,50 @@ def apply_task_rule_to_input(
     return forced_result.get("predicted")
 
 
-def score_task_rule_prediction(
-    strategy_name,
-    task_rule,
-    input_grid,
-    expected_grid,
-    pair_index=None,
+# ============================================================
+# TEST-ONLY TASK CONTEXT HELPERS
+# ============================================================
+
+def try_anchor_compass_merge_for_test_pair(
+    task,
+    test_pair,
+    test_index=None,
+    debug=False,
 ):
+    """
+    Test-only helper.
+
+    This rule needs the full task because it learns templates from train pairs,
+    then applies them to a test pair.
+
+    It returns a normal router-style result if it fires.
+    It returns None if this test pair should fall back.
+    """
+
+    prediction = predict_anchor_compass_merge_for_pair(
+        task=task,
+        pair=test_pair,
+        test_index=test_index,
+        debug=debug,
+    )
+
+    if prediction is None:
+        return None
+
+    return {
+        "strategy": "anchor_compass_merge_rule",
+        "predicted": prediction,
+        "prediction": prediction,
+        "score": 0,
+        "adjusted_score": 0,
+        "exact": False,
+        "task_rule": None,
+        "rule": None,
+    }
+
+
+
+def score_task_rule_prediction(strategy_name, task_rule, input_grid, expected_grid, pair_index=None,):
     predicted = apply_task_rule_to_input(
         strategy_name=strategy_name,
         task_rule=task_rule,

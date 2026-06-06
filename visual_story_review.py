@@ -24,7 +24,7 @@ import json
 import os
 import tkinter as tk
 from tkinter import Canvas, Frame, Scrollbar
-
+from reasoning.anchor_compass_merge_rule import predict_anchor_compass_merge_for_pair
 
 # =============================================================================
 # SECTION 0: TASK LOADING
@@ -181,9 +181,9 @@ def format_bbox(bbox):
 
 
 def make_final_test_prediction_grid(task, pair, test_index=None):
-    anchor_compass_grid = make_optional_anchor_compass_test_grid(
-        task,
-        pair,
+    anchor_compass_grid = predict_anchor_compass_merge_for_pair(
+        task=task,
+        pair=pair,
     )
 
     if anchor_compass_grid is not None:

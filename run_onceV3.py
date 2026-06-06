@@ -35,7 +35,7 @@ from reasoning.visual_symbolic_output_learner import (
     print_marker_decision_report,
     source_facts_from_scene,
 )
-
+from reasoning.task_router import try_anchor_compass_merge_for_test_pair
 
 # ============================================================
 # SETTINGS
@@ -50,9 +50,9 @@ TARGET_TASK_FILE = "data_failures/extracted_tasks/2d0172a1.json"
 
 SHOW_POPUPS = True
 
-PRINT_NUMBER_GRIDS = False
-PRINT_BLOB_GEOMETRY = False
-PRINT_RING_GEOMETRY = False
+PRINT_NUMBER_GRIDS = True
+PRINT_BLOB_GEOMETRY = True
+PRINT_RING_GEOMETRY = True
 PRINT_SCENE_FACTS = True
 PRINT_MARKER_LEARNING = True
 PRINT_DIFFS = True
@@ -540,12 +540,12 @@ def run_frame_only_baseline_check(train_pairs):
 # TEST PREDICTIONS — MAIN COMPETITION-STYLE FLOW
 # ============================================================
 
-def run_test_predictions(train_pairs, test_pairs, marker_rule):
+def run_test_predictions(task, train_pairs, test_pairs, marker_rule):
     print()
     print("=" * 60)
-    print("MAIN RESULT — VISUAL SYMBOLIC V2 TEST PREDICTIONS")
+    print("MAIN RESULT — TEST PREDICTIONS")
     print("=" * 60)
-    print("Using marker rule learned from ALL train pairs.")
+    print("Using anchor-compass first, then learned marker fallback.")
 
     results = []
 
@@ -554,20 +554,40 @@ def run_test_predictions(train_pairs, test_pairs, marker_rule):
 
         print_scene_facts(f"TEST {idx}", input_grid)
 
-        predicted, explanation, applied_markers = predict_with_learned_markers(
-            input_grid=input_grid,
-            marker_rule=marker_rule,
+        anchor_result = try_anchor_compass_merge_for_test_pair(
+            task=task,
+            test_pair=pair,
+            test_index=idx,
+            debug=True,
         )
 
+        if anchor_result is not None:
+            predicted = anchor_result["predicted"]
+            explanation = None
+            applied_markers = []
+            strategy = anchor_result["strategy"]
+
+        else:
+            predicted, explanation, applied_markers = predict_with_learned_markers(
+                input_grid=input_grid,
+                marker_rule=marker_rule,
+            )
+            strategy = "visual_symbolic_ruleV2_learned_markers"
+
+        print(f"test_strategy     : {strategy}")
         print(f"applied_markers   : {applied_markers}")
-        print_marker_decision_report(
-            title=f"TEST DECISION REPORT {idx}",
-            applied_markers=applied_markers,
-        )
-        print_structural_explanation(
-            "V2 TEST STRUCTURAL EXPLANATION",
-            explanation,
-        )
+
+        if applied_markers:
+            print_marker_decision_report(
+                title=f"TEST DECISION REPORT {idx}",
+                applied_markers=applied_markers,
+            )
+
+        if explanation is not None:
+            print_structural_explanation(
+                "V2 TEST STRUCTURAL EXPLANATION",
+                explanation,
+            )
 
         print()
         print("-" * 60)
@@ -601,6 +621,7 @@ def run_test_predictions(train_pairs, test_pairs, marker_rule):
 
             results.append({
                 "pair_index": idx,
+                "strategy": strategy,
                 "exact": exact,
                 "score": score,
                 "predicted": predicted,
@@ -611,18 +632,13 @@ def run_test_predictions(train_pairs, test_pairs, marker_rule):
         else:
             results.append({
                 "pair_index": idx,
+                "strategy": strategy,
                 "predicted": predicted,
                 "applied_markers": applied_markers,
             })
 
         popup_grids(
-            (
-                f"TEST PAIR {idx} | "
-                f"rings={extract_scene_facts(input_grid).get('ring_count')} "
-                f"blobs={extract_scene_facts(input_grid).get('blob_count')} "
-                f"outside={extract_scene_facts(input_grid).get('outside_blob_count')} "
-                f"ring_blobs={extract_scene_facts(input_grid).get('ring_blob_counts')}"
-            ),
+            f"TEST PAIR {idx} | strategy={strategy}",
             panels,
         )
 
@@ -787,6 +803,7 @@ def main():
     # ------------------------------------------------------------
     if RUN_TEST_PREDICTIONS:
         test_result = run_test_predictions(
+            task=task,
             train_pairs=train_pairs,
             test_pairs=test_pairs,
             marker_rule=marker_rule,

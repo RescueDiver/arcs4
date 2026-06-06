@@ -6,6 +6,7 @@ from reasoning.task_router import (
     apply_task_rule_to_input,
     score_task_rule_prediction,
     solve_pair_with_multiple_strategies,
+    try_anchor_compass_merge_for_test_pair,
 )
 
 from debug.debug_utils import print_grid, show_three_grids
@@ -457,6 +458,44 @@ def run():
                     )
                 except Exception as e:
                     print(f"[VISUAL ERROR] {e}")
+
+        # ----------------------------------------------------
+        # Predict test pairs using test-only task-context helpers.
+        # This does not affect train scoring.
+        # ----------------------------------------------------
+        test_pairs = task.get("test", [])
+
+        for test_index, test_pair in enumerate(test_pairs):
+            print(f"\n--- TEST PAIR {test_index} ---")
+
+            anchor_result = try_anchor_compass_merge_for_test_pair(
+                task=task,
+                test_pair=test_pair,
+                test_index=test_index,
+                debug=True,
+            )
+
+            if anchor_result is not None:
+                prediction = anchor_result["predicted"]
+                strategy = anchor_result["strategy"]
+            else:
+                prediction = apply_task_rule_to_input(
+                    strategy_name=chosen_strategy,
+                    task_rule=task_rule,
+                    input_grid=test_pair["input"],
+                    expected_grid=None,
+                    pair_index=None,
+                )
+                strategy = chosen_strategy
+
+            print(f"Test strategy: {strategy}")
+
+            if prediction is None:
+                print("Test prediction: None")
+            else:
+                print_grid(test_pair["input"], "TEST INPUT")
+                print_grid(prediction, "TEST PREDICTED")
+
 
         # ----------------------------------------------------
         # Task summary
