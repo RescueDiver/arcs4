@@ -378,7 +378,7 @@ def solve_pair_motif_layout_rule(input_grid, output_grid):
     score = score_prediction(predicted, output_grid)
     exact = predicted == output_grid
 
-    print("\n=== MOTIF LAYOUT RULE OUTPUT ===")
+    print(" MOTIF LAYOUT RULE OUTPUT")
     print("Strategy: motif_layout_rule")
     print(f"Score: {score}")
     print(f"Exact: {exact}")

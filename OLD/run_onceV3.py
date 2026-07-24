@@ -41,7 +41,7 @@ from reasoning.task_router import try_anchor_compass_merge_for_test_pair
 # SETTINGS
 # ============================================================
 
-TARGET_TASK_FILE = "data_failures/extracted_tasks/2d0172a1.json"
+TARGET_TASK_FILE = "../data_failures/extracted_tasks/2d0172a1.json"
 
 
 # ============================================================

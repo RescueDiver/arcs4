@@ -527,5 +527,6 @@ WRONG TRAIN PAIRS
    Strategy : region_alignment_rule_v2
    Score    : 120
    Selector : None
-   Transform: None
+   Transform: NoneWRONG TRAIN PAIRS
+============================================================
 

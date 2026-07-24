@@ -1,128 +1,178 @@
 # reasoning/task_router.py
+"""
+Clean 5-family task router for ARCs4.
 
-# ============================================================
-# NORMAL PAIR-LEVEL STRATEGIES
-# ============================================================
+Important honesty rule:
+    One task = one family = one fixed inner strategy.
 
-from reasoning.pattern_rule_engine import solve_pair_pattern_rule
-from reasoning.region_rule_engine import solve_pair_region_rule
-from reasoning.region_alignment_rule_engine_v2 import solve_pair_region_alignment_rule_v2
-from reasoning.motif_layout_rule import solve_pair_motif_layout_rule
-from reasoning.object_grid_rule import solve_pair_object_grid_rule
-from reasoning.pattern_expansion_rule import solve_pair_pattern_expansion
-from reasoning.seed_placement_expansion_rule import solve_pair_seed_placement_expansion
-from reasoning.anchor_compass_merge_rule import predict_anchor_compass_merge_for_pair
+The router may test several candidate helpers during training,
+but once a family chooses one helper, every train pair and test pair
+must use that same helper.
 
-# ============================================================
-# OPTIONAL TASK-LEVEL MULTI-SEED RULE
-# ============================================================
+This removes fake 100% train scores caused by picking a different
+best helper for each train pair.
+"""
 
-try:
-    from reasoning.multi_seed_composition_rule import (
-        discover_multi_seed_composition_rule_for_task,
-        apply_multi_seed_composition_rule,
-        apply_multi_seed_composition_rule_for_train_pair,
-    )
-except ImportError:
-    discover_multi_seed_composition_rule_for_task = None
-    apply_multi_seed_composition_rule = None
-    apply_multi_seed_composition_rule_for_train_pair = None
+from copy import deepcopy
 
 
 # ============================================================
-# OPTIONAL TASK-LEVEL LEARNED REGION RULE
+# SAFE IMPORT HELPERS
 # ============================================================
 
-try:
-    from reasoning.learned_region_rule import (
-        discover_learned_region_rule_for_task,
-        apply_learned_region_rule,
-        describe_learned_region_rule,
-        debug_learned_region_choice,
-    )
-except ImportError:
-    discover_learned_region_rule_for_task = None
-    apply_learned_region_rule = None
-    describe_learned_region_rule = None
-    debug_learned_region_choice = None
+def _optional_import(import_fn):
+    try:
+        return import_fn()
+    except Exception:
+        return None
 
 
-# ============================================================
-# OPTIONAL TASK-LEVEL RING/BLOB RULE SYNTHESIZER
-# ============================================================
+def _safe_call(fn, *args, **kwargs):
+    if fn is None:
+        return None
 
-try:
-    from reasoning.archive.ring_blob_rule_synthesizer import (
-        learn_ring_blob_rule_synthesizer,
-        predict_with_ring_blob_rule_synthesizer,
-    )
-except ImportError:
-    learn_ring_blob_rule_synthesizer = None
-    predict_with_ring_blob_rule_synthesizer = None
+    try:
+        return fn(*args, **kwargs)
+    except TypeError:
+        try:
+            return fn(*args)
+        except Exception:
+            return None
+    except Exception:
+        return None
 
 
 # ============================================================
-# OPTIONAL TASK-LEVEL VISUAL SYMBOLIC RULE
+# OPTIONAL OLD PAIR-LEVEL ENGINES
 # ============================================================
 
-try:
-    from reasoning.visual_symbolic_rule import (
-        discover_visual_symbolic_rule_for_task,
-        apply_visual_symbolic_rule,
-        score_visual_symbolic_rule_on_train,
-        leave_one_out_visual_symbolic,
-    )
-except ImportError as exc:
-    print("[VISUAL SYMBOLIC IMPORT ERROR]", repr(exc))
+solve_pair_pattern_rule = _optional_import(
+    lambda: __import__(
+        "reasoning.pattern_rule_engine",
+        fromlist=["solve_pair_pattern_rule"],
+    ).solve_pair_pattern_rule
+)
 
-    discover_visual_symbolic_rule_for_task = None
-    apply_visual_symbolic_rule = None
-    score_visual_symbolic_rule_on_train = None
-    leave_one_out_visual_symbolic = None
+solve_pair_region_rule = _optional_import(
+    lambda: __import__(
+        "reasoning.region_rule_engine",
+        fromlist=["solve_pair_region_rule"],
+    ).solve_pair_region_rule
+)
 
+solve_pair_region_alignment_rule_v2 = _optional_import(
+    lambda: __import__(
+        "reasoning.region_alignment_rule_engine_v2",
+        fromlist=["solve_pair_region_alignment_rule_v2"],
+    ).solve_pair_region_alignment_rule_v2
+)
 
-try:
-    from reasoning.visual_symbolic_ruleV2 import (
-        discover_visual_symbolic_rule_v2_for_task,
-        apply_visual_symbolic_rule_v2,
-        extract_scene_facts,
-    )
-except ImportError as exc:
-    print("[VISUAL SYMBOLIC V2 IMPORT ERROR]", repr(exc))
+solve_pair_motif_layout_rule = _optional_import(
+    lambda: __import__(
+        "reasoning.motif_layout_rule",
+        fromlist=["solve_pair_motif_layout_rule"],
+    ).solve_pair_motif_layout_rule
+)
 
-    discover_visual_symbolic_rule_v2_for_task = None
-    apply_visual_symbolic_rule_v2 = None
-    extract_scene_facts = None
+solve_pair_object_grid_rule = _optional_import(
+    lambda: __import__(
+        "reasoning.object_grid_rule",
+        fromlist=["solve_pair_object_grid_rule"],
+    ).solve_pair_object_grid_rule
+)
+
+solve_pair_pattern_expansion = _optional_import(
+    lambda: __import__(
+        "reasoning.pattern_expansion_rule",
+        fromlist=["solve_pair_pattern_expansion"],
+    ).solve_pair_pattern_expansion
+)
+
+solve_pair_seed_placement_expansion = _optional_import(
+    lambda: __import__(
+        "reasoning.seed_placement_expansion_rule",
+        fromlist=["solve_pair_seed_placement_expansion"],
+    ).solve_pair_seed_placement_expansion
+)
+
+predict_anchor_compass_merge_for_pair = _optional_import(
+    lambda: __import__(
+        "reasoning.anchor_compass_merge_rule",
+        fromlist=["predict_anchor_compass_merge_for_pair"],
+    ).predict_anchor_compass_merge_for_pair
+)
 
 
 # ============================================================
-# OPTIONAL TASK-LEVEL VISUAL SYMBOLIC RULE V2
+# OPTIONAL TASK-LEVEL ENGINES
 # ============================================================
 
-try:
-    from reasoning.visual_symbolic_ruleV2 import (
-        explain_visual_symbolic_prediction,
-        extract_scene_facts,
-    )
+discover_multi_seed_composition_rule_for_task = _optional_import(
+    lambda: __import__(
+        "reasoning.multi_seed_composition_rule",
+        fromlist=["discover_multi_seed_composition_rule_for_task"],
+    ).discover_multi_seed_composition_rule_for_task
+)
 
-    from reasoning.visual_symbolic_output_learner import (
-        build_marker_learning_example,
-        learn_marker_placement_rule,
-        apply_learned_marker_rule,
-    )
+apply_multi_seed_composition_rule = _optional_import(
+    lambda: __import__(
+        "reasoning.multi_seed_composition_rule",
+        fromlist=["apply_multi_seed_composition_rule"],
+    ).apply_multi_seed_composition_rule
+)
 
-except ImportError as exc:
-    print("[VISUAL SYMBOLIC V2 IMPORT ERROR]", repr(exc))
+apply_multi_seed_composition_rule_for_train_pair = _optional_import(
+    lambda: __import__(
+        "reasoning.multi_seed_composition_rule",
+        fromlist=["apply_multi_seed_composition_rule_for_train_pair"],
+    ).apply_multi_seed_composition_rule_for_train_pair
+)
 
-    explain_visual_symbolic_prediction = None
-    extract_scene_facts = None
-    build_marker_learning_example = None
-    learn_marker_placement_rule = None
-    apply_learned_marker_rule = None
+discover_learned_region_rule_for_task = _optional_import(
+    lambda: __import__(
+        "reasoning.learned_region_rule",
+        fromlist=["discover_learned_region_rule_for_task"],
+    ).discover_learned_region_rule_for_task
+)
+
+apply_learned_region_rule = _optional_import(
+    lambda: __import__(
+        "reasoning.learned_region_rule",
+        fromlist=["apply_learned_region_rule"],
+    ).apply_learned_region_rule
+)
+
+discover_visual_symbolic_rule_for_task = _optional_import(
+    lambda: __import__(
+        "reasoning.visual_symbolic_rule",
+        fromlist=["discover_visual_symbolic_rule_for_task"],
+    ).discover_visual_symbolic_rule_for_task
+)
+
+apply_visual_symbolic_rule = _optional_import(
+    lambda: __import__(
+        "reasoning.visual_symbolic_rule",
+        fromlist=["apply_visual_symbolic_rule"],
+    ).apply_visual_symbolic_rule
+)
+
+discover_anchor_repair_rule_for_task = _optional_import(
+    lambda: __import__(
+        "reasoning.anchor_repair_rule",
+        fromlist=["discover_anchor_repair_rule_for_task"],
+    ).discover_anchor_repair_rule_for_task
+)
+
+apply_anchor_repair_rule = _optional_import(
+    lambda: __import__(
+        "reasoning.anchor_repair_rule",
+        fromlist=["apply_anchor_repair_rule"],
+    ).apply_anchor_repair_rule
+)
 
 
 # ============================================================
-# BASIC HELPERS
+# BASIC GRID HELPERS
 # ============================================================
 
 def grid_shape(grid):
@@ -134,7 +184,40 @@ def grid_shape(grid):
     return h, w
 
 
+def copy_grid(grid):
+    if grid is None:
+        return None
+    return deepcopy(grid)
+
+
+def is_valid_arc_grid(grid):
+    """Return True only for a rectangular ARC grid accepted by Kaggle."""
+    if not isinstance(grid, list) or not 1 <= len(grid) <= 30:
+        return False
+
+    if not isinstance(grid[0], list) or not 1 <= len(grid[0]) <= 30:
+        return False
+
+    width = len(grid[0])
+
+    for row in grid:
+        if not isinstance(row, list) or len(row) != width:
+            return False
+
+        for value in row:
+            if isinstance(value, bool) or not isinstance(value, int):
+                return False
+            if not 0 <= value <= 9:
+                return False
+
+    return True
+
+
 def score_prediction(predicted, expected):
+    """
+    Larger is better.
+    Exact match gets a huge bonus.
+    """
     if predicted is None or expected is None:
         return 0
 
@@ -156,7 +239,7 @@ def score_prediction(predicted, expected):
 
 def shape_penalty(predicted, expected):
     if predicted is None or expected is None:
-        return 0
+        return 10_000
 
     ph, pw = grid_shape(predicted)
     eh, ew = grid_shape(expected)
@@ -164,575 +247,356 @@ def shape_penalty(predicted, expected):
     if ph == eh and pw == ew:
         return 0
 
-    return (abs(ph - eh) + abs(pw - ew)) * 20
+    return (abs(ph - eh) + abs(pw - ew)) * 50
 
+
+def extract_prediction(result):
+    if result is None:
+        return None
+
+    if isinstance(result, dict):
+        pred = result.get("predicted")
+        if pred is None:
+            pred = result.get("prediction")
+        return pred
+
+    if isinstance(result, list):
+        return result
+
+    return None
+
+
+def normalize_prediction_result(
+    strategy,
+    predicted,
+    expected=None,
+    raw_result=None,
+):
+    if predicted is None:
+        return None
+
+    raw_result = dict(raw_result or {})
+
+    raw_score = score_prediction(predicted, expected) if expected is not None else 0
+    penalty = shape_penalty(predicted, expected) if expected is not None else 0
+    adjusted_score = raw_score - penalty
+
+    raw_result["strategy"] = strategy
+    raw_result["predicted"] = predicted
+    raw_result["prediction"] = predicted
+    raw_result["score"] = raw_score
+    raw_result["raw_score"] = raw_score
+    raw_result["adjusted_score"] = adjusted_score
+    raw_result["total_adjusted_score"] = adjusted_score
+    raw_result["shape_penalty"] = penalty
+    raw_result["exact"] = predicted == expected if expected is not None else False
+
+    return raw_result
+
+
+# ============================================================
+# TASK FEATURE HINTS
+# ============================================================
 
 def find_divider_column(grid):
     if grid is None:
         return None
 
     h, w = grid_shape(grid)
-
     if h == 0 or w == 0:
         return None
 
     for c in range(w):
-        col_vals = [grid[r][c] for r in range(h)]
+        values = [grid[r][c] for r in range(h)]
 
-        if len(set(col_vals)) == 1 and col_vals[0] != 0:
+        if len(set(values)) == 1 and values[0] != 0:
             return c
 
     return None
 
 
-def detect_task_type(input_grid, output_grid):
-    in_h, in_w = grid_shape(input_grid)
-    out_h, out_w = grid_shape(output_grid)
-
-    divider_col = find_divider_column(input_grid)
-
-    if divider_col is not None and divider_col > 0:
-        return "motif_layout"
-
-    if output_grid is not None and in_h == out_h and in_w == out_w:
-        return "pattern_same_size"
-
-    if output_grid is not None and out_h <= in_h and out_w <= in_w:
-        return "region_extract"
-
-    if output_grid is not None and (out_h > in_h or out_w > in_w):
-        return "expansion"
-
-    return "general"
-
-
-def maybe_add_candidate(candidates, result, strategy_name, input_grid, output_grid):
-    """
-    Normalize one pair-level strategy result into the router's candidate format.
-    """
-    if result is None:
-        return None
-
-    pred = result.get("predicted")
-
-    if pred is None:
-        pred = result.get("prediction")
-
-    if pred is None:
-        return None
-
-    result["predicted"] = pred
-
-    raw_score = result.get("score")
-
-    if raw_score is None:
-        raw_score = score_prediction(pred, output_grid)
-
-    penalty = shape_penalty(pred, output_grid)
-    adjusted = raw_score - penalty
-
-    result["strategy"] = strategy_name
-    result["raw_score"] = raw_score
-    result["score"] = raw_score
-    result["shape_penalty"] = penalty
-    result["full_grid_penalty"] = 0
-    result["adjusted_score"] = adjusted
-
-    if output_grid is not None:
-        result["exact"] = pred == output_grid
-    else:
-        result["exact"] = False
-
-    candidates.append(result)
-    return result
-
-
-# ============================================================
-# MULTI-SEED HELPERS
-# ============================================================
-
-def is_strong_multi_seed_result(result, train_pairs):
-    if result is None:
-        return False
-
-    examples = result.get("examples", [])
-    seed_count = len(train_pairs)
-
-    if len(examples) != len(train_pairs):
-        return False
-
-    if not result.get("all_seeds_found", False):
-        return False
-
-    if not result.get("perfect_seed_matches", False):
-        return False
-
-    for ex in examples:
-        placements = ex.get("placements", [])
-
-        if len(placements) != seed_count:
-            return False
-
-        for placement in placements:
-            if placement.get("ratio", 0) < 1.0:
-                return False
-
-    return True
-
-
-def build_multi_seed_strategy_stats(multi_seed_rule, train_pairs):
-    exact_count = multi_seed_rule.get("exact_count", 0)
-    pair_count = multi_seed_rule.get("pair_count", len(train_pairs))
-    total_score = multi_seed_rule.get("total_score", 0)
-    confidence = multi_seed_rule.get("confidence", total_score)
-
-    residual_rule = multi_seed_rule.get("residual_rule", {})
-    residual_type = residual_rule.get("type")
-
-    return {
-        "multi_seed_composition_rule": {
-            "pair_count": pair_count,
-            "exact_count": exact_count,
-            "total_adjusted_score": confidence,
-            "total_raw_score": total_score,
-            "all_seeds_found": multi_seed_rule.get("all_seeds_found", False),
-            "perfect_seed_matches": multi_seed_rule.get("perfect_seed_matches", False),
-            "residual_rule": residual_type,
-        }
+def detect_task_features(train_pairs):
+    features = {
+        "pair_count": len(train_pairs),
+        "same_size_count": 0,
+        "crop_like_count": 0,
+        "expansion_count": 0,
+        "has_divider_count": 0,
+        "many_color_count": 0,
     }
-
-
-# ============================================================
-# LEARNED REGION HELPERS
-# ============================================================
-
-def score_learned_region_rule_on_train(learned_rule, train_pairs):
-    if learned_rule is None or apply_learned_region_rule is None:
-        return None
-
-    total_score = 0
-    exact_count = 0
-    pair_count = 0
-    results = []
-
-    for pair_index, pair in enumerate(train_pairs):
-        input_grid = pair["input"]
-        output_grid = pair["output"]
-
-        if debug_learned_region_choice is not None:
-            chosen = debug_learned_region_choice(
-                learned_rule,
-                input_grid,
-                expected_grid=output_grid,
-                pair_index=pair_index,
-            )
-
-            if chosen is None:
-                predicted = None
-            else:
-                predicted = chosen.get("predicted")
-
-        else:
-            predicted = apply_learned_region_rule(
-                learned_rule,
-                input_grid,
-            )
-
-        score = score_prediction(predicted, output_grid)
-        exact = predicted == output_grid
-
-        if exact:
-            exact_count += 1
-
-        pair_count += 1
-        total_score += score
-
-        results.append({
-            "pair_index": pair_index,
-            "predicted": predicted,
-            "score": score,
-            "exact": exact,
-        })
-
-    return {
-        "strategy": "learned_region_rule",
-        "task_rule": learned_rule,
-        "rule": learned_rule,
-        "pair_count": pair_count,
-        "exact_count": exact_count,
-        "total_raw_score": total_score,
-        "total_adjusted_score": total_score,
-        "results": results,
-    }
-
-
-def is_strong_learned_region_result(scored_rule):
-    if scored_rule is None:
-        return False
-
-    pair_count = scored_rule.get("pair_count", 0)
-    exact_count = scored_rule.get("exact_count", 0)
-    results = scored_rule.get("results", [])
-
-    if pair_count == 0:
-        return False
-
-    if len(results) != pair_count:
-        return False
-
-    if exact_count != pair_count:
-        return False
-
-    for item in results:
-        if item.get("predicted") is None:
-            return False
-
-    return True
-
-
-def build_learned_region_strategy_stats(scored_rule):
-    return {
-        "learned_region_rule": {
-            "pair_count": scored_rule.get("pair_count", 0),
-            "exact_count": scored_rule.get("exact_count", 0),
-            "total_adjusted_score": scored_rule.get("total_adjusted_score", 0),
-            "total_raw_score": scored_rule.get("total_raw_score", 0),
-            "pattern_type": scored_rule.get("task_rule", {}).get("pattern_type"),
-        }
-    }
-
-
-# ============================================================
-# RING/BLOB SYNTHESIZER HELPERS
-# ============================================================
-
-def score_ring_blob_rule_synthesizer_on_train(task_rule, train_pairs):
-    if task_rule is None:
-        return None
-
-    if predict_with_ring_blob_rule_synthesizer is None:
-        return None
-
-    total_score = 0
-    exact_count = 0
-    pair_count = 0
-    results = []
-
-    for pair_index, pair in enumerate(train_pairs):
-        input_grid = pair["input"]
-        output_grid = pair["output"]
-
-        try:
-            result = predict_with_ring_blob_rule_synthesizer(
-                task_rule,
-                input_grid,
-            )
-            predicted = result.get("prediction")
-            details = result
-
-        except Exception as exc:
-            predicted = None
-            details = {
-                "error": repr(exc),
-            }
-
-        score = score_prediction(predicted, output_grid)
-        exact = predicted == output_grid
-
-        if exact:
-            exact_count += 1
-
-        pair_count += 1
-        total_score += score
-
-        results.append({
-            "pair_index": pair_index,
-            "predicted": predicted,
-            "score": score,
-            "exact": exact,
-            "details": details,
-        })
-
-    return {
-        "strategy": "ring_blob_rule_synthesizer",
-        "task_rule": task_rule,
-        "rule": task_rule,
-        "pair_count": pair_count,
-        "exact_count": exact_count,
-        "total_raw_score": total_score,
-        "total_adjusted_score": total_score,
-        "results": results,
-    }
-
-
-def is_strong_ring_blob_rule_synthesizer_result(scored_rule):
-    if scored_rule is None:
-        return False
-
-    pair_count = scored_rule.get("pair_count", 0)
-    exact_count = scored_rule.get("exact_count", 0)
-    results = scored_rule.get("results", [])
-
-    if pair_count == 0:
-        return False
-
-    if len(results) != pair_count:
-        return False
-
-    if exact_count != pair_count:
-        return False
-
-    for item in results:
-        if item.get("predicted") is None:
-            return False
-
-    return True
-
-
-def build_ring_blob_strategy_stats(scored_rule):
-    return {
-        "ring_blob_rule_synthesizer": {
-            "pair_count": scored_rule.get("pair_count", 0),
-            "exact_count": scored_rule.get("exact_count", 0),
-            "total_adjusted_score": scored_rule.get("total_adjusted_score", 0),
-            "total_raw_score": scored_rule.get("total_raw_score", 0),
-            "task_rule": scored_rule.get("task_rule"),
-        }
-    }
-
-
-# ============================================================
-# VISUAL SYMBOLIC RULE HELPERS
-# ============================================================
-
-def build_visual_symbolic_strategy_stats(scored_rule, loo_scored=None):
-    return {
-        "visual_symbolic_rule": {
-            "pair_count": scored_rule.get("pair_count", 0) if scored_rule else 0,
-            "exact_count": scored_rule.get("exact_count", 0) if scored_rule else 0,
-            "total_adjusted_score": scored_rule.get("total_adjusted_score", 0) if scored_rule else 0,
-            "total_raw_score": scored_rule.get("total_raw_score", 0) if scored_rule else 0,
-            "loo_pair_count": loo_scored.get("pair_count", 0) if loo_scored else 0,
-            "loo_exact_count": loo_scored.get("exact_count", 0) if loo_scored else 0,
-            "loo_total_score": loo_scored.get("total_raw_score", 0) if loo_scored else 0,
-        }
-    }
-
-
-def is_strong_visual_symbolic_leave_one_out(loo_scored):
-    """
-    Honest gate for visual_symbolic_rule.
-
-    It can override only if it predicts every hidden train pair exactly.
-    """
-    if loo_scored is None:
-        return False
-
-    pair_count = loo_scored.get("pair_count", 0)
-    exact_count = loo_scored.get("exact_count", 0)
-    results = loo_scored.get("results", [])
-
-    if pair_count == 0:
-        return False
-
-    if len(results) != pair_count:
-        return False
-
-    if exact_count != pair_count:
-        return False
-
-    for item in results:
-        if item.get("predicted") is None:
-            return False
-
-    return True
-
-
-def is_ring_blob_style_task(train_pairs):
-    """
-    Gate visual_symbolic_ruleV2.
-
-    This prevents the ring/blob solver from running on unrelated ARC tasks.
-    It only checks whether the task has rings + blobs.
-    """
-
-    if extract_scene_facts is None:
-        return False
-
-    if not train_pairs:
-        return False
 
     for pair in train_pairs:
-        input_grid = pair.get("input")
+        inp = pair.get("input")
+        out = pair.get("output")
 
-        if input_grid is None:
-            return False
+        ih, iw = grid_shape(inp)
+        oh, ow = grid_shape(out)
 
-        try:
-            scene = extract_scene_facts(input_grid)
-        except Exception:
-            return False
+        if ih == oh and iw == ow:
+            features["same_size_count"] += 1
 
-        ring_count = scene.get("ring_count", 0)
-        blob_count = scene.get("blob_count", 0)
+        if oh <= ih and ow <= iw and (oh, ow) != (ih, iw):
+            features["crop_like_count"] += 1
 
-        if ring_count < 1:
-            return False
+        if oh > ih or ow > iw:
+            features["expansion_count"] += 1
 
-        if blob_count < 1:
-            return False
+        if find_divider_column(inp) is not None:
+            features["has_divider_count"] += 1
 
-    return True
+        colors = set()
+        if inp is not None:
+            for row in inp:
+                colors.update(row)
+
+        if len(colors) >= 4:
+            features["many_color_count"] += 1
+
+    return features
 
 
-def discover_visual_symbolic_rule_v2_for_router(train_pairs):
-    """
-    Learn the real V2 task-level rule:
-        frame prediction + learned marker placement.
+# ============================================================
+# LEGACY STRATEGY TABLE
+# ============================================================
 
-    This matches the successful run_onceV3 path.
-    """
+LEGACY_PAIR_STRATEGIES = {
+    "pattern_rule": solve_pair_pattern_rule,
+    "region_rule": solve_pair_region_rule,
+    "region_alignment_rule_v2": solve_pair_region_alignment_rule_v2,
+    "motif_layout_rule": solve_pair_motif_layout_rule,
+    "object_grid_rule": solve_pair_object_grid_rule,
+    "pattern_expansion_rule": solve_pair_pattern_expansion,
+    "seed_placement_expansion_rule": solve_pair_seed_placement_expansion,
+}
 
-    if explain_visual_symbolic_prediction is None:
+
+def run_legacy_pair_strategy(strategy_name, input_grid, output_grid=None):
+    fn = LEGACY_PAIR_STRATEGIES.get(strategy_name)
+
+    if fn is None:
         return None
 
-    if build_marker_learning_example is None:
-        return None
+    result = _safe_call(fn, input_grid, output_grid)
+    predicted = extract_prediction(result)
 
-    if learn_marker_placement_rule is None:
-        return None
-
-    learning_examples = []
-
-    for pair_index, pair in enumerate(train_pairs):
-        input_grid = pair["input"]
-        output_grid = pair["output"]
-
-        explanation = explain_visual_symbolic_prediction(input_grid)
-
-        learning_example = build_marker_learning_example(
-            pair_index=pair_index,
-            input_grid=input_grid,
-            output_grid=output_grid,
-            explanation=explanation,
-        )
-
-        learning_examples.append(learning_example)
-
-    marker_rule = learn_marker_placement_rule(learning_examples)
-
-    return {
-        "family": "visual_symbolic_ruleV2",
-        "mode": "learned_marker_router_rule",
-        "marker_rule": marker_rule,
-    }
-
-
-def apply_visual_symbolic_rule_v2_for_router(task_rule, input_grid):
-    """
-    Apply the learned V2 marker rule.
-
-    This is not the frame-only result.
-    It does:
-        1. explain/build frame prediction
-        2. apply learned output markers
-    """
-
-    if task_rule is None:
-        return None
-
-    if explain_visual_symbolic_prediction is None:
-        return None
-
-    if apply_learned_marker_rule is None:
-        return None
-
-    marker_rule = task_rule.get("marker_rule")
-
-    if marker_rule is None:
-        return None
-
-    explanation = explain_visual_symbolic_prediction(input_grid)
-    frame_prediction = explanation.get("prediction")
-
-    if frame_prediction is None:
-        return None
-
-    learned_prediction, applied_markers = apply_learned_marker_rule(
-        prediction=frame_prediction,
-        explanation=explanation,
-        marker_rule=marker_rule,
+    return normalize_prediction_result(
+        strategy=strategy_name,
+        predicted=predicted,
+        expected=output_grid,
+        raw_result=result if isinstance(result, dict) else None,
     )
 
-    return learned_prediction
+
+def solve_pair_with_forced_strategy(input_grid, output_grid, strategy_name):
+    return run_legacy_pair_strategy(strategy_name, input_grid, output_grid)
 
 
-def score_visual_symbolic_v2_on_train(task_rule, train_pairs):
-    if task_rule is None:
+def solve_pair_with_multiple_strategies(input_grid, output_grid, debug=False):
+    """
+    Old fallback.
+
+    This can still pick best-per-pair, but only as emergency fallback.
+    The task-level family router should not rely on this for honest scoring.
+    """
+    candidates = []
+
+    for strategy_name in LEGACY_PAIR_STRATEGIES:
+        result = run_legacy_pair_strategy(strategy_name, input_grid, output_grid)
+
+        if result is not None:
+            candidates.append(result)
+
+    if not candidates:
         return None
 
-    total_score = 0
+    candidates.sort(
+        key=lambda item: (
+            item.get("exact", False),
+            item.get("adjusted_score", 0),
+            item.get("score", 0),
+        ),
+        reverse=True,
+    )
+
+    return candidates[0]
+
+
+# ============================================================
+# FIXED STRATEGY SCORING
+# ============================================================
+
+def score_fixed_apply_fn(
+    family_name,
+    task_rule,
+    train_pairs,
+    apply_fn,
+):
+    total_raw = 0
+    total_adjusted = 0
     exact_count = 0
-    pair_count = 0
     results = []
 
     for pair_index, pair in enumerate(train_pairs):
         input_grid = pair["input"]
         output_grid = pair["output"]
 
-        try:
-            predicted = apply_visual_symbolic_rule_v2_for_router(
-                task_rule,
-                input_grid,
-            )
+        predicted = _safe_call(
+            apply_fn,
+            task_rule,
+            input_grid,
+            output_grid,
+            pair_index,
+        )
 
-        except Exception as exc:
-            predicted = None
-            print(
-                "[VISUAL SYMBOLIC V2 SCORE WARNING]",
-                f"pair={pair_index}",
-                repr(exc),
-            )
-
-        score = score_prediction(predicted, output_grid)
+        raw_score = score_prediction(predicted, output_grid)
+        penalty = shape_penalty(predicted, output_grid)
+        adjusted = raw_score - penalty
         exact = predicted == output_grid
 
         if exact:
             exact_count += 1
 
-        pair_count += 1
-        total_score += score
+        total_raw += raw_score
+        total_adjusted += adjusted
 
-        results.append({
-            "pair_index": pair_index,
-            "predicted": predicted,
-            "score": score,
-            "exact": exact,
-        })
+        results.append(
+            {
+                "pair_index": pair_index,
+                "predicted": predicted,
+                "score": raw_score,
+                "adjusted_score": adjusted,
+                "exact": exact,
+            }
+        )
 
     return {
-        "strategy": "visual_symbolic_ruleV2",
+        "strategy": family_name,
+        "family": family_name,
         "task_rule": task_rule,
         "rule": task_rule,
-        "pair_count": pair_count,
+        "pair_count": len(train_pairs),
         "exact_count": exact_count,
-        "total_raw_score": total_score,
-        "total_adjusted_score": total_score,
+        "total_raw_score": total_raw,
+        "total_adjusted_score": total_adjusted,
         "results": results,
     }
 
 
-def leave_one_out_visual_symbolic_v2(train_pairs):
+def score_legacy_strategy_across_train(strategy_name, train_pairs):
     """
-    Diagnostic only.
-
-    We do not require perfect LOO for this family because some hidden pairs
-    remove the only example of a needed marker behavior.
+    Honest score for one fixed legacy strategy across all train pairs.
     """
-
-    total_score = 0
+    total_raw = 0
+    total_adjusted = 0
     exact_count = 0
-    pair_count = 0
+    results = []
+
+    for pair_index, pair in enumerate(train_pairs):
+        result = run_legacy_pair_strategy(
+            strategy_name,
+            pair["input"],
+            pair["output"],
+        )
+
+        if result is None:
+            predicted = None
+            raw_score = 0
+            adjusted = -10_000
+            exact = False
+        else:
+            predicted = result.get("predicted")
+            raw_score = result.get("score", 0)
+            adjusted = result.get("adjusted_score", raw_score)
+            exact = result.get("exact", False)
+
+        if exact:
+            exact_count += 1
+
+        total_raw += raw_score
+        total_adjusted += adjusted
+
+        results.append(
+            {
+                "pair_index": pair_index,
+                "predicted": predicted,
+                "score": raw_score,
+                "adjusted_score": adjusted,
+                "exact": exact,
+            }
+        )
+
+    return {
+        "strategy": strategy_name,
+        "pair_count": len(train_pairs),
+        "exact_count": exact_count,
+        "total_raw_score": total_raw,
+        "total_adjusted_score": total_adjusted,
+        "results": results,
+    }
+
+
+def choose_best_fixed_legacy_strategy(strategy_names, train_pairs):
+    """
+    Pick one fixed inner strategy for the whole task.
+    """
+    candidates = []
+
+    for strategy_name in strategy_names:
+        if LEGACY_PAIR_STRATEGIES.get(strategy_name) is None:
+            continue
+
+        score = score_legacy_strategy_across_train(strategy_name, train_pairs)
+        candidates.append(score)
+
+    if not candidates:
+        return None
+
+    candidates.sort(
+        key=lambda item: (
+            item.get("exact_count", 0),
+            item.get("total_adjusted_score", 0),
+            item.get("total_raw_score", 0),
+        ),
+        reverse=True,
+    )
+
+    return candidates[0]
+
+
+def leave_one_out_family(
+    family_name,
+    train_pairs,
+    discover_fn,
+    apply_fn,
+):
+    """
+    Honest leave-one-out:
+        - hide one pair
+        - discover the rule from remaining pairs
+        - apply that one discovered rule to hidden pair
+    """
+    if len(train_pairs) <= 1:
+        return {
+            "strategy": family_name,
+            "family": family_name,
+            "pair_count": 0,
+            "exact_count": 0,
+            "total_raw_score": 0,
+            "total_adjusted_score": 0,
+            "valid_prediction_count": 0,
+            "missing_prediction_count": 0,
+            "invalid_prediction_count": 0,
+            "shape_exact_count": 0,
+            "results": [],
+        }
+
+    total_raw = 0
+    total_adjusted = 0
+    exact_count = 0
+    valid_prediction_count = 0
+    missing_prediction_count = 0
+    invalid_prediction_count = 0
+    shape_exact_count = 0
     results = []
 
     for hidden_index in range(len(train_pairs)):
@@ -744,63 +608,86 @@ def leave_one_out_visual_symbolic_v2(train_pairs):
 
         hidden_pair = train_pairs[hidden_index]
 
-        try:
-            rule = discover_visual_symbolic_rule_v2_for_router(
-                visible_pairs,
-            )
+        task_rule = _safe_call(discover_fn, visible_pairs)
 
-            predicted = apply_visual_symbolic_rule_v2_for_router(
-                rule,
-                hidden_pair["input"],
-            )
+        predicted = _safe_call(
+            apply_fn,
+            task_rule,
+            hidden_pair["input"],
+            None,
+            None,
+        )
 
-        except Exception as exc:
-            predicted = None
-            print(
-                "[VISUAL SYMBOLIC V2 LOO WARNING]",
-                f"hidden_pair={hidden_index}",
-                repr(exc),
-            )
+        valid_prediction = is_valid_arc_grid(predicted)
+        prediction_missing = predicted is None
+        invalid_prediction = predicted is not None and not valid_prediction
 
-        expected = hidden_pair["output"]
+        if prediction_missing:
+            missing_prediction_count += 1
+        elif invalid_prediction:
+            invalid_prediction_count += 1
+        else:
+            valid_prediction_count += 1
 
-        score = score_prediction(predicted, expected)
-        exact = predicted == expected
+        evaluated_prediction = predicted if valid_prediction else None
+        raw_score = score_prediction(evaluated_prediction, hidden_pair["output"])
+        penalty = shape_penalty(evaluated_prediction, hidden_pair["output"])
+        adjusted = raw_score - penalty
+        exact = valid_prediction and predicted == hidden_pair["output"]
+        shape_exact = (
+            valid_prediction
+            and grid_shape(predicted) == grid_shape(hidden_pair["output"])
+        )
 
         if exact:
             exact_count += 1
 
-        pair_count += 1
-        total_score += score
+        if shape_exact:
+            shape_exact_count += 1
 
-        results.append({
-            "pair_index": hidden_index,
-            "predicted": predicted,
-            "score": score,
-            "exact": exact,
-        })
+        total_raw += raw_score
+        total_adjusted += adjusted
+
+        results.append(
+            {
+                "pair_index": hidden_index,
+                "predicted": predicted,
+                "score": raw_score,
+                "adjusted_score": adjusted,
+                "exact": exact,
+                "valid_prediction": valid_prediction,
+                "prediction_missing": prediction_missing,
+                "invalid_prediction": invalid_prediction,
+                "shape_exact": shape_exact,
+            }
+        )
 
     return {
-        "strategy": "visual_symbolic_ruleV2",
-        "pair_count": pair_count,
+        "strategy": family_name,
+        "family": family_name,
+        "pair_count": len(train_pairs),
         "exact_count": exact_count,
-        "total_raw_score": total_score,
-        "total_adjusted_score": total_score,
+        "total_raw_score": total_raw,
+        "total_adjusted_score": total_adjusted,
+        "valid_prediction_count": valid_prediction_count,
+        "missing_prediction_count": missing_prediction_count,
+        "invalid_prediction_count": invalid_prediction_count,
+        "shape_exact_count": shape_exact_count,
         "results": results,
     }
 
 
-def is_strong_visual_symbolic_v2_result(scored_rule, loo_scored):
+def family_is_honest(scored_rule, loo_rule=None):
     """
-    Gate for allowing visual_symbolic_ruleV2 to control the task.
+    Gatekeeper.
 
-    Requirements:
-        1. It must solve every visible train pair.
-        2. It must have at least some honest LOO success.
-        3. It must only run on ring/blob-style tasks.
+    Perfect train is required.
+    Leave-one-out is preferred, but small tasks may not have enough examples.
     """
-
     if scored_rule is None:
+        return False
+
+    if scored_rule.get("test_capable") is False:
         return False
 
     pair_count = scored_rule.get("pair_count", 0)
@@ -812,881 +699,1159 @@ def is_strong_visual_symbolic_v2_result(scored_rule, loo_scored):
     if exact_count != pair_count:
         return False
 
-    if loo_scored is None:
-        return False
+    if loo_rule is None:
+        return True
 
-    loo_pair_count = loo_scored.get("pair_count", 0)
-    loo_exact_count = loo_scored.get("exact_count", 0)
+    loo_pair_count = loo_rule.get("pair_count", 0)
+    loo_exact_count = loo_rule.get("exact_count", 0)
+    loo_valid_count = loo_rule.get("valid_prediction_count", 0)
 
     if loo_pair_count == 0:
+        return True
+
+    return loo_valid_count == loo_pair_count and loo_exact_count > 0
+
+
+# ============================================================
+# FAMILY 1: VISUAL SYMBOLIC
+# ============================================================
+
+VISUAL_SYMBOLIC_FAMILY = "visual_symbolic_family"
+
+
+def discover_visual_symbolic_family(train_pairs):
+    if discover_visual_symbolic_rule_for_task is None:
+        return None
+
+    inner_rule = _safe_call(
+        discover_visual_symbolic_rule_for_task,
+        train_pairs,
+    )
+
+    if inner_rule is None:
+        return None
+
+    return {
+        "family": VISUAL_SYMBOLIC_FAMILY,
+        "rule_type": "visual_symbolic",
+        "chosen_inner_strategy": "visual_symbolic_rule",
+        "inner_rule": inner_rule,
+    }
+
+
+def apply_visual_symbolic_family(
+    task_rule,
+    input_grid,
+    expected_grid=None,
+    pair_index=None,
+):
+    if task_rule is None:
+        return None
+
+    if apply_visual_symbolic_rule is None:
+        return None
+
+    inner_rule = task_rule.get("inner_rule")
+
+    result = _safe_call(
+        apply_visual_symbolic_rule,
+        inner_rule,
+        input_grid,
+    )
+
+    predicted = extract_prediction(result)
+
+    if predicted is not None:
+        return predicted
+
+    return result
+
+
+def score_visual_symbolic_family(train_pairs):
+    task_rule = discover_visual_symbolic_family(train_pairs)
+
+    if task_rule is None:
+        return None, None
+
+    scored = score_fixed_apply_fn(
+        VISUAL_SYMBOLIC_FAMILY,
+        task_rule,
+        train_pairs,
+        apply_visual_symbolic_family,
+    )
+
+    if scored.get("exact_count") == scored.get("pair_count"):
+        loo = leave_one_out_family(
+            VISUAL_SYMBOLIC_FAMILY,
+            train_pairs,
+            discover_visual_symbolic_family,
+            apply_visual_symbolic_family,
+        )
+    else:
+        loo = None
+
+    return scored, loo
+
+
+# ============================================================
+# FAMILY 2: PATTERN CANVAS
+# ============================================================
+
+PATTERN_CANVAS_FAMILY = "pattern_canvas_family"
+
+PATTERN_CANVAS_STRATEGIES = [
+    "pattern_rule",
+    "pattern_expansion_rule",
+]
+
+
+def discover_pattern_canvas_family(train_pairs):
+    best = choose_best_fixed_legacy_strategy(
+        PATTERN_CANVAS_STRATEGIES,
+        train_pairs,
+    )
+
+    if best is None:
+        return None
+
+    return {
+        "family": PATTERN_CANVAS_FAMILY,
+        "rule_type": "fixed_legacy_family_wrapper",
+        "chosen_inner_strategy": best.get("strategy"),
+        "inner_score": best,
+        "inner_strategies_tested": list(PATTERN_CANVAS_STRATEGIES),
+    }
+
+
+def apply_pattern_canvas_family(
+    task_rule,
+    input_grid,
+    expected_grid=None,
+    pair_index=None,
+):
+    if task_rule is None:
+        return None
+
+    chosen_inner_strategy = task_rule.get("chosen_inner_strategy")
+
+    if chosen_inner_strategy is None:
+        return None
+
+    result = run_legacy_pair_strategy(
+        chosen_inner_strategy,
+        input_grid,
+        expected_grid,
+    )
+
+    if result is None:
+        return None
+
+    return result.get("predicted")
+
+
+def score_pattern_canvas_family(train_pairs):
+    task_rule = discover_pattern_canvas_family(train_pairs)
+
+    if task_rule is None:
+        return None, None
+
+    scored = score_fixed_apply_fn(
+        PATTERN_CANVAS_FAMILY,
+        task_rule,
+        train_pairs,
+        apply_pattern_canvas_family,
+    )
+
+    if scored.get("exact_count") == scored.get("pair_count"):
+        loo = leave_one_out_family(
+            PATTERN_CANVAS_FAMILY,
+            train_pairs,
+            discover_pattern_canvas_family,
+            apply_pattern_canvas_family,
+        )
+    else:
+        loo = None
+
+    return scored, loo
+
+
+# ============================================================
+# FAMILY 3: REGION OBJECT
+# ============================================================
+
+REGION_OBJECT_FAMILY = "region_object_family"
+
+REGION_OBJECT_STRATEGIES = [
+    "region_rule",
+    "region_alignment_rule_v2",
+    "object_grid_rule",
+]
+
+
+def score_learned_region_candidate(train_pairs, learned_rule):
+    if learned_rule is None:
+        return None
+
+    if apply_learned_region_rule is None:
+        return None
+
+    total_raw = 0
+    total_adjusted = 0
+    exact_count = 0
+    results = []
+
+    for pair_index, pair in enumerate(train_pairs):
+        result = _safe_call(
+            apply_learned_region_rule,
+            learned_rule,
+            pair["input"],
+        )
+
+        predicted = extract_prediction(result)
+
+        if predicted is None and result is not None:
+            predicted = result
+
+        raw_score = score_prediction(predicted, pair["output"])
+        penalty = shape_penalty(predicted, pair["output"])
+        adjusted = raw_score - penalty
+        exact = predicted == pair["output"]
+
+        if exact:
+            exact_count += 1
+
+        total_raw += raw_score
+        total_adjusted += adjusted
+
+        results.append(
+            {
+                "pair_index": pair_index,
+                "predicted": predicted,
+                "score": raw_score,
+                "adjusted_score": adjusted,
+                "exact": exact,
+            }
+        )
+
+    return {
+        "strategy": "learned_region_rule",
+        "pair_count": len(train_pairs),
+        "exact_count": exact_count,
+        "total_raw_score": total_raw,
+        "total_adjusted_score": total_adjusted,
+        "results": results,
+    }
+
+
+def discover_region_object_family(train_pairs):
+    candidates = []
+
+    best_legacy = choose_best_fixed_legacy_strategy(
+        REGION_OBJECT_STRATEGIES,
+        train_pairs,
+    )
+
+    if best_legacy is not None:
+        candidates.append(
+            {
+                "kind": "legacy",
+                "strategy": best_legacy.get("strategy"),
+                "score": best_legacy,
+                "learned_rule": None,
+            }
+        )
+
+    learned_region_rule = None
+
+    if discover_learned_region_rule_for_task is not None:
+        learned_region_rule = _safe_call(
+            discover_learned_region_rule_for_task,
+            train_pairs,
+        )
+
+    learned_score = score_learned_region_candidate(
+        train_pairs,
+        learned_region_rule,
+    )
+
+    if learned_score is not None:
+        candidates.append(
+            {
+                "kind": "learned_region",
+                "strategy": "learned_region_rule",
+                "score": learned_score,
+                "learned_rule": learned_region_rule,
+            }
+        )
+
+    if not candidates:
+        return None
+
+    candidates.sort(
+        key=lambda item: (
+            item["score"].get("exact_count", 0),
+            item["score"].get("total_adjusted_score", 0),
+            item["score"].get("total_raw_score", 0),
+        ),
+        reverse=True,
+    )
+
+    best = candidates[0]
+
+    return {
+        "family": REGION_OBJECT_FAMILY,
+        "rule_type": "fixed_region_object_wrapper",
+        "chosen_inner_strategy": best["strategy"],
+        "chosen_inner_kind": best["kind"],
+        "learned_region_rule": best.get("learned_rule"),
+        "inner_score": best["score"],
+        "inner_strategies_tested": list(REGION_OBJECT_STRATEGIES) + ["learned_region_rule"],
+    }
+
+
+def apply_region_object_family(
+    task_rule,
+    input_grid,
+    expected_grid=None,
+    pair_index=None,
+):
+    if task_rule is None:
+        return None
+
+    chosen_inner_strategy = task_rule.get("chosen_inner_strategy")
+
+    if chosen_inner_strategy == "learned_region_rule":
+        learned_rule = task_rule.get("learned_region_rule")
+
+        if learned_rule is None:
+            return None
+
+        if apply_learned_region_rule is None:
+            return None
+
+        result = _safe_call(
+            apply_learned_region_rule,
+            learned_rule,
+            input_grid,
+        )
+
+        predicted = extract_prediction(result)
+
+        if predicted is not None:
+            return predicted
+
+        return result
+
+    result = run_legacy_pair_strategy(
+        chosen_inner_strategy,
+        input_grid,
+        expected_grid,
+    )
+
+    if result is None:
+        return None
+
+    return result.get("predicted")
+
+
+def score_region_object_family(train_pairs):
+    task_rule = discover_region_object_family(train_pairs)
+
+    if task_rule is None:
+        return None, None
+
+    scored = score_fixed_apply_fn(
+        REGION_OBJECT_FAMILY,
+        task_rule,
+        train_pairs,
+        apply_region_object_family,
+    )
+
+    if scored.get("exact_count") == scored.get("pair_count"):
+        loo = leave_one_out_family(
+            REGION_OBJECT_FAMILY,
+            train_pairs,
+            discover_region_object_family,
+            apply_region_object_family,
+        )
+    else:
+        loo = None
+
+    return scored, loo
+
+
+# ============================================================
+# FAMILY 4: COMPOSITION LAYOUT
+# ============================================================
+
+COMPOSITION_LAYOUT_FAMILY = "composition_layout_family"
+
+COMPOSITION_LAYOUT_STRATEGIES = [
+    "motif_layout_rule",
+    "seed_placement_expansion_rule",
+]
+
+
+def _load_motif_path_layout_fns():
+    learn_fn = _optional_import(
+        lambda: __import__(
+            "reasoning.motif_path_layout_rule",
+            fromlist=["learn_motif_path_layout_rule"],
+        ).learn_motif_path_layout_rule
+    )
+
+    apply_fn = _optional_import(
+        lambda: __import__(
+            "reasoning.motif_path_layout_rule",
+            fromlist=["apply_motif_path_layout_rule"],
+        ).apply_motif_path_layout_rule
+    )
+
+    guesses_fn = _optional_import(
+        lambda: __import__(
+            "reasoning.motif_path_layout_rule",
+            fromlist=["generate_motif_path_layout_guesses"],
+        ).generate_motif_path_layout_guesses
+    )
+
+    return learn_fn, apply_fn, guesses_fn
+
+
+def score_multi_seed_candidate(train_pairs, multi_seed_rule):
+    if multi_seed_rule is None:
+        return None
+
+    total_raw = 0
+    total_adjusted = 0
+    exact_count = 0
+    results = []
+
+    for pair_index, pair in enumerate(train_pairs):
+        predicted = None
+
+        if apply_multi_seed_composition_rule_for_train_pair is not None:
+            result = _safe_call(
+                apply_multi_seed_composition_rule_for_train_pair,
+                multi_seed_rule,
+                pair["input"],
+                pair_index,
+            )
+
+            predicted = extract_prediction(result)
+
+            if predicted is None and result is not None:
+                predicted = result
+
+        if predicted is None and apply_multi_seed_composition_rule is not None:
+            result = _safe_call(
+                apply_multi_seed_composition_rule,
+                multi_seed_rule,
+                pair["input"],
+            )
+
+            predicted = extract_prediction(result)
+
+            if predicted is None and result is not None:
+                predicted = result
+
+        raw_score = score_prediction(predicted, pair["output"])
+        penalty = shape_penalty(predicted, pair["output"])
+        adjusted = raw_score - penalty
+        exact = predicted == pair["output"]
+
+        if exact:
+            exact_count += 1
+
+        total_raw += raw_score
+        total_adjusted += adjusted
+
+        results.append(
+            {
+                "pair_index": pair_index,
+                "predicted": predicted,
+                "score": raw_score,
+                "adjusted_score": adjusted,
+                "exact": exact,
+            }
+        )
+
+    return {
+        "strategy": "multi_seed_composition_rule",
+        "pair_count": len(train_pairs),
+        "exact_count": exact_count,
+        "total_raw_score": total_raw,
+        "total_adjusted_score": total_adjusted,
+        "results": results,
+    }
+
+
+def score_motif_path_layout_candidate(train_pairs, motif_path_rule):
+    if motif_path_rule is None:
+        return None
+
+    learn_fn, apply_fn, guesses_fn = _load_motif_path_layout_fns()
+
+    if apply_fn is None:
+        return None
+
+    total_raw = 0
+    total_adjusted = 0
+    exact_count = 0
+    results = []
+
+    for pair_index, pair in enumerate(train_pairs):
+        predicted = _safe_call(
+            apply_fn,
+            motif_path_rule,
+            pair["input"],
+            0,
+        )
+
+        raw_score = score_prediction(predicted, pair["output"])
+        penalty = shape_penalty(predicted, pair["output"])
+        adjusted = raw_score - penalty
+        exact = predicted == pair["output"]
+
+        if exact:
+            exact_count += 1
+
+        total_raw += raw_score
+        total_adjusted += adjusted
+
+        results.append(
+            {
+                "pair_index": pair_index,
+                "predicted": predicted,
+                "score": raw_score,
+                "adjusted_score": adjusted,
+                "exact": exact,
+            }
+        )
+
+    return {
+        "strategy": "motif_path_layout_rule",
+        "pair_count": len(train_pairs),
+        "exact_count": exact_count,
+        "total_raw_score": total_raw,
+        "total_adjusted_score": total_adjusted,
+        "results": results,
+    }
+
+
+def discover_composition_layout_family(train_pairs):
+    candidates = []
+
+    # ------------------------------------------------------------
+    # New learned motif path layout rule.
+    # Prefer this over old motif_layout_rule when it solves train.
+    # ------------------------------------------------------------
+    learn_motif_path_layout_rule, apply_motif_path_layout_rule, _ = (
+        _load_motif_path_layout_fns()
+    )
+
+    motif_path_rule = None
+
+    if learn_motif_path_layout_rule is not None:
+        motif_path_rule = _safe_call(
+            learn_motif_path_layout_rule,
+            train_pairs,
+        )
+
+    motif_path_score = score_motif_path_layout_candidate(
+        train_pairs,
+        motif_path_rule,
+    )
+
+    if motif_path_score is not None:
+        candidates.append(
+            {
+                "kind": "learned_motif_path",
+                "strategy": "motif_path_layout_rule",
+                "score": motif_path_score,
+                "motif_path_rule": motif_path_rule,
+                "multi_seed_rule": None,
+            }
+        )
+
+    # ------------------------------------------------------------
+    # Existing multi-seed learned rule.
+    # ------------------------------------------------------------
+    multi_seed_rule = None
+
+    if discover_multi_seed_composition_rule_for_task is not None:
+        multi_seed_rule = _safe_call(
+            discover_multi_seed_composition_rule_for_task,
+            train_pairs,
+        )
+
+    multi_seed_score = score_multi_seed_candidate(
+        train_pairs,
+        multi_seed_rule,
+    )
+
+    if multi_seed_score is not None:
+        candidates.append(
+            {
+                "kind": "multi_seed",
+                "strategy": "multi_seed_composition_rule",
+                "score": multi_seed_score,
+                "motif_path_rule": None,
+                "multi_seed_rule": multi_seed_rule,
+            }
+        )
+
+    # ------------------------------------------------------------
+    # Old fixed legacy strategies.
+    # Kept as fallback only.
+    # ------------------------------------------------------------
+    best_legacy = choose_best_fixed_legacy_strategy(
+        COMPOSITION_LAYOUT_STRATEGIES,
+        train_pairs,
+    )
+
+    if best_legacy is not None:
+        candidates.append(
+            {
+                "kind": "legacy",
+                "strategy": best_legacy.get("strategy"),
+                "score": best_legacy,
+                "motif_path_rule": None,
+                "multi_seed_rule": None,
+            }
+        )
+
+    if not candidates:
+        return None
+
+    def candidate_rank(item):
+        kind_bonus = {
+            "learned_motif_path": 3,
+            "multi_seed": 2,
+            "legacy": 0,
+        }.get(item["kind"], 0)
+
+        score = item["score"]
+
+        return (
+            score.get("exact_count", 0),
+            kind_bonus,
+            score.get("total_adjusted_score", 0),
+            score.get("total_raw_score", 0),
+        )
+
+    candidates.sort(key=candidate_rank, reverse=True)
+    best = candidates[0]
+
+    if best["kind"] == "learned_motif_path":
+        rule_type = "learned_motif_path_layout_wrapper"
+    elif best["kind"] == "multi_seed":
+        rule_type = "learned_multi_seed_composition_wrapper"
+    else:
+        rule_type = "fixed_composition_layout_wrapper"
+
+    return {
+        "family": COMPOSITION_LAYOUT_FAMILY,
+        "rule_type": rule_type,
+        "chosen_inner_strategy": best["strategy"],
+        "chosen_inner_kind": best["kind"],
+        "motif_path_rule": best.get("motif_path_rule"),
+        "multi_seed_rule": best.get("multi_seed_rule"),
+        "inner_score": best["score"],
+        "inner_strategies_tested": [
+            "motif_path_layout_rule",
+            "multi_seed_composition_rule",
+        ] + list(COMPOSITION_LAYOUT_STRATEGIES),
+    }
+
+
+def apply_composition_layout_family(
+    task_rule,
+    input_grid,
+    expected_grid=None,
+    pair_index=None,
+):
+    if task_rule is None:
+        return None
+
+    chosen_inner_strategy = task_rule.get("chosen_inner_strategy")
+
+    # ------------------------------------------------------------
+    # New learned motif path layout.
+    # ------------------------------------------------------------
+    if chosen_inner_strategy == "motif_path_layout_rule":
+        motif_path_rule = task_rule.get("motif_path_rule")
+
+        if motif_path_rule is None:
+            return None
+
+        _, apply_fn, _ = _load_motif_path_layout_fns()
+
+        if apply_fn is None:
+            return None
+
+        result = _safe_call(
+            apply_fn,
+            motif_path_rule,
+            input_grid,
+            0,
+        )
+
+        predicted = extract_prediction(result)
+
+        if predicted is not None:
+            return predicted
+
+        return result
+
+    # ------------------------------------------------------------
+    # Existing multi-seed learned rule.
+    # ------------------------------------------------------------
+    if chosen_inner_strategy == "multi_seed_composition_rule":
+        multi_seed_rule = task_rule.get("multi_seed_rule")
+
+        if multi_seed_rule is None:
+            return None
+
+        if expected_grid is not None and apply_multi_seed_composition_rule_for_train_pair is not None:
+            result = _safe_call(
+                apply_multi_seed_composition_rule_for_train_pair,
+                multi_seed_rule,
+                input_grid,
+                pair_index,
+            )
+
+            predicted = extract_prediction(result)
+
+            if predicted is not None:
+                return predicted
+
+            if result is not None:
+                return result
+
+        if apply_multi_seed_composition_rule is not None:
+            result = _safe_call(
+                apply_multi_seed_composition_rule,
+                multi_seed_rule,
+                input_grid,
+            )
+
+            predicted = extract_prediction(result)
+
+            if predicted is not None:
+                return predicted
+
+            if result is not None:
+                return result
+
+        return None
+
+    # ------------------------------------------------------------
+    # Old legacy fallback.
+    # ------------------------------------------------------------
+    result = run_legacy_pair_strategy(
+        chosen_inner_strategy,
+        input_grid,
+        expected_grid,
+    )
+
+    if result is None:
+        return None
+
+    return result.get("predicted")
+
+
+def score_composition_layout_family(train_pairs):
+    task_rule = discover_composition_layout_family(train_pairs)
+
+    if task_rule is None:
+        return None, None
+
+    scored = score_fixed_apply_fn(
+        COMPOSITION_LAYOUT_FAMILY,
+        task_rule,
+        train_pairs,
+        apply_composition_layout_family,
+    )
+
+    if scored.get("exact_count") == scored.get("pair_count"):
+        loo = leave_one_out_family(
+            COMPOSITION_LAYOUT_FAMILY,
+            train_pairs,
+            discover_composition_layout_family,
+            apply_composition_layout_family,
+        )
+    else:
+        loo = None
+
+    return scored, loo
+
+
+# ============================================================
+# FAMILY 5: ANCHOR REPAIR
+# ============================================================
+
+ANCHOR_REPAIR_FAMILY = "anchor_repair_family"
+
+
+def task_looks_like_anchor_repair(train_pairs):
+    """
+    Fast pre-check.
+
+    Anchor repair tasks are small-color tasks:
+        background + structure + anchor
+
+    Do not run this on big noisy mask/pattern tasks like 0934a4d8.
+    """
+    if not train_pairs:
         return False
 
-    # 50% LOO is acceptable here because hidden pairs may remove unique evidence.
-    if loo_exact_count < max(1, loo_pair_count // 2):
-        return False
+    for pair in train_pairs:
+        input_grid = pair.get("input")
+        output_grid = pair.get("output")
+
+        if input_grid is None or output_grid is None:
+            return False
+
+        input_colors = set()
+        output_colors = set()
+
+        for row in input_grid:
+            input_colors.update(row)
+
+        for row in output_grid:
+            output_colors.update(row)
+
+        # Anchor repair should not be running on huge many-color quilt tasks.
+        if len(input_colors) > 4:
+            return False
+
+        # Output should usually drop the anchor color, not introduce many colors.
+        if len(output_colors) > 3:
+            return False
 
     return True
 
 
-def build_visual_symbolic_v2_strategy_stats(scored_rule, loo_scored=None):
+def discover_anchor_repair_family(train_pairs):
+    if discover_anchor_repair_rule_for_task is None:
+        return None
+
+    if not task_looks_like_anchor_repair(train_pairs):
+        return None
+
+    inner_rule = _safe_call(
+        discover_anchor_repair_rule_for_task,
+        train_pairs,
+    )
+
+    if inner_rule is None:
+        return None
+
     return {
-        "visual_symbolic_ruleV2": {
-            "pair_count": scored_rule.get("pair_count", 0) if scored_rule else 0,
-            "exact_count": scored_rule.get("exact_count", 0) if scored_rule else 0,
-            "total_adjusted_score": scored_rule.get("total_adjusted_score", 0) if scored_rule else 0,
-            "total_raw_score": scored_rule.get("total_raw_score", 0) if scored_rule else 0,
-            "loo_pair_count": loo_scored.get("pair_count", 0) if loo_scored else 0,
-            "loo_exact_count": loo_scored.get("exact_count", 0) if loo_scored else 0,
-            "loo_total_score": loo_scored.get("total_raw_score", 0) if loo_scored else 0,
-        }
+        "family": ANCHOR_REPAIR_FAMILY,
+        "rule_type": "anchor_repair",
+        "chosen_inner_strategy": "anchor_repair_rule",
+        "inner_rule": inner_rule,
     }
 
 
-# ============================================================
-# DEBUG HELPERS
-# ============================================================
-
-def print_adjusted_debug(candidates):
-    print("\nDEBUG ROUTER ADJUSTMENTS:")
-
-    if not candidates:
-        print("  No candidates.")
-        return
-
-    for result in candidates:
-        pred = result.get("predicted")
-        ph, pw = grid_shape(pred)
-
-        print(
-            f" {result.get('strategy'):<34} "
-            f"raw={result.get('raw_score'):<7} "
-            f"shape_penalty={result.get('shape_penalty'):<4} "
-            f"full_grid_penalty={result.get('full_grid_penalty'):<4} "
-            f"adjusted={result.get('adjusted_score'):<7} "
-            f"pred_shape={ph}x{pw}"
-        )
-
-
-def debug_strategy_scores(
-    result_seed_placement,
-    result_pattern,
-    result_region,
-    result_motif_layout,
-    result_region_alignment_v2,
-    result_object_grid,
-    result_pattern_expansion,
+def apply_anchor_repair_family(
+    task_rule,
+    input_grid,
+    expected_grid=None,
+    pair_index=None,
 ):
-    print("\n=== STRATEGY SCORES ===")
-
-    rows = [
-        ("seed_placement_expansion_rule", result_seed_placement),
-        ("pattern_rule", result_pattern),
-        ("region_rule", result_region),
-        ("motif_layout_rule", result_motif_layout),
-        ("region_alignment_rule_v2", result_region_alignment_v2),
-        ("object_grid_rule", result_object_grid),
-        ("pattern_expansion_rule", result_pattern_expansion),
-    ]
-
-    for name, result in rows:
-        if result is None:
-            print(f"{name:<34}: None")
-        else:
-            print(f"{name:<34}: {result.get('score')}")
-
-
-def debug_router_adjustments(result_seed_placement, result_pattern, result_region, result_motif_layout, result_region_alignment_v2,
-         result_object_grid, result_pattern_expansion,):
-
-    print("\n=== ROUTER DECISION TABLE ===")
-
-    rows = [
-        ("seed_placement_expansion_rule", result_seed_placement),
-        ("pattern_rule", result_pattern),
-        ("region_rule", result_region),
-        ("motif_layout_rule", result_motif_layout),
-        ("region_alignment_rule_v2", result_region_alignment_v2),
-        ("object_grid_rule", result_object_grid),
-        ("pattern_expansion_rule", result_pattern_expansion),
-    ]
-
-    for name, result in rows:
-        if result is None:
-            print(f"{name:<34}: None")
-            continue
-
-        pred = result.get("predicted")
-        ph, pw = grid_shape(pred)
-
-        print(
-            f"{name:<34} "
-            f"raw={result.get('raw_score'):<7} "
-            f"adj={result.get('adjusted_score'):<7} "
-            f"shape_pen={result.get('shape_penalty'):<4} "
-            f"full_pen={result.get('full_grid_penalty'):<4} "
-            f"out={ph}x{pw}"
-        )
-
-
-def print_task_level_replay_debug(strategy_name, scored_rule):
-    print()
-    print(f"[TASK-LEVEL DEBUG] {strategy_name}")
-    print("-" * 60)
-
-    if scored_rule is None:
-        print("No scored rule.")
-        return
-
-    print(f"Exact count: {scored_rule.get('exact_count')}")
-    print(f"Pair count : {scored_rule.get('pair_count')}")
-    print(f"Total score: {scored_rule.get('total_raw_score')}")
-
-    for item in scored_rule.get("results", []):
-        pred = item.get("predicted")
-        ph, pw = grid_shape(pred)
-
-        print(
-            f"  pair {item.get('pair_index')}: "
-            f"exact={item.get('exact')} "
-            f"score={item.get('score')} "
-            f"shape={ph}x{pw}"
-        )
-
-
-def print_visual_symbolic_debug(visual_symbolic_scored, visual_symbolic_loo):
-    print()
-    print("[TASK-LEVEL DEBUG] visual_symbolic_rule")
-    print("-" * 60)
-
-    if visual_symbolic_scored is None:
-        print("Train replay: None")
-    else:
-        print("Train replay:")
-        print(f"  exact_count: {visual_symbolic_scored.get('exact_count')}")
-        print(f"  pair_count : {visual_symbolic_scored.get('pair_count')}")
-        print(f"  total_score: {visual_symbolic_scored.get('total_raw_score')}")
-
-        for item in visual_symbolic_scored.get("results", []):
-            pred = item.get("predicted")
-            ph, pw = grid_shape(pred)
-
-            print(
-                f"  pair {item.get('pair_index')}: "
-                f"exact={item.get('exact')} "
-                f"score={item.get('score')} "
-                f"shape={ph}x{pw}"
-            )
-
-    print()
-
-    if visual_symbolic_loo is None:
-        print("Leave-one-out: None")
-    else:
-        print("Leave-one-out:")
-        print(f"  exact_count: {visual_symbolic_loo.get('exact_count')}")
-        print(f"  pair_count : {visual_symbolic_loo.get('pair_count')}")
-        print(f"  total_score: {visual_symbolic_loo.get('total_raw_score')}")
-
-        for item in visual_symbolic_loo.get("results", []):
-            pred = item.get("predicted")
-            ph, pw = grid_shape(pred)
-
-            print(
-                f"  hidden pair {item.get('pair_index')}: "
-                f"exact={item.get('exact')} "
-                f"score={item.get('score')} "
-                f"shape={ph}x{pw}"
-            )
-
-
-# ============================================================
-# ACTIVE PAIR ROUTER
-# ============================================================
-
-def get_all_strategy_results(input_grid, output_grid, debug=True):
-    candidates = []
-
-    task_type = detect_task_type(input_grid, output_grid)
-
-    if debug:
-        print(f"\n[TASK TYPE DETECTED] {task_type}")
-
-    result_seed_placement = None
-    result_pattern = None
-    result_region = None
-    result_motif_layout = None
-    result_region_alignment_v2 = None
-    result_object_grid = None
-    result_pattern_expansion = None
-
-    if task_type == "expansion":
-        result_seed_placement = maybe_add_candidate(
-            candidates,
-            solve_pair_seed_placement_expansion(input_grid, output_grid),
-            "seed_placement_expansion_rule",
-            input_grid,
-            output_grid,
-        )
-
-        if result_seed_placement is not None and result_seed_placement.get("exact"):
-            if debug:
-                print("[ROUTER PRIORITY] seed_placement_expansion_rule exact match")
-
-                debug_strategy_scores(
-                    result_seed_placement,
-                    result_pattern,
-                    result_region,
-                    result_motif_layout,
-                    result_region_alignment_v2,
-                    result_object_grid,
-                    result_pattern_expansion,
-                )
-
-                debug_router_adjustments(
-                    result_seed_placement,
-                    result_pattern,
-                    result_region,
-                    result_motif_layout,
-                    result_region_alignment_v2,
-                    result_object_grid,
-                    result_pattern_expansion,
-                )
-
-                print_adjusted_debug(candidates)
-
-            return candidates
-
-    if task_type in ["pattern_same_size", "general", "motif_layout", "expansion"]:
-        result_pattern = maybe_add_candidate(
-            candidates,
-            solve_pair_pattern_rule(input_grid, output_grid),
-            "pattern_rule",
-            input_grid,
-            output_grid,
-        )
-
-    if task_type in ["region_extract", "general", "motif_layout"]:
-        result_region = maybe_add_candidate(
-            candidates,
-            solve_pair_region_rule(input_grid, output_grid),
-            "region_rule",
-            input_grid,
-            output_grid,
-        )
-
-        result_region_alignment_v2 = maybe_add_candidate(
-            candidates,
-            solve_pair_region_alignment_rule_v2(input_grid, output_grid),
-            "region_alignment_rule_v2",
-            input_grid,
-            output_grid,
-        )
-
-    if task_type == "motif_layout":
-        result_motif_layout = maybe_add_candidate(
-            candidates,
-            solve_pair_motif_layout_rule(input_grid, output_grid),
-            "motif_layout_rule",
-            input_grid,
-            output_grid,
-        )
-    else:
-        if debug:
-            print("Skipping motif_layout_rule (task type not motif_layout)")
-
-    if task_type == "expansion":
-        result_pattern_expansion = maybe_add_candidate(
-            candidates,
-            solve_pair_pattern_expansion(input_grid, output_grid),
-            "pattern_expansion_rule",
-            input_grid,
-            output_grid,
-        )
-
-    result_object_grid = maybe_add_candidate(
-        candidates,
-        solve_pair_object_grid_rule(input_grid, output_grid),
-        "object_grid_rule",
-        input_grid,
-        output_grid,
-    )
-
-    if debug:
-        debug_strategy_scores(
-            result_seed_placement,
-            result_pattern,
-            result_region,
-            result_motif_layout,
-            result_region_alignment_v2,
-            result_object_grid,
-            result_pattern_expansion,
-        )
-
-        debug_router_adjustments(
-            result_seed_placement,
-            result_pattern,
-            result_region,
-            result_motif_layout,
-            result_region_alignment_v2,
-            result_object_grid,
-            result_pattern_expansion,
-        )
-
-        print("\nOBJECT_GRID DEBUG RESULT:")
-
-        if result_object_grid is None:
-            print("  object_grid_rule: None")
-        else:
-            print(f"  strategy: {result_object_grid.get('strategy')}")
-            print(f"  score   : {result_object_grid.get('score')}")
-            print(f"  exact   : {result_object_grid.get('exact')}")
-
-            pred = result_object_grid.get("predicted")
-
-            if pred is not None:
-                print(f"  shape   : {len(pred)}x{len(pred[0]) if pred else 0}")
-
-        print_adjusted_debug(candidates)
-
-    return candidates
-
-
-def choose_best_result(candidates):
-    if not candidates:
+    if task_rule is None:
         return None
 
-    return max(
-        candidates,
-        key=lambda result: (
-            1 if result.get("exact") else 0,
-            result.get("adjusted_score", result.get("score", -10**9)),
-        ),
-    )
+    if apply_anchor_repair_rule is None:
+        return None
 
+    inner_rule = task_rule.get("inner_rule")
 
-def solve_pair_with_multiple_strategies(input_grid, output_grid, debug=True):
-    candidates = get_all_strategy_results(
+    if inner_rule is None:
+        return None
+
+    result = _safe_call(
+        apply_anchor_repair_rule,
+        inner_rule,
         input_grid,
-        output_grid,
-        debug=debug,
     )
 
-    return choose_best_result(candidates)
+    predicted = extract_prediction(result)
+
+    if predicted is not None:
+        return predicted
+
+    return result
+
+
+def score_anchor_repair_family(train_pairs):
+    task_rule = discover_anchor_repair_family(train_pairs)
+
+    if task_rule is None:
+        return None, None
+
+    scored = score_fixed_apply_fn(
+        ANCHOR_REPAIR_FAMILY,
+        task_rule,
+        train_pairs,
+        apply_anchor_repair_family,
+    )
+
+    if scored.get("exact_count") == scored.get("pair_count"):
+        loo = leave_one_out_family(
+            ANCHOR_REPAIR_FAMILY,
+            train_pairs,
+            discover_anchor_repair_family,
+            apply_anchor_repair_family,
+        )
+    else:
+        loo = None
+
+    return scored, loo
 
 
 # ============================================================
-# TASK-LEVEL STRATEGY PICKER
+# FAMILY TABLE
 # ============================================================
 
-def choose_task_level_strategy(train_pairs, debug=True):
+FAMILY_SCORERS = [
+    score_visual_symbolic_family,
+    score_pattern_canvas_family,
+    score_region_object_family,
+    score_composition_layout_family,
+    score_anchor_repair_family,
+]
+
+FAMILY_APPLIERS = {
+    VISUAL_SYMBOLIC_FAMILY: apply_visual_symbolic_family,
+    PATTERN_CANVAS_FAMILY: apply_pattern_canvas_family,
+    REGION_OBJECT_FAMILY: apply_region_object_family,
+    COMPOSITION_LAYOUT_FAMILY: apply_composition_layout_family,
+    ANCHOR_REPAIR_FAMILY: apply_anchor_repair_family,
+}
+
+
+# ============================================================
+# MAIN TASK-LEVEL ROUTER
+# ============================================================
+
+def choose_task_level_strategy(train_pairs, debug=False):
     """
-    Choose ONE strategy for the whole task.
-
-    Honest rule:
-        Task-level rules may only override if they pass their strict gate.
-
-    Current gates:
-        multi_seed_composition_rule:
-            strict internal seed match gate
-
-        visual_symbolic_rule:
-            honest leave-one-out gate
-
-        learned_region_rule:
-            blocked for now because it replayed visible train pairs
-
-        ring_blob_rule_synthesizer:
-            blocked for now unless later given leave-one-out gate
+    Choose one family for the whole task.
     """
+    if not train_pairs:
+        return {
+            "best_strategy": None,
+            "task_rule": None,
+            "rule": None,
+            "strategy_stats": {},
+            "family_scores": [],
+            "features": {},
+        }
 
-    # --------------------------------------------------------
-    # 1. MULTI-SEED TASK-LEVEL OVERRIDE
-    # --------------------------------------------------------
-    if discover_multi_seed_composition_rule_for_task is not None:
-        multi_seed_rule = discover_multi_seed_composition_rule_for_task(train_pairs)
+    features = detect_task_features(train_pairs)
 
-        if is_strong_multi_seed_result(multi_seed_rule, train_pairs):
-            if debug:
-                print("\n[ROUTER OVERRIDE] Using multi_seed_composition_rule")
-                print("[ROUTER OVERRIDE] Reason: all train seeds found with ratio=1.0")
-
-                residual_rule = multi_seed_rule.get("residual_rule", {})
-                print(
-                    "[ROUTER OVERRIDE] Residual rule:",
-                    residual_rule.get("type"),
-                )
-
-            stats = build_multi_seed_strategy_stats(
-                multi_seed_rule,
-                train_pairs,
-            )
-
-            return {
-                "best_strategy": "multi_seed_composition_rule",
-                "strategy_stats": stats,
-                "task_rule": multi_seed_rule,
-                "rule": multi_seed_rule,
-            }
-    else:
-        if debug:
-            print("[MULTI-SEED WARNING] multi_seed_composition_rule import failed")
-
-    # --------------------------------------------------------
-    # 2. RING/BLOB SYNTHESIZER — DEBUG ONLY FOR NOW
-    # --------------------------------------------------------
-    ring_blob_rule = None
-    ring_blob_scored = None
-
-    if learn_ring_blob_rule_synthesizer is not None:
-        try:
-            ring_blob_rule = learn_ring_blob_rule_synthesizer(train_pairs)
-
-            ring_blob_scored = score_ring_blob_rule_synthesizer_on_train(
-                ring_blob_rule,
-                train_pairs,
-            )
-
-            if debug:
-                print_task_level_replay_debug(
-                    "ring_blob_rule_synthesizer",
-                    ring_blob_scored,
-                )
-
-            if is_strong_ring_blob_rule_synthesizer_result(ring_blob_scored):
-                if debug:
-                    print("\n[RING/BLOB BLOCKED]")
-                    print("ring_blob_rule_synthesizer solved visible train pairs.")
-                    print("Blocked because visible-pair replay is not honest learning.")
-                    print("It must pass leave-one-out before it can override.")
-
-        except Exception as exc:
-            if debug:
-                print("[RING/BLOB WARNING] ring_blob_rule_synthesizer failed")
-                print("  error:", repr(exc))
-    else:
-        if debug:
-            print("[RING/BLOB WARNING] ring_blob_rule_synthesizer import failed")
-
-    # --------------------------------------------------------
-    # 3. VISUAL SYMBOLIC RULE V2 — RING/BLOB TASK-LEVEL RULE
-    # --------------------------------------------------------
-    visual_symbolic_v2_rule = None
-    visual_symbolic_v2_scored = None
-    visual_symbolic_v2_loo = None
-
-    if is_ring_blob_style_task(train_pairs):
-        if discover_visual_symbolic_rule_v2_for_router is not None:
-            try:
-                visual_symbolic_v2_rule = discover_visual_symbolic_rule_v2_for_router(
-                    train_pairs,
-                )
-
-                visual_symbolic_v2_scored = score_visual_symbolic_v2_on_train(
-                    visual_symbolic_v2_rule,
-                    train_pairs,
-                )
-
-                visual_symbolic_v2_loo = leave_one_out_visual_symbolic_v2(
-                    train_pairs,
-                )
-
-                if debug:
-                    print_task_level_replay_debug(
-                        "visual_symbolic_ruleV2",
-                        visual_symbolic_v2_scored,
-                    )
-
-                    print_task_level_replay_debug(
-                        "visual_symbolic_ruleV2 leave-one-out",
-                        visual_symbolic_v2_loo,
-                    )
-
-                if is_strong_visual_symbolic_v2_result(
-                    visual_symbolic_v2_scored,
-                    visual_symbolic_v2_loo,
-                ):
-                    if debug:
-                        print("\n[ROUTER OVERRIDE] Using visual_symbolic_ruleV2")
-                        print("[ROUTER OVERRIDE] Reason: ring/blob task, full train exact, LOO acceptable")
-
-                    stats = build_visual_symbolic_v2_strategy_stats(
-                        visual_symbolic_v2_scored,
-                        visual_symbolic_v2_loo,
-                    )
-
-                    return {
-                        "best_strategy": "visual_symbolic_ruleV2",
-                        "strategy_stats": stats,
-                        "task_rule": visual_symbolic_v2_rule,
-                        "rule": visual_symbolic_v2_rule,
-                    }
-
-                else:
-                    if debug:
-                        print("\n[VISUAL SYMBOLIC V2 BLOCKED]")
-                        print("visual_symbolic_ruleV2 did not pass its task-level gate.")
-
-            except Exception as exc:
-                if debug:
-                    print("[VISUAL SYMBOLIC V2 WARNING] visual_symbolic_ruleV2 failed")
-                    print("  error:", repr(exc))
-        else:
-            if debug:
-                print("[VISUAL SYMBOLIC V2 WARNING] visual_symbolic_ruleV2 import failed")
-    else:
-        if debug:
-            print("[VISUAL SYMBOLIC V2 SKIPPED] not a ring/blob-style task")
-
-
-    # --------------------------------------------------------
-    # 3. LEARNED REGION RULE — DEBUG ONLY FOR NOW
-    # --------------------------------------------------------
-    learned_region_scored = None
-    learned_region_rule = None
-
-    if discover_learned_region_rule_for_task is not None:
-        learned_region_rule = discover_learned_region_rule_for_task(train_pairs)
-
-        if learned_region_rule is not None:
-            learned_region_scored = score_learned_region_rule_on_train(
-                learned_region_rule,
-                train_pairs,
-            )
-
-            if debug:
-                print("\n[LEARNED REGION DEBUG]")
-
-                if describe_learned_region_rule is not None:
-                    describe_learned_region_rule(learned_region_rule)
-
-                print_task_level_replay_debug(
-                    "learned_region_rule",
-                    learned_region_scored,
-                )
-
-            if is_strong_learned_region_result(learned_region_scored):
-                if debug:
-                    print("\n[LEARNED REGION BLOCKED]")
-                    print("learned_region_rule solved visible train pairs.")
-                    print("Blocked because visible-pair replay is not honest learning.")
-                    print("It must pass leave-one-out before it can override.")
-    else:
-        if debug:
-            print("[LEARNED REGION WARNING] learned_region_rule import failed")
-
-    # --------------------------------------------------------
-    # 4. OLD VISUAL SYMBOLIC RULE — DISABLED
-    # --------------------------------------------------------
-    visual_symbolic_rule = None
-    visual_symbolic_scored = None
-    visual_symbolic_loo = None
-
-    if debug:
-        print("[OLD VISUAL SYMBOLIC SKIPPED] disabled; use visual_symbolic_ruleV2 only")
-
-    # --------------------------------------------------------
-    # 5. NORMAL PAIR-LEVEL STRATEGY RANKING
-    # --------------------------------------------------------
+    family_scores = []
     strategy_stats = {}
 
-    if ring_blob_scored is not None:
-        strategy_stats["BLOCKED_ring_blob_rule_synthesizer"] = {
-            "pair_count": ring_blob_scored.get("pair_count", 0),
-            "exact_count": ring_blob_scored.get("exact_count", 0),
-            "total_adjusted_score": ring_blob_scored.get("total_adjusted_score", 0),
-            "total_raw_score": ring_blob_scored.get("total_raw_score", 0),
-            "task_rule": ring_blob_scored.get("task_rule"),
-            "blocked": True,
-        }
+    for score_fn in FAMILY_SCORERS:
+        result = _safe_call(score_fn, train_pairs)
 
-    if learned_region_scored is not None:
-        strategy_stats["BLOCKED_learned_region_rule"] = {
-            "pair_count": learned_region_scored.get("pair_count", 0),
-            "exact_count": learned_region_scored.get("exact_count", 0),
-            "total_adjusted_score": learned_region_scored.get("total_adjusted_score", 0),
-            "total_raw_score": learned_region_scored.get("total_raw_score", 0),
-            "task_rule": learned_region_scored.get("task_rule"),
-            "blocked": True,
-        }
-
-    if visual_symbolic_scored is not None:
-        strategy_stats["BLOCKED_visual_symbolic_rule"] = {
-            "pair_count": visual_symbolic_scored.get("pair_count", 0),
-            "exact_count": visual_symbolic_scored.get("exact_count", 0),
-            "total_adjusted_score": visual_symbolic_scored.get("total_adjusted_score", 0),
-            "total_raw_score": visual_symbolic_scored.get("total_raw_score", 0),
-            "loo_pair_count": visual_symbolic_loo.get("pair_count", 0) if visual_symbolic_loo else 0,
-            "loo_exact_count": visual_symbolic_loo.get("exact_count", 0) if visual_symbolic_loo else 0,
-            "task_rule": visual_symbolic_scored.get("task_rule"),
-            "blocked": True,
-        }
-
-    for pair_index, pair in enumerate(train_pairs):
-        input_grid = pair["input"]
-        output_grid = pair["output"]
-
-        candidates = get_all_strategy_results(
-            input_grid,
-            output_grid,
-            debug=debug,
-        )
-
-        for result in candidates:
-            strategy = result.get("strategy")
-
-            if strategy is None:
-                continue
-
-            if strategy not in strategy_stats:
-                strategy_stats[strategy] = {
-                    "pair_count": 0,
-                    "exact_count": 0,
-                    "total_adjusted_score": 0,
-                    "total_raw_score": 0,
-                    "blocked": False,
-                }
-
-            strategy_stats[strategy]["pair_count"] += 1
-            strategy_stats[strategy]["total_adjusted_score"] += result.get(
-                "adjusted_score",
-                result.get("score", 0),
-            )
-            strategy_stats[strategy]["total_raw_score"] += result.get("score", 0)
-
-            if result.get("exact"):
-                strategy_stats[strategy]["exact_count"] += 1
-
-    best_strategy = None
-    best_key = None
-
-    for strategy, stats in strategy_stats.items():
-        if stats.get("blocked"):
+        if result is None:
             continue
 
-        key = (
-            stats.get("exact_count", 0),
-            stats.get("total_adjusted_score", 0),
-            stats.get("pair_count", 0),
+        scored, loo = result
+
+        if scored is None:
+            continue
+
+        family_name = scored.get("family") or scored.get("strategy")
+        task_rule = scored.get("task_rule") or scored.get("rule") or {}
+
+        family_applier = FAMILY_APPLIERS.get(family_name)
+        test_probe = None
+
+        if family_applier is not None and train_pairs:
+            test_probe = _safe_call(
+                family_applier,
+                task_rule,
+                train_pairs[0].get("input"),
+                None,
+                None,
+            )
+
+        test_capable = is_valid_arc_grid(test_probe)
+        scored["test_capable"] = test_capable
+
+        honest = family_is_honest(scored, loo)
+
+        scored["honest"] = honest
+        scored["leave_one_out"] = loo
+
+        pair_count = scored.get("pair_count", 0)
+        exact_count = scored.get("exact_count", 0)
+
+        loo_pair_count = loo.get("pair_count", 0) if loo else 0
+        loo_exact_count = loo.get("exact_count", 0) if loo else 0
+        loo_valid_count = loo.get("valid_prediction_count", 0) if loo else 0
+        loo_missing_count = loo.get("missing_prediction_count", 0) if loo else 0
+        loo_invalid_count = loo.get("invalid_prediction_count", 0) if loo else 0
+        loo_shape_exact_count = loo.get("shape_exact_count", 0) if loo else 0
+
+        strategy_stats[family_name] = {
+            "pair_count": pair_count,
+            "exact_count": exact_count,
+            "total_raw_score": scored.get("total_raw_score", 0),
+            "total_adjusted_score": scored.get("total_adjusted_score", 0),
+            "loo_pair_count": loo_pair_count,
+            "loo_exact_count": loo_exact_count,
+            "loo_valid_prediction_count": loo_valid_count,
+            "loo_missing_prediction_count": loo_missing_count,
+            "loo_invalid_prediction_count": loo_invalid_count,
+            "loo_shape_exact_count": loo_shape_exact_count,
+            "test_capable": test_capable,
+            "honest": honest,
+            "chosen_inner_strategy": task_rule.get("chosen_inner_strategy"),
+            "rule_type": task_rule.get("rule_type"),
+        }
+
+        family_scores.append(scored)
+
+    if not family_scores:
+        return {
+            "best_strategy": None,
+            "task_rule": None,
+            "rule": None,
+            "strategy_stats": strategy_stats,
+            "family_scores": [],
+            "features": features,
+        }
+
+    def ranking_key(item):
+        loo = item.get("leave_one_out") or {}
+        task_rule = item.get("task_rule") or item.get("rule") or {}
+
+        rule_type = task_rule.get("rule_type")
+        task_level_bonus = 1 if rule_type in {
+    "visual_symbolic",
+    "fixed_region_object_wrapper",
+    "fixed_composition_layout_wrapper",
+    "learned_motif_path_layout_wrapper",
+    "learned_multi_seed_composition_wrapper",
+} else 0
+
+        return (
+            item.get("test_capable", False),
+            item.get("honest", False),
+            loo.get("exact_count", 0),
+            loo.get("shape_exact_count", 0),
+            loo.get("valid_prediction_count", 0),
+            item.get("exact_count", 0),
+            task_level_bonus,
+            item.get("total_adjusted_score", 0),
+            item.get("total_raw_score", 0),
         )
 
-        if best_key is None or key > best_key:
-            best_key = key
-            best_strategy = strategy
+    family_scores.sort(key=ranking_key, reverse=True)
+    best = family_scores[0]
+
+    best_family = best.get("family") or best.get("strategy")
+    task_rule = best.get("task_rule") or best.get("rule")
+
+    if debug:
+        print("\nTASK ROUTER FAMILY SCORES")
+        print("-" * 60)
+
+        for item in family_scores:
+            loo = item.get("leave_one_out") or {}
+            task_rule_for_print = item.get("task_rule") or item.get("rule") or {}
+
+            print(
+                f"{item.get('family')}: "
+                f"inner={task_rule_for_print.get('chosen_inner_strategy')} "
+                f"exact={item.get('exact_count')}/{item.get('pair_count')} "
+                f"loo={loo.get('exact_count', 0)}/{loo.get('pair_count', 0)} "
+                f"loo_valid={loo.get('valid_prediction_count', 0)} "
+                f"test_capable={item.get('test_capable')} "
+                f"honest={item.get('honest')} "
+                f"adj={item.get('total_adjusted_score')}"
+            )
 
     return {
-        "best_strategy": best_strategy,
+        "best_strategy": best_family,
+        "task_rule": task_rule,
+        "rule": task_rule,
         "strategy_stats": strategy_stats,
-        "task_rule": None,
-        "rule": None,
+        "family_scores": family_scores,
+        "features": features,
     }
 
 
 # ============================================================
-# FORCED PAIR-LEVEL STRATEGY SOLVER
+# APPLY CHOSEN TASK RULE
 # ============================================================
 
-def solve_pair_with_forced_strategy(input_grid, output_grid, strategy_name):
+def apply_task_rule_to_input(
+    strategy_name,
+    task_rule,
+    input_grid,
+    expected_grid=None,
+    pair_index=None,
+):
+    if strategy_name is None:
+        return None
 
-    if strategy_name == "pattern_rule":
-        result = solve_pair_pattern_rule(input_grid, output_grid)
-
-    elif strategy_name == "region_rule":
-        result = solve_pair_region_rule(input_grid, output_grid)
-
-    elif strategy_name == "visual_symbolic_ruleV2":
-        print(
-            "[FORCED STRATEGY ERROR] visual_symbolic_ruleV2 needs a learned "
-            "task_rule. Use apply_task_rule_to_input(...)."
+    if strategy_name in FAMILY_APPLIERS:
+        return _safe_call(
+            FAMILY_APPLIERS[strategy_name],
+            task_rule,
+            input_grid,
+            expected_grid,
+            pair_index,
         )
-        return None
 
-    elif strategy_name == "region_alignment_rule_v2":
-        result = solve_pair_region_alignment_rule_v2(input_grid, output_grid)
-
-    elif strategy_name == "motif_layout_rule":
-        result = solve_pair_motif_layout_rule(input_grid, output_grid)
-
-    elif strategy_name == "object_grid_rule":
-        result = solve_pair_object_grid_rule(input_grid, output_grid)
-
-    elif strategy_name == "pattern_expansion_rule":
-        result = solve_pair_pattern_expansion(input_grid, output_grid)
-
-    elif strategy_name == "seed_placement_expansion_rule":
-        result = solve_pair_seed_placement_expansion(input_grid, output_grid)
-
-    elif strategy_name == "multi_seed_composition_rule":
-        print(
-            "[FORCED STRATEGY ERROR] multi_seed_composition_rule needs a learned "
-            "task_rule. Use apply_task_rule_to_input(...)."
-        )
-        return None
-
-    elif strategy_name == "ring_blob_rule_synthesizer":
-        print(
-            "[FORCED STRATEGY ERROR] ring_blob_rule_synthesizer needs a learned "
-            "task_rule. Use apply_task_rule_to_input(...)."
-        )
-        return None
-
-    elif strategy_name == "learned_region_rule":
-        print(
-            "[FORCED STRATEGY ERROR] learned_region_rule needs a learned "
-            "task_rule. Use apply_task_rule_to_input(...)."
-        )
-        return None
-
-    elif strategy_name == "visual_symbolic_rule":
-        print(
-            "[FORCED STRATEGY ERROR] visual_symbolic_rule needs a learned "
-            "task_rule. Use apply_task_rule_to_input(...)."
-        )
-        return None
-
-    else:
-        print(f"[FORCED STRATEGY ERROR] Unknown strategy: {strategy_name}")
-        return None
-
-    candidates = []
-
-    return maybe_add_candidate(
-        candidates,
-        result,
+    result = run_legacy_pair_strategy(
         strategy_name,
-        input_grid,
-        output_grid,
-    )
-
-
-# ============================================================
-# APPLY LEARNED TASK RULE
-# ============================================================
-
-def apply_task_rule_to_input(strategy_name, task_rule, input_grid, expected_grid=None, pair_index=None,):
-    # --------------------------------------------------------
-    # Multi-seed task-level rule
-    # --------------------------------------------------------
-    if strategy_name == "multi_seed_composition_rule":
-        if task_rule is None:
-            print("[TASK RULE ERROR] Missing multi_seed task_rule.")
-            return None
-
-        if pair_index is not None:
-            if apply_multi_seed_composition_rule_for_train_pair is None:
-                print(
-                    "[TASK RULE ERROR] "
-                    "apply_multi_seed_composition_rule_for_train_pair import failed."
-                )
-                return None
-
-            return apply_multi_seed_composition_rule_for_train_pair(
-                task_rule,
-                pair_index,
-            )
-
-        if apply_multi_seed_composition_rule is None:
-            print("[TASK RULE ERROR] apply_multi_seed_composition_rule import failed.")
-            return None
-
-        return apply_multi_seed_composition_rule(
-            task_rule,
-            input_grid,
-        )
-
-    # --------------------------------------------------------
-    # Ring/blob task-level rule
-    # --------------------------------------------------------
-    if strategy_name == "ring_blob_rule_synthesizer":
-        if task_rule is None:
-            print("[TASK RULE ERROR] Missing ring_blob_rule_synthesizer task_rule.")
-            return None
-
-        if predict_with_ring_blob_rule_synthesizer is None:
-            print("[TASK RULE ERROR] predict_with_ring_blob_rule_synthesizer import failed.")
-            return None
-
-        result = predict_with_ring_blob_rule_synthesizer(
-            task_rule,
-            input_grid,
-        )
-
-        if result is None:
-            return None
-
-        return result.get("prediction")
-
-    # --------------------------------------------------------
-    # Learned region task-level rule
-    # --------------------------------------------------------
-    if strategy_name == "learned_region_rule":
-        if task_rule is None:
-            print("[TASK RULE ERROR] Missing learned_region task_rule.")
-            return None
-
-        if apply_learned_region_rule is None:
-            print("[TASK RULE ERROR] apply_learned_region_rule import failed.")
-            return None
-
-        return apply_learned_region_rule(
-            task_rule,
-            input_grid,
-        )
-
-    # --------------------------------------------------------
-    # Visual symbolic task-level rule
-    # --------------------------------------------------------
-    if strategy_name == "visual_symbolic_rule":
-        if task_rule is None:
-            print("[TASK RULE ERROR] Missing visual_symbolic_rule task_rule.")
-            return None
-
-        if apply_visual_symbolic_rule is None:
-            print("[TASK RULE ERROR] apply_visual_symbolic_rule import failed.")
-            return None
-
-        return apply_visual_symbolic_rule(
-            task_rule,
-            input_grid,
-        )
-
-    # --------------------------------------------------------
-    # Visual symbolic V2 task-level rule
-    # --------------------------------------------------------
-    if strategy_name == "visual_symbolic_ruleV2":
-        if task_rule is None:
-            print("[TASK RULE ERROR] Missing visual_symbolic_ruleV2 task_rule.")
-            return None
-
-        return apply_visual_symbolic_rule_v2_for_router(
-            task_rule,
-            input_grid,
-        )
-
-
-    # --------------------------------------------------------
-    # Normal pair-level strategies
-    # --------------------------------------------------------
-    if expected_grid is None:
-        print(
-            f"[TEST APPLY SKIPPED] {strategy_name} has no learned task_rule yet, "
-            "and expected_grid is None."
-        )
-        return None
-
-    forced_result = solve_pair_with_forced_strategy(
         input_grid,
         expected_grid,
-        strategy_name,
     )
 
-    if forced_result is None:
+    if result is None:
         return None
 
-    return forced_result.get("predicted")
+    return result.get("predicted")
+
+
+def score_task_rule_prediction(
+    strategy_name,
+    task_rule,
+    input_grid,
+    expected_grid,
+    pair_index=None,
+):
+    predicted = apply_task_rule_to_input(
+        strategy_name=strategy_name,
+        task_rule=task_rule,
+        input_grid=input_grid,
+        expected_grid=expected_grid,
+        pair_index=pair_index,
+    )
+
+    return normalize_prediction_result(
+        strategy=strategy_name,
+        predicted=predicted,
+        expected=expected_grid,
+        raw_result={
+            "pair_index": pair_index,
+            "task_rule": task_rule,
+        },
+    )
 
 
 # ============================================================
-# TEST-ONLY TASK CONTEXT HELPERS
+# TEST-ONLY SPECIAL HELPER
 # ============================================================
 
 def try_anchor_compass_merge_for_test_pair(
@@ -1696,62 +1861,37 @@ def try_anchor_compass_merge_for_test_pair(
     debug=False,
 ):
     """
-    Test-only helper.
+    Kept for compatibility with run_solver.py.
 
-    This rule needs the full task because it learns templates from train pairs,
-    then applies them to a test pair.
-
-    It returns a normal router-style result if it fires.
-    It returns None if this test pair should fall back.
+    This should later move into composition_layout_family
+    or visual_symbolic_family.
     """
-
-    prediction = predict_anchor_compass_merge_for_pair(
-        task=task,
-        pair=test_pair,
-        test_index=test_index,
-        debug=debug,
-    )
-
-    if prediction is None:
+    if predict_anchor_compass_merge_for_pair is None:
         return None
 
-    return {
-        "strategy": "anchor_compass_merge_rule",
-        "predicted": prediction,
-        "prediction": prediction,
-        "score": 0,
-        "adjusted_score": 0,
-        "exact": False,
-        "task_rule": None,
-        "rule": None,
-    }
-
-
-
-def score_task_rule_prediction(strategy_name, task_rule, input_grid, expected_grid, pair_index=None,):
-    predicted = apply_task_rule_to_input(
-        strategy_name=strategy_name,
-        task_rule=task_rule,
-        input_grid=input_grid,
-        expected_grid=expected_grid,
-        pair_index=pair_index,
+    result = _safe_call(
+        predict_anchor_compass_merge_for_pair,
+        task,
+        test_pair,
+        test_index,
+        debug,
     )
 
+    if result is None:
+        return None
+
+    predicted = extract_prediction(result)
+
     if predicted is None:
-        return {
-            "strategy": strategy_name,
-            "predicted": None,
-            "score": 0,
-            "adjusted_score": 0,
-            "exact": False,
-        }
+        return None
 
-    score = score_prediction(predicted, expected_grid)
+    if isinstance(result, dict):
+        result = dict(result)
+    else:
+        result = {}
 
-    return {
-        "strategy": strategy_name,
-        "predicted": predicted,
-        "score": score,
-        "adjusted_score": score,
-        "exact": predicted == expected_grid,
-    }
+    result["strategy"] = "anchor_compass_merge_rule"
+    result["predicted"] = predicted
+    result["prediction"] = predicted
+
+    return result

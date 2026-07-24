@@ -38,6 +38,14 @@ except ImportError:
     discover_visual_abstractions = None
 
 
+
+DEBUG_VISUAL_SYMBOLIC = False
+
+
+def vdebug(*args, **kwargs):
+    if DEBUG_VISUAL_SYMBOLIC:
+        print(*args, **kwargs)
+
 # ============================================================
 # BASIC HELPERS
 # ============================================================
@@ -202,8 +210,8 @@ def formula_name(formula):
 def print_shape_rule_debug(shape_rule, label="SHAPE RULE"):
     print()
     print(f"[{label}]")
-    print("height_formula:", formula_name(shape_rule.get("height_formula")))
-    print("width_formula :", formula_name(shape_rule.get("width_formula")))
+    vdebug("height_formula:", formula_name(shape_rule.get("height_formula")))
+    vdebug("width_formula :", formula_name(shape_rule.get("width_formula")))
 
 
 # ============================================================
@@ -901,12 +909,12 @@ def learn_color_rule(examples):
     that fits all visible train examples.
     """
     print()
-    print("[COLOR LEARNING EXAMPLES]")
+    vdebug("[COLOR LEARNING EXAMPLES]")
     for ex in examples:
         scene = ex["scene"]
         output_info = ex["output_info"]
 
-        print(
+        vdebug(
             f"pair={ex.get('pair_index')} "
             f"rings={scene.get('ring_count')} "
             f"blobs={scene.get('blob_count')} "
@@ -1444,13 +1452,13 @@ def learn_one_ring_marker_rule(examples):
         if ex["scene"].get("ring_count", 0) == 1
     ]
     print()
-    print("[ONE RING MARKER LEARNING EXAMPLES]")
+    vdebug("[ONE RING MARKER LEARNING EXAMPLES]")
     for ex in one_ring_examples:
         scene = ex["scene"]
         output_info = ex["output_info"]
         drawing_info = ex["drawing_info"]
 
-        print(
+        vdebug(
             f"pair={ex.get('pair_index')} "
             f"rings={scene.get('ring_count')} "
             f"blobs={scene.get('blob_count')} "
@@ -1877,8 +1885,8 @@ def learn_drawing_rule(examples, prediction_scene=None):
         prediction_scene=prediction_scene
     )
     print()
-    print("[LEARNED OUTER BOX RULE]")
-    print(outer_box_rule)
+    vdebug("[LEARNED OUTER BOX RULE]")
+    vdebug(outer_box_rule)
 
     inner_presence_rule = learn_inner_box_presence_rule(examples_with_drawing)
 
@@ -2097,8 +2105,8 @@ def discover_visual_symbolic_rule_for_task(train_pairs, prediction_scene=None):
         examples,
         prediction_scene=prediction_scene,
     )
-    print("[VISUAL SYMBOLIC COLOR RULE]")
-    print(color_rule)
+    vdebug("[VISUAL SYMBOLIC COLOR RULE]")
+    vdebug(color_rule)
 
     print_shape_rule_debug(
         shape_rule,

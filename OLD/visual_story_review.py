@@ -79,27 +79,27 @@ def resolve_task_file(user_text):
     text = user_text.strip().strip('"')
 
     if text.lower() == "data":
-        return os.path.join("data", "data.json")
+        return os.path.join("../data", "data.json")
 
     if os.path.exists(text):
         return text
 
     if text.endswith(".json"):
-        possible = os.path.join("data_failures", "extracted_tasks", text)
+        possible = os.path.join("../data_failures", "extracted_tasks", text)
         if os.path.exists(possible):
             return possible
 
-        possible = os.path.join("data", text)
+        possible = os.path.join("../data", text)
         if os.path.exists(possible):
             return possible
 
         return text
 
-    possible = os.path.join("data_failures", "extracted_tasks", text + ".json")
+    possible = os.path.join("../data_failures", "extracted_tasks", text + ".json")
     if os.path.exists(possible):
         return possible
 
-    possible = os.path.join("data", text + ".json")
+    possible = os.path.join("../data", text + ".json")
     if os.path.exists(possible):
         return possible
 

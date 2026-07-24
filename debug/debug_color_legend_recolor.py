@@ -16,7 +16,7 @@ from reasoning.color_legend_recolor_rule import (
 
 
 TASK_PATH = os.path.join(
-    "data_failures",
+    "../data_failures",
     "extracted_tasks",
     "b0039139.json",
 )

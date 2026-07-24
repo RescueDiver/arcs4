@@ -28,7 +28,7 @@ from reasoning.visual_symbolic_rule import (
 # TASK TO DEBUG
 # ============================================================
 
-TARGET_TASK_ID = "b0039139"
+TARGET_TASK_ID = "20270e3b"
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ------------------------------------------------------------

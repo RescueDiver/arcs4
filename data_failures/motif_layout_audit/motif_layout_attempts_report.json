@@ -1,0 +1,4922 @@
+{
+  "source": "data\\data.json",
+  "rule": "motif_layout_rule",
+  "task_count": 120,
+  "fully_solved_count": 1,
+  "partially_solved_count": 0,
+  "tried_count": 119,
+  "tried_not_fully_exact_count": 118,
+  "errored_count": 0,
+  "fully_solved_ids": [
+    "136b0064"
+  ],
+  "partially_solved_ids": [],
+  "tried_ids": [
+    "0934a4d8",
+    "135a2760",
+    "136b0064",
+    "13e47133",
+    "142ca369",
+    "16b78196",
+    "16de56c4",
+    "1818057f",
+    "195c6913",
+    "1ae2feb7",
+    "20270e3b",
+    "20a9e565",
+    "21897d95",
+    "221dfab4",
+    "247ef758",
+    "269e22fb",
+    "271d71e2",
+    "28a6681f",
+    "291dc1e1",
+    "2b83f449",
+    "2ba387bc",
+    "2c181942",
+    "2d0172a1",
+    "31f7f899",
+    "332f06d7",
+    "35ab12c3",
+    "36a08778",
+    "38007db0",
+    "3a25b0d8",
+    "3dc255db",
+    "3e6067c3",
+    "409aa875",
+    "446ef5d2",
+    "45a5af55",
+    "4a21e3da",
+    "4c3d4a41",
+    "4c416de3",
+    "4c7dc4dd",
+    "4e34c42c",
+    "53fb4810",
+    "5545f144",
+    "581f7754",
+    "58490d8a",
+    "58f5dbd5",
+    "5961cc34",
+    "5dbc8537",
+    "62593bfd",
+    "64efde09",
+    "65b59efc",
+    "67e490f4",
+    "6e453dd6",
+    "6e4f6532",
+    "6ffbe589",
+    "71e489b6",
+    "7491f3cf",
+    "7666fa5d",
+    "78332cb0",
+    "7b0280bc",
+    "7b3084d4",
+    "7b5033c1",
+    "7b80bb43",
+    "7c66cb00",
+    "7ed72f31",
+    "800d221b",
+    "80a900e0",
+    "8698868d",
+    "88bcf3b4",
+    "88e364bc",
+    "89565ca0",
+    "898e7135",
+    "8b7bacbf",
+    "8b9c3697",
+    "8e5c0c38",
+    "8f215267",
+    "8f3a5a89",
+    "9385bd28",
+    "97d7923e",
+    "981571dc",
+    "9aaea919",
+    "9bbf930d",
+    "a251c730",
+    "a25697e4",
+    "a32d8b75",
+    "a395ee82",
+    "a47bf94d",
+    "a6f40cea",
+    "aa4ec2a5",
+    "abc82100",
+    "b0039139",
+    "b10624e5",
+    "b5ca7ac4",
+    "b6f77b65",
+    "b99e7126",
+    "b9e38dc0",
+    "bf45cf4b",
+    "c4d067a0",
+    "c7f57c3e",
+    "cb2d8a2c",
+    "cbebaa4b",
+    "d35bdbdc",
+    "d59b0160",
+    "d8e07eb2",
+    "da515329",
+    "db0c5428",
+    "db695cfb",
+    "dbff022c",
+    "dd6b8c4b",
+    "de809cff",
+    "dfadab01",
+    "e12f9a14",
+    "e3721c99",
+    "e376de54",
+    "e8686506",
+    "e87109e9",
+    "edb79dae",
+    "f560132c",
+    "f931b4a8",
+    "faa9f03d",
+    "fc7cae8d"
+  ],
+  "tried_not_fully_exact_ids": [
+    "0934a4d8",
+    "135a2760",
+    "13e47133",
+    "142ca369",
+    "16b78196",
+    "16de56c4",
+    "1818057f",
+    "195c6913",
+    "1ae2feb7",
+    "20270e3b",
+    "20a9e565",
+    "21897d95",
+    "221dfab4",
+    "247ef758",
+    "269e22fb",
+    "271d71e2",
+    "28a6681f",
+    "291dc1e1",
+    "2b83f449",
+    "2ba387bc",
+    "2c181942",
+    "2d0172a1",
+    "31f7f899",
+    "332f06d7",
+    "35ab12c3",
+    "36a08778",
+    "38007db0",
+    "3a25b0d8",
+    "3dc255db",
+    "3e6067c3",
+    "409aa875",
+    "446ef5d2",
+    "45a5af55",
+    "4a21e3da",
+    "4c3d4a41",
+    "4c416de3",
+    "4c7dc4dd",
+    "4e34c42c",
+    "53fb4810",
+    "5545f144",
+    "581f7754",
+    "58490d8a",
+    "58f5dbd5",
+    "5961cc34",
+    "5dbc8537",
+    "62593bfd",
+    "64efde09",
+    "65b59efc",
+    "67e490f4",
+    "6e453dd6",
+    "6e4f6532",
+    "6ffbe589",
+    "71e489b6",
+    "7491f3cf",
+    "7666fa5d",
+    "78332cb0",
+    "7b0280bc",
+    "7b3084d4",
+    "7b5033c1",
+    "7b80bb43",
+    "7c66cb00",
+    "7ed72f31",
+    "800d221b",
+    "80a900e0",
+    "8698868d",
+    "88bcf3b4",
+    "88e364bc",
+    "89565ca0",
+    "898e7135",
+    "8b7bacbf",
+    "8b9c3697",
+    "8e5c0c38",
+    "8f215267",
+    "8f3a5a89",
+    "9385bd28",
+    "97d7923e",
+    "981571dc",
+    "9aaea919",
+    "9bbf930d",
+    "a251c730",
+    "a25697e4",
+    "a32d8b75",
+    "a395ee82",
+    "a47bf94d",
+    "a6f40cea",
+    "aa4ec2a5",
+    "abc82100",
+    "b0039139",
+    "b10624e5",
+    "b5ca7ac4",
+    "b6f77b65",
+    "b99e7126",
+    "b9e38dc0",
+    "bf45cf4b",
+    "c4d067a0",
+    "c7f57c3e",
+    "cb2d8a2c",
+    "cbebaa4b",
+    "d35bdbdc",
+    "d59b0160",
+    "d8e07eb2",
+    "da515329",
+    "db0c5428",
+    "db695cfb",
+    "dbff022c",
+    "dd6b8c4b",
+    "de809cff",
+    "dfadab01",
+    "e12f9a14",
+    "e3721c99",
+    "e376de54",
+    "e8686506",
+    "e87109e9",
+    "edb79dae",
+    "f560132c",
+    "f931b4a8",
+    "faa9f03d",
+    "fc7cae8d"
+  ],
+  "errored_ids": [],
+  "tasks": [
+    {
+      "task_id": "0934a4d8",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 1,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "135a2760",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 6,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "136b0064",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 3,
+      "error_count": 0,
+      "total_score": 30000,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": true,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": false,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": true,
+          "score": 10000,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": true,
+          "score": 10000,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": true,
+          "score": 10000,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "13e47133",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 4,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "142ca369",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 525,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 185,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 139,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 201,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "16b78196",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 997,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 486,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 511,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "16de56c4",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 126,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 87,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 36,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "1818057f",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 5,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "195c6913",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 162,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 134,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 10,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 18,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "1ae2feb7",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 158,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 47,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 56,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 55,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "20270e3b",
+      "train_count": 4,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 2,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "20a9e565",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 14,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 5,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 8,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "21897d95",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 16,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 10,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "221dfab4",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 21,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 21,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "247ef758",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 124,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 67,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 32,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 25,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "269e22fb",
+      "train_count": 5,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 11,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 11,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 4,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "271d71e2",
+      "train_count": 3,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 37,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 29,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 8,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "28a6681f",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 35,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 17,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 11,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 7,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "291dc1e1",
+      "train_count": 4,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 0,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "2b83f449",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 59,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 37,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 22,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "2ba387bc",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 74,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 22,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 15,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 7,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 30,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "2c181942",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 0,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "2d0172a1",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 8,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "31f7f899",
+      "train_count": 3,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 2,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "332f06d7",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 18,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 5,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 10,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "35ab12c3",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 391,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 186,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 157,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 48,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "36a08778",
+      "train_count": 6,
+      "predicted_count": 5,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 7,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 4,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 5,
+          "tried": true,
+          "exact": false,
+          "score": 5,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "38007db0",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 8,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "3a25b0d8",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 5,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "3dc255db",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 75,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 29,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 14,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 32,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "3e6067c3",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 11,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 5,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "409aa875",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 10,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 10,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "446ef5d2",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 7,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 7,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "45a5af55",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 2,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "4a21e3da",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 22,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 7,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 6,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 9,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "4c3d4a41",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 149,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 69,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 80,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "4c416de3",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 83,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 28,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 24,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 31,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "4c7dc4dd",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 14,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 12,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "4e34c42c",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 2,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "53fb4810",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 10,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 10,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "5545f144",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 38,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 35,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "581f7754",
+      "train_count": 3,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 3,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "58490d8a",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 113,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 31,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 66,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 16,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "58f5dbd5",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 10,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "5961cc34",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 0,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "5dbc8537",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 107,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 101,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 6,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "62593bfd",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 267,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 266,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "64efde09",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 0,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "65b59efc",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 49,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 5,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 42,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "67e490f4",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 0,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "6e453dd6",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 27,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 16,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 7,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "6e4f6532",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 10,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 8,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "6ffbe589",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 132,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 51,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 36,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 45,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "71e489b6",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 177,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 63,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 36,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 78,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "7491f3cf",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 41,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 39,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "7666fa5d",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 0,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "78332cb0",
+      "train_count": 3,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 1,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "7b0280bc",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 13,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 11,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "7b3084d4",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 5,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "7b5033c1",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 1,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "7b80bb43",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 388,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 8,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 380,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "7c66cb00",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 16,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 16,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "7ed72f31",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 7,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 7,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "800d221b",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 7,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "80a900e0",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 316,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 52,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 264,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "8698868d",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 7,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "88bcf3b4",
+      "train_count": 5,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 25,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 9,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 12,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 4,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "88e364bc",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 468,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 126,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 172,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 170,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "89565ca0",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 7,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "898e7135",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 7,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "8b7bacbf",
+      "train_count": 4,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 401,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 196,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 85,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 120,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "8b9c3697",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 30,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 6,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 8,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 16,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "8e5c0c38",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 288,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 288,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "8f215267",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 15,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 9,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 5,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "8f3a5a89",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 1,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "9385bd28",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 115,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 9,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 16,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 89,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "97d7923e",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 104,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 45,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 11,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 48,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "981571dc",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 26,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 10,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 12,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "9aaea919",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 91,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 11,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 65,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 15,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "9bbf930d",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 18,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 8,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 6,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "a251c730",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 5,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 5,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "a25697e4",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 29,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 9,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 11,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 9,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "a32d8b75",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 5,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "a395ee82",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 4,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "a47bf94d",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 608,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 218,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 179,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 211,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "a6f40cea",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 3,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "aa4ec2a5",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 11,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 10,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "abc82100",
+      "train_count": 4,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 256,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 69,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 187,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "b0039139",
+      "train_count": 4,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 0,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "b10624e5",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 0,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "b5ca7ac4",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 207,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 205,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "b6f77b65",
+      "train_count": 5,
+      "predicted_count": 5,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 128,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 25,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 25,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 26,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 28,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 4,
+          "tried": true,
+          "exact": false,
+          "score": 24,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "b99e7126",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 30,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 6,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 20,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "b9e38dc0",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 12,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 9,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "bf45cf4b",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 101,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 101,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "c4d067a0",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 23,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 22,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "c7f57c3e",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 6,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 6,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "cb2d8a2c",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 2,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "cbebaa4b",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 514,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 257,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 257,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "d35bdbdc",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 28,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 11,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 7,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 10,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "d59b0160",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 50,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 30,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 18,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "d8e07eb2",
+      "train_count": 5,
+      "predicted_count": 5,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 55,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 15,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 12,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 6,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 15,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 4,
+          "tried": true,
+          "exact": false,
+          "score": 7,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "da515329",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 234,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 26,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 151,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 57,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "db0c5428",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 7,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 5,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "db695cfb",
+      "train_count": 5,
+      "predicted_count": 5,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 6,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 4,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "dbff022c",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 42,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 23,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 7,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 12,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "dd6b8c4b",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 0,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "de809cff",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 101,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 33,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 68,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "dfadab01",
+      "train_count": 4,
+      "predicted_count": 4,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 276,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 170,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 9,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 6,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 91,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "e12f9a14",
+      "train_count": 4,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 4,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 3,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "e3721c99",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 922,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 471,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 451,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "e376de54",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 2,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "e8686506",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 1,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 1,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "e87109e9",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 19,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 9,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 10,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 0,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "edb79dae",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 6,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "eee78d87",
+      "train_count": 3,
+      "predicted_count": 0,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 0,
+      "tried_any": false,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": false,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "f560132c",
+      "train_count": 2,
+      "predicted_count": 2,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 7,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 5,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "f931b4a8",
+      "train_count": 5,
+      "predicted_count": 1,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 4,
+      "tried_any": true,
+      "tried_all": false,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 3,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        },
+        {
+          "pair_index": 4,
+          "tried": false,
+          "exact": false,
+          "score": null,
+          "strategy": null,
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "faa9f03d",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 83,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 27,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 22,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 34,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    },
+    {
+      "task_id": "fc7cae8d",
+      "train_count": 3,
+      "predicted_count": 3,
+      "exact_count": 0,
+      "error_count": 0,
+      "total_score": 14,
+      "tried_any": true,
+      "tried_all": true,
+      "fully_solved": false,
+      "partially_solved": false,
+      "tried_but_not_fully_exact": true,
+      "pair_results": [
+        {
+          "pair_index": 0,
+          "tried": true,
+          "exact": false,
+          "score": 8,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 1,
+          "tried": true,
+          "exact": false,
+          "score": 4,
+          "strategy": "motif_layout_rule",
+          "error": null
+        },
+        {
+          "pair_index": 2,
+          "tried": true,
+          "exact": false,
+          "score": 2,
+          "strategy": "motif_layout_rule",
+          "error": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+[
+  {
+    "task_id": "20270e3b",
+    "pair_index": 1,
+    "strategy": "region_alignment_rule_v2",
+    "score": 46,
+    "selector": null,
+    "transform": null
+  },
+  {
+    "task_id": "20270e3b",
+    "pair_index": 2,
+    "strategy": "region_alignment_rule_v2",
+    "score": 38,
+    "selector": null,
+    "transform": null
+  },
+  {
+    "task_id": "20270e3b",
+    "pair_index": 3,
+    "strategy": "region_alignment_rule_v2",
+    "score": 10,
+    "selector": null,
+    "transform": null
+  },
+  {
+    "task_id": "20270e3b",
+    "pair_index": 4,
+    "strategy": "pattern_expansion_rule",
+    "score": 56,
+    "selector": null,
+    "transform": null
+  }
+]

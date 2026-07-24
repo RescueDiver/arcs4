@@ -1,0 +1,27 @@
+WRONG TRAIN PAIRS
+============================================================
+
+1. TASK: 20270e3b | PAIR: 1
+   Strategy : region_alignment_rule_v2
+   Score    : 46
+   Selector : None
+   Transform: None
+
+2. TASK: 20270e3b | PAIR: 2
+   Strategy : region_alignment_rule_v2
+   Score    : 38
+   Selector : None
+   Transform: None
+
+3. TASK: 20270e3b | PAIR: 3
+   Strategy : region_alignment_rule_v2
+   Score    : 10
+   Selector : None
+   Transform: None
+
+4. TASK: 20270e3b | PAIR: 4
+   Strategy : pattern_expansion_rule
+   Score    : 56
+   Selector : None
+   Transform: None
+

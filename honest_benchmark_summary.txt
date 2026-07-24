@@ -1,0 +1,42 @@
+HONEST ARCs4 LEAVE-ONE-OUT BENCHMARK
+========================================================================
+Data file             : C:\Users\johne\Desktop\ARCs4\ARCs4\data\data.json
+Tasks                 : 46
+Testable tasks        : 46
+Not testable          : 0
+
+TRAIN REPLAY (NOT HONEST)
+------------------------------------------------------------------------
+Exact grids           : 134 / 138
+Replay percent        : 97.10%
+
+HIDDEN-PAIR RESULT (HONEST)
+------------------------------------------------------------------------
+Exact grids           : 13 / 138
+Honest percent        : 9.42%
+Correct output shape  : 51 / 138
+Missing predictions   : 1
+Errors                : 0
+
+TASK RESULTS
+------------------------------------------------------------------------
+Fully solved          : 3
+Partially solved      : 1
+Failed                : 42
+
+HONEST RESULT BY CHOSEN FAMILY
+------------------------------------------------------------------------
+anchor_repair_family              4/4     100.00%
+composition_layout_family         3/7      42.86%
+region_object_family              4/122     3.28%
+visual_symbolic_family            2/5      40.00%
+
+HONESTY CHECK
+------------------------------------------------------------------------
+Hidden expected output passed to solver : NO
+Hidden original pair index passed       : NO
+Expected-output fallback allowed        : NO
+Comparison performed after prediction   : YES
+
+Elapsed seconds        : 1727.202
+========================================================================

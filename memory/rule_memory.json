@@ -1053,6 +1053,80 @@
           20
         ]
       }
+    },
+    {
+      "task_id": "269e22fb",
+      "strategy": "region_object_family",
+      "exact_count": 0,
+      "total_pairs": 5,
+      "result": "partial",
+      "features": {
+        "pair_count": 5,
+        "has_divider_color_4": false,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "output_heights": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ]
+      }
+    },
+    {
+      "task_id": "20270e3b",
+      "strategy": "anchor_repair_family",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": false,
+        "output_widths": [
+          8,
+          6,
+          3,
+          12
+        ],
+        "output_heights": [
+          7,
+          7,
+          6,
+          5
+        ]
+      }
+    },
+    {
+      "task_id": "0934a4d8",
+      "strategy": "region_object_family",
+      "exact_count": 0,
+      "total_pairs": 4,
+      "result": "partial",
+      "features": {
+        "pair_count": 4,
+        "has_divider_color_4": true,
+        "has_anchor_color_5": true,
+        "output_widths": [
+          4,
+          5,
+          7,
+          4
+        ],
+        "output_heights": [
+          9,
+          4,
+          3,
+          4
+        ]
+      }
     }
   ],
   "patterns": [
